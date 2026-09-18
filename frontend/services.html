@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Services &amp; Plans — NestKey</title>
+  <meta name="theme-color" content="#0B1B2B">
+  <link rel="icon" type="image/png" href="/assets/icon-192.png">
+  <link rel="apple-touch-icon" href="/assets/icon-192.png">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="stylesheet" href="/assets/styles.css">
+</head>
+<body>
+  <header class="top"><div class="wrap">
+    <a class="brand" href="/"><img class="brand-mark" src="/assets/logo.png" alt="NestKey"><span class="brand-word">Nest<b>Key</b></span></a>
+    <nav><a href="/">Home</a><a href="/browse.html">Browse</a><a href="/services.html" class="active">Services</a><a href="/blog.html">Blog</a><a href="/about.html">About</a><a href="/contact.html">Contact</a><a href="/post.html" class="nav-post">Post a house</a><span id="navauth"></span></nav>
+  </div></header>
+
+  <section class="hero"><div class="wrap">
+    <h1>Do more with NestKey</h1>
+    <p>Premium plans for house hunters, landlords and agents — pay monthly by M-Pesa, cancel anytime.</p>
+  </div></section>
+
+  <section class="section"><div class="wrap" id="services">
+    <div class="pricing-intro">
+      <p>Choose a plan that fits. Prices in Kenyan shillings, billed by M-Pesa.</p>
+    </div>
+    <div class="center">
+      <div class="billing-toggle" id="billing">
+        <button data-billing="monthly" class="active">Monthly</button>
+        <button data-billing="annual">Annual <span class="save">save ~2 months</span></button>
+      </div>
+    </div>
+
+    <div class="plans" id="plans"></div>
+
+    <h2 style="margin-top:50px">Also available</h2>
+    <div class="addons">
+      <div class="addon"><div class="ic"><svg class="ico ico-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 7-4 1-1 4-7-7z"/><path d="M5 19l3-3"/></svg></div><div><h4>Boost a listing</h4><p>Push a single listing back to the top of results for 7 days. Great when you need to let or sell fast.</p></div></div>
+      <div class="addon"><div class="ic"><svg class="ico ico-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div><div><h4>Verified badge</h4><p>Get your identity and ownership verified so hunters trust your listings and reply faster.</p></div></div>
+      <div class="addon"><div class="ic"><svg class="ico ico-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9a6 6 0 1112 0c0 5 2 6 2 6H4s2-1 2-6z"/><path d="M10 21h4"/></svg></div><div><h4>Area alerts</h4><p>Included with Hunter Plus — instant notifications the moment a matching house is posted in your area.</p></div></div>
+      <div class="addon"><div class="ic"><svg class="ico ico-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-8"/></svg></div><div><h4>Listing analytics</h4><p>Included with Landlord Pro & Agency — see views, saves and enquiries for every listing.</p></div></div>
+    </div>
+
+    <div class="manage" id="manage">
+      <h3>Manage your subscription</h3>
+      <p style="color:var(--muted);margin-top:4px">Enter the M-Pesa number you subscribed with to check your plan and renewal date.</p>
+      <div class="row">
+        <input id="mgPhone" type="tel" placeholder="07xx xxx xxx">
+        <button class="btn" id="mgBtn">Check status</button>
+      </div>
+      <div id="mgResult" style="margin-top:14px"></div>
+    </div>
+  </div></section>
+
+  <div class="sub-modal" id="subModal">
+    <div class="sub-card">
+      <h3 id="subPlan">Subscribe</h3>
+      <div class="plan-line" id="subLine"></div>
+      <div class="amount" id="subAmount">KSh 0</div>
+      <label>Full name</label>
+      <input id="subName" type="text" placeholder="Your name">
+      <label>Email (optional)</label>
+      <input id="subEmail" type="email" placeholder="you@email.com">
+      <label>M-Pesa phone number *</label>
+      <input id="subPhone" type="tel" placeholder="07xx xxx xxx">
+      <label>Pay with</label>
+      <div class="pay-toggle" id="subPayVia">
+        <button type="button" data-via="mpesa" class="active">M-Pesa (STK)</button>
+        <button type="button" data-via="pesapal">Card / Pesapal</button>
+      </div>
+      <div class="status" id="subStatus"></div>
+      <div class="sub-actions">
+        <button class="btn ghost" id="subCancel">Cancel</button>
+        <button class="btn block" id="subPay">Pay with M-Pesa</button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="foot"><div class="wrap">NestKey · plans billed securely via M-Pesa · <a href="/privacy.html">Privacy</a> · <a href="/cookies.html">Cookies</a></div></footer>
+  <script src="/assets/app.js"></script>
+</body>
+</html>

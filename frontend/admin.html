@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Command Center — NestKey</title>
+  <meta name="theme-color" content="#0B1B2B">
+  <link rel="icon" type="image/png" href="/assets/icon-192.png">
+  <link rel="stylesheet" href="/assets/styles.css">
+</head>
+<body>
+  <header class="top"><div class="wrap">
+    <a class="brand" href="/"><img class="brand-mark" src="/assets/logo.png" alt="NestKey"><span class="brand-word">Nest<b>Key</b></span></a>
+    <nav><a href="/admin.html" class="active">Command Center</a><a href="/browse.html">Browse</a><a href="#" id="signout">Sign out</a></nav>
+  </div></header>
+
+  <section class="section"><div class="wrap" id="admin">
+    <div class="admin-head">
+      <h1>Command Center</h1>
+      <span class="live-dot" id="live-dot" title="Live">● live</span>
+    </div>
+
+    <div class="kpi-grid" id="kpis"></div>
+
+    <div class="admin-grid">
+      <div class="admin-col">
+        <h2>Activity feed</h2>
+        <div class="feed" id="feed"><p class="dc-sub">Loading…</p></div>
+      </div>
+      <div class="admin-col">
+        <h2>Listings by county</h2>
+        <div class="bars" id="by-county"></div>
+        <h2 style="margin-top:24px">By type</h2>
+        <div class="bars" id="by-deal"></div>
+      </div>
+    </div>
+
+    <h2 style="margin-top:34px">Recent listings — moderation</h2>
+    <div id="admin-listings"></div>
+  </div></section>
+
+  <footer class="foot"><div class="wrap">NestKey · Command Center · <a href="/privacy.html">Privacy</a> · <a href="/cookies.html">Cookies</a></div></footer>
+  <script src="/assets/app.js"></script>
+</body>
+</html>

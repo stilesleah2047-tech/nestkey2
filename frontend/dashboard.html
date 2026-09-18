@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dashboard — NestKey</title>
+  <meta name="theme-color" content="#0B1B2B">
+  <link rel="icon" type="image/png" href="/assets/icon-192.png">
+  <link rel="apple-touch-icon" href="/assets/icon-192.png">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="/assets/styles.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+<body>
+  <header class="top"><div class="wrap">
+    <a class="brand" href="/"><img class="brand-mark" src="/assets/logo.png" alt="NestKey"><span class="brand-word">Nest<b>Key</b></span></a>
+    <nav><a href="/dashboard.html" class="active">Dashboard</a><a href="/browse.html">Browse</a><a href="/services.html">Plans</a><a href="#" id="signout">Sign out</a></nav>
+  </div></header>
+
+  <section class="section"><div class="wrap" id="dashboard">
+    <h1 id="hello">Your dashboard</h1>
+
+    <div class="dash-cards" id="summary"></div>
+
+    <div class="dash-grid">
+      <div>
+        <h2>Add a property</h2>
+        <form class="form" id="agent-form">
+          <div class="row">
+            <div class="field full"><label>Title *</label><input name="title" required placeholder="e.g. 2-bedroom apartment in Kilimani"></div>
+            <div class="field"><label>Deal</label><select name="deal" id="ag-deal"><option value="rent">For rent</option><option value="sale">For sale</option><option value="land">Land</option></select></div>
+            <div class="field" id="ag-field-type"><label>Type</label><input name="type" placeholder="Apartment, Maisonette…"></div>
+            <div class="field"><label id="ag-price-label">Monthly rent (KSh)</label><input name="price" id="ag-price" type="number" min="0"></div>
+            <div class="field"><label>County</label><input name="county" id="ag-county" list="ag-county-list" placeholder="Type or pick a county"><datalist id="ag-county-list"></datalist></div>
+            <div class="field"><label>Town / area</label><input name="region" id="ag-region" list="ag-townlist" placeholder="e.g. Kilimani"><datalist id="ag-townlist"></datalist></div>
+            <div class="field full">
+              <label>Exact location — pin it on the map</label>
+              <div class="loc-tools">
+                <button type="button" class="btn ghost btn--sm" id="ag-geo"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6-5.686-6-10a6 6 0 1112 0c0 4.314-6 10-6 10z"/><circle cx="12" cy="11" r="2"/></svg> Use my location</button>
+                <input id="ag-loc-paste" placeholder="…or paste Google Maps link / 'lat, lng'">
+                <button type="button" class="btn ghost btn--sm" id="ag-loc-set">Set</button>
+              </div>
+              <div id="ag-map" class="pick-map"></div>
+              <small class="hint" id="ag-loc-status">Click the map or drag the pin to the exact spot.</small>
+              <input type="hidden" id="ag-lat"><input type="hidden" id="ag-lng">
+            </div>
+            <div class="field" id="ag-field-beds"><label>Bedrooms</label><input name="beds" type="number" min="0"></div>
+            <div class="field" id="ag-field-baths"><label>Bathrooms</label><input name="baths" type="number" min="0"></div>
+            <div class="field" id="ag-field-size" style="display:none"><label>Plot size</label>
+              <div style="display:flex;gap:8px">
+                <input id="ag-size-value" type="number" min="0" step="0.01" placeholder="e.g. 2" style="flex:1">
+                <select id="ag-size-unit"><option value="acres">acres</option><option value="hectares">hectares</option><option value="plots">plots (50×100)</option><option value="sqm">sq metres</option></select>
+              </div>
+            </div>
+            <div class="field full" id="ag-commission" style="display:none"><div class="commission-note"><strong id="ag-cp-headline">Commission on sale</strong><span id="ag-cp-detail"></span></div></div>
+            <div class="field full"><label>Description</label><textarea name="description"></textarea></div>
+            <div class="field full"><label>Photos</label><input id="ag-photos" type="file" accept="image/*" multiple></div>
+            <div class="field full" id="ag-field-videos"><label>Videos (optional)</label><input id="ag-videos" type="file" accept="video/*" multiple></div>
+          </div>
+          <div class="status" id="agent-status"></div>
+          <button class="btn block" type="submit">Save as draft</button>
+        </form>
+      </div>
+
+      <div>
+        <h2>Enquiries</h2>
+        <div id="leads" class="leads"></div>
+      </div>
+    </div>
+
+    <h2 style="margin-top:34px">Your properties</h2>
+    <div id="my-listings"></div>
+
+    <div class="dash-split">
+      <div>
+        <h2 style="margin-top:34px">Payment details</h2>
+        <p class="dc-sub">Where buyers pay you directly for properties you're selling. The money goes straight to your account — NestKey records the sale and invoices our 8% separately. Rentals are commission-free (covered by your monthly plan).</p>
+        <form class="form" id="payout-form">
+          <div class="field"><label>Receive payments by</label>
+            <select name="payoutMethod" id="pm-method"><option value="">Select…</option><option value="mpesa">M-Pesa</option><option value="bank">Bank</option></select></div>
+          <div id="pm-mpesa" style="display:none">
+            <div class="field"><label>M-Pesa number / Till / Paybill</label><input name="payoutMpesa" placeholder="e.g. 07xx… or Till 123456"></div>
+          </div>
+          <div id="pm-bank" style="display:none">
+            <div class="field"><label>Bank name</label><input name="bankName"></div>
+            <div class="field"><label>Account name</label><input name="bankAccountName"></div>
+            <div class="field"><label>Account number</label><input name="bankAccountNumber"></div>
+          </div>
+          <div class="field"><label>Business / trading name (optional)</label><input name="businessName"></div>
+          <div class="row">
+            <div class="field"><label>ID number (KYC)</label><input name="idNumber"></div>
+            <div class="field"><label>KRA PIN (optional)</label><input name="kraPin"></div>
+          </div>
+          <div class="status" id="payout-status"></div>
+          <button class="btn block" type="submit">Save payment details</button>
+        </form>
+      </div>
+
+      <div>
+        <h2 style="margin-top:34px">Sales &amp; commission</h2>
+        <div class="commission-box" id="commission-box"></div>
+        <div id="transactions"></div>
+      </div>
+    </div>
+  </div></section>
+
+  <footer class="foot"><div class="wrap">NestKey · <a href="/privacy.html">Privacy</a> · <a href="/cookies.html">Cookies</a></div></footer>
+  <script src="/assets/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+<svg width="196" height="46" viewBox="0 0 196 46" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="House Hunt">
+  <!-- Mark: house + magnifier -->
+  <rect x="1" y="1" width="44" height="44" rx="12" fill="#0B1B2B"/>
+  <!-- house -->
+  <path d="M12 24 L23 14 L34 24 V34 a1 1 0 0 1 -1 1 H13 a1 1 0 0 1 -1 -1 Z" fill="#0FB5A6"/>
+  <path d="M12 24 L23 14 L34 24" stroke="#0FB5A6" stroke-width="2.4" stroke-linejoin="round" fill="none"/>
+  <rect x="20" y="27" width="6" height="8" rx="1" fill="#0B1B2B"/>
+  <!-- magnifier lens -->
+  <circle cx="30" cy="30" r="7.5" fill="#0B1B2B"/>
+  <circle cx="30" cy="30" r="5.4" fill="none" stroke="#F4B740" stroke-width="2.3"/>
+  <line x1="34.4" y1="34.4" x2="39" y2="39" stroke="#F4B740" stroke-width="2.8" stroke-linecap="round"/>
+  <!-- Wordmark -->
+  <text x="56" y="30" font-family="Segoe UI, Roboto, Inter, sans-serif" font-size="22" font-weight="800" fill="#0B1B2B">House<tspan fill="#0FB5A6">Hunt</tspan></text>
+</svg>

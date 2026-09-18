@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Post your house — NestKey</title>
+  <link rel="icon" type="image/png" href="/assets/icon-192.png">
+  <link rel="apple-touch-icon" href="/assets/icon-192.png">
+  <meta name="theme-color" content="#0A2342">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="/assets/styles.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+<body>
+  <header class="top"><div class="wrap">
+    <a class="brand" href="/"><img class="brand-mark" src="/assets/logo.png" alt="NestKey"><span class="brand-word">Nest<b>Key</b></span></a>
+    <nav><a href="/">Home</a><a href="/browse.html">Browse</a><a href="/services.html">Services</a><a href="/blog.html">Blog</a><a href="/about.html">About</a><a href="/contact.html">Contact</a><a href="/post.html" class="active nav-post">Post a house</a><span id="navauth"></span></nav>
+  </div></header>
+
+  <section class="hero"><div class="wrap">
+    <h1>Post your house or room</h1>
+    <p>List it in minutes, pay a small fee by M-Pesa, and reach house hunters across every area.</p>
+  </div></section>
+
+  <section class="section"><div class="wrap" style="max-width:760px">
+    <form class="form" id="post-form">
+      <div class="row">
+        <div class="field full"><label>Listing title *</label><input name="title" required placeholder="e.g. Cosy bedsitter for rent in Roysambu"></div>
+        <div class="field"><label>Type</label>
+          <select name="deal" id="h-deal"><option value="rent">For rent</option><option value="sale">For sale</option><option value="land">Land</option></select></div>
+        <div class="field" id="field-type"><label>Property type</label><input name="type" placeholder="Bedsitter, 1-bed, Maisonette…"></div>
+        <div class="field"><label id="price-label">Monthly rent (KSh)</label><input name="price" id="h-price" type="number" min="0" placeholder="12000"></div>
+        <div class="field"><label>County</label><input name="county" id="p-county" list="p-county-list" placeholder="Type or pick a county"><datalist id="p-county-list"></datalist></div>
+        <div class="field"><label>Town / area</label><input name="region" id="region" list="p-townlist" placeholder="e.g. Roysambu"><datalist id="p-townlist"></datalist></div>
+        <div class="field full">
+          <label>Exact location — pin it on the map</label>
+          <div class="loc-tools">
+            <button type="button" class="btn ghost btn--sm" id="p-geo"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6-5.686-6-10a6 6 0 1112 0c0 4.314-6 10-6 10z"/><circle cx="12" cy="11" r="2"/></svg> Use my location</button>
+            <input id="p-loc-paste" placeholder="…or paste Google Maps link / 'lat, lng'">
+            <button type="button" class="btn ghost btn--sm" id="p-loc-set">Set</button>
+          </div>
+          <div id="p-map" class="pick-map"></div>
+          <small class="hint" id="p-loc-status">Click the map or drag the pin to the exact spot — this helps people find the property.</small>
+          <input type="hidden" id="p-lat"><input type="hidden" id="p-lng">
+        </div>
+        <div class="field" id="field-beds"><label>Bedrooms</label><input name="beds" id="beds" type="number" min="0" placeholder="1"></div>
+        <div class="field" id="field-baths"><label>Bathrooms</label><input name="baths" type="number" min="0" placeholder="1"></div>
+        <div class="field" id="field-size" style="display:none"><label>Plot size</label>
+          <div style="display:flex;gap:8px">
+            <input id="p-size-value" type="number" min="0" step="0.01" placeholder="e.g. 2" style="flex:1">
+            <select id="p-size-unit">
+              <option value="acres">acres</option>
+              <option value="hectares">hectares</option>
+              <option value="plots">plots (50×100)</option>
+              <option value="sqm">sq metres</option>
+            </select>
+          </div>
+        </div>
+        <div class="field full"><label>Description</label><textarea name="description" placeholder="Describe the house or room, what's included (water, electricity, parking)…"></textarea></div>
+
+        <div class="field full" id="commission-preview" style="display:none">
+          <div class="commission-note">
+            <strong id="cp-headline">Commission on sale</strong>
+            <div id="cp-detail" class="dc-sub">Enter a selling price to see the commission.</div>
+          </div>
+        </div>
+
+        <div class="field full">
+          <label>Listing type</label>
+          <div class="tier-toggle" id="tier">
+            <button type="button" data-tier="standard" class="active"><strong>Standard</strong><span>Photos + description</span></button>
+            <button type="button" data-tier="showcase"><strong>Video Showcase</strong><span>Rooms, photos &amp; videos — laid out like a page</span></button>
+          </div>
+        </div>
+
+        <div class="field full"><label>Cover photos</label><input name="photos" id="photos" type="file" accept="image/*" multiple><small class="hint">Shown on the listing card and at the top of the page.</small></div>
+
+        <div class="field full showcase-only" id="rooms-wrap" style="display:none">
+          <label>Rooms &amp; areas — add each space with its own photos &amp; a short video</label>
+          <div id="rooms-builder"></div>
+          <button type="button" class="btn ghost" id="addRoom">+ Add a room / area</button>
+          <small class="hint">We arrange them automatically in a natural order: exterior → living → kitchen → bedrooms → bathrooms → …</small>
+        </div>
+
+        <div class="field"><label>Your name</label><input name="name" placeholder="Full name"></div>
+        <div class="field"><label>Your email</label><input name="email" type="email" placeholder="you@email.com"></div>
+        <div class="field full"><label id="phone-label">M-Pesa phone number *</label><input name="phone" id="phone" placeholder="07xx xxx xxx"></div>
+      </div>
+
+      <div class="field full" style="margin-top:6px">
+        <label>Pay with</label>
+        <div class="pay-toggle" id="payVia">
+          <button type="button" data-via="mpesa" class="active">M-Pesa (STK)</button>
+          <button type="button" data-via="pesapal">Card / Pesapal</button>
+        </div>
+        <small class="hint" id="card-hint" style="display:none">You'll enter your card (or mobile money) details securely on the next screen — no redirect off the site.</small>
+      </div>
+
+      <div class="fee-box">
+        <div class="sub" id="fee-caption">Listing fee — one-off, paid by M-Pesa</div>
+        <div class="total" id="feeTotal">KSh 100</div>
+        <div class="sub" id="feeBreak">KSh 100 per room × 1 room</div>
+      </div>
+
+      <div class="status" id="status"></div>
+      <button class="btn block" id="submitBtn" type="submit">Post house &amp; pay <span id="feeBtn">KSh 100</span></button>
+    </form>
+  </div></section>
+
+  <footer class="foot"><div class="wrap">NestKey · <a href="/privacy.html">Privacy</a> · <a href="/cookies.html">Cookies</a></div></footer>
+  <script src="/assets/app.js"></script>
+</body>
+</html>

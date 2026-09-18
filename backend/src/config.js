@@ -1,0 +1,39 @@
+require('dotenv').config();
+
+module.exports = {
+  port: parseInt(process.env.PORT || '4000', 10),
+  publicUrl: process.env.PUBLIC_URL || 'http://localhost:4000',
+  uploadDir: process.env.UPLOAD_DIR || 'uploads',
+  driver: (process.env.DB_DRIVER || 'postgres').toLowerCase(),
+  databaseUrl: process.env.DATABASE_URL || 'postgres://postgres:postgres@localhost:5432/househunt',
+  mongoUri: process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/househunt',
+  roomRate: parseInt(process.env.ROOM_RATE || '100', 10),
+  showcaseFee: parseInt(process.env.SHOWCASE_FEE || '500', 10),
+  land: {
+    ratePerAcre: parseInt(process.env.LAND_RATE || '1500', 10),
+    min: parseInt(process.env.LAND_MIN || '300', 10),
+    max: parseInt(process.env.LAND_MAX || '3000', 10),
+  },
+  currency: process.env.CURRENCY || 'KES',
+  jwtSecret: process.env.JWT_SECRET || 'dev-secret-change-me-in-production',
+  adminEmails: (process.env.ADMIN_EMAILS || '').split(',').map(function (s) { return s.trim().toLowerCase(); }).filter(Boolean),
+  commissionRate: parseFloat(process.env.COMMISSION_RATE || '0.08'),
+  publicUrlFront: process.env.PUBLIC_URL || 'http://localhost:4000',
+  pesapal: {
+    env: (process.env.PESAPAL_ENV || 'sandbox').toLowerCase(),
+    key: process.env.PESAPAL_KEY || '',
+    secret: process.env.PESAPAL_SECRET || '',
+    ipnId: process.env.PESAPAL_IPN_ID || '',
+    ipnUrl: process.env.PESAPAL_IPN_URL || '',
+    callbackUrl: process.env.PESAPAL_CALLBACK_URL || '',
+  },
+  mpesa: {
+    env: (process.env.MPESA_ENV || 'sandbox').toLowerCase(),
+    key: process.env.MPESA_KEY || '',
+    secret: process.env.MPESA_SECRET || '',
+    shortcode: process.env.MPESA_SHORTCODE || '',
+    passkey: process.env.MPESA_PASSKEY || '',
+    type: (process.env.MPESA_TYPE || 'paybill').toLowerCase(),
+    callbackUrl: process.env.MPESA_CALLBACK_URL || '',
+  },
+};

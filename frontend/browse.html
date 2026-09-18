@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Browse houses — NestKey</title>
+  <meta name="theme-color" content="#0B1B2B">
+  <link rel="icon" type="image/png" href="/assets/icon-192.png">
+  <link rel="apple-touch-icon" href="/assets/icon-192.png">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="/assets/styles.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+<body>
+  <header class="top"><div class="wrap">
+    <a class="brand" href="/"><img class="brand-mark" src="/assets/logo.png" alt="NestKey"><span class="brand-word">Nest<b>Key</b></span></a>
+    <nav><a href="/">Home</a><a href="/browse.html" class="active">Browse</a><a href="/services.html">Services</a><a href="/blog.html">Blog</a><a href="/about.html">About</a><a href="/contact.html">Contact</a><a href="/post.html" class="nav-post">Post a house</a><span id="navauth"></span></nav>
+  </div></header>
+
+  <section class="hero"><div class="wrap">
+    <h1 id="browse-title">Browse houses</h1>
+    <p id="browse-sub">Rooms, bedsitters and homes for rent and sale — updated live.</p>
+  </div></section>
+
+  <section class="section"><div class="wrap" id="browse">
+    <div class="toolbar">
+      <input class="search" id="q" type="search" placeholder="Search area, type or keyword…">
+      <select id="deal">
+        <option value="">Rent &amp; sale</option>
+        <option value="rent">For rent</option>
+        <option value="sale">For sale</option>
+        <option value="land">Land</option>
+      </select>
+      <select id="beds">
+        <option value="">Any beds</option>
+        <option value="1">1+ bed</option><option value="2">2+ beds</option>
+        <option value="3">3+ beds</option><option value="4">4+ beds</option>
+      </select>
+      <input class="price" id="minPrice" type="number" placeholder="Min KSh">
+      <input class="price" id="maxPrice" type="number" placeholder="Max KSh">
+      <select id="sort">
+        <option value="newest">Newest</option>
+        <option value="price-asc">Price ↑</option>
+        <option value="price-desc">Price ↓</option>
+      </select>
+      <button type="button" id="clearArea" class="btn ghost" style="display:none;padding:9px 16px">Clear area ✕</button>
+      <span class="count"><b id="count">0</b> listings</span>
+      <div class="view-toggle" id="viewToggle">
+        <button type="button" data-view="list" class="active">List</button>
+        <button type="button" data-view="map">Map</button>
+      </div>
+    </div>
+
+    <div class="chips" id="chips"></div>
+    <div id="results"></div>
+    <div id="map" style="display:none"></div>
+  </div></section>
+
+  <div class="modal" id="modal">
+    <button class="close" id="modalClose" aria-label="Close">&times;</button>
+    <div class="panel" id="modalPanel"></div>
+  </div>
+
+  <footer class="foot"><div class="wrap">NestKey · find a home anywhere in Kenya · <a href="/privacy.html">Privacy</a> · <a href="/cookies.html">Cookies</a></div></footer>
+  <script src="/assets/app.js"></script>
+</body>
+</html>

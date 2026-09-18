@@ -1,0 +1,13 @@
+{
+  "name": "NestKey",
+  "short_name": "NestKey",
+  "description": "Find and post houses and rooms for rent or sale, by area.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0A2342",
+  "theme_color": "#0A2342",
+  "icons": [
+    { "src": "/assets/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/assets/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

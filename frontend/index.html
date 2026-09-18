@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NestKey — Find your next home by county & town</title>
+  <meta name="theme-color" content="#0B1B2B">
+  <link rel="icon" type="image/png" href="/assets/icon-192.png">
+  <link rel="apple-touch-icon" href="/assets/icon-192.png">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="stylesheet" href="/assets/styles.css">
+</head>
+<body>
+  <header class="top"><div class="wrap">
+    <a class="brand" href="/"><img class="brand-mark" src="/assets/logo.png" alt="NestKey"><span class="brand-word">Nest<b>Key</b></span></a>
+    <nav><a href="/" class="active">Home</a><a href="/browse.html">Browse</a><a href="/services.html">Services</a><a href="/blog.html">Blog</a><a href="/about.html">About</a><a href="/contact.html">Contact</a><a href="/post.html" class="nav-post">Post a house</a><span id="navauth"></span></nav>
+  </div></header>
+
+  <section class="home-hero"><div class="wrap" id="home">
+    <h1>Find your next home</h1>
+    <p class="home-lead">Choose a county and the town you want to live around — or just type any area. We'll show you every property listed there.</p>
+    <div class="rating-proof" id="rating-proof"></div>
+
+    <div class="finder">
+      <div class="finder-row">
+        <div class="finder-field">
+          <label>County</label>
+          <input id="f-county" list="f-county-list" placeholder="Type or pick a county" autocomplete="off"><datalist id="f-county-list"></datalist>
+        </div>
+        <div class="finder-field">
+          <label>Town / area</label>
+          <input id="f-town" list="f-town-list" placeholder="Any town (type to search)" autocomplete="off"><datalist id="f-town-list"></datalist>
+        </div>
+        <div class="finder-field">
+          <label>Looking for</label>
+          <select id="f-deal">
+            <option value="">Rent &amp; sale</option>
+            <option value="rent">For rent</option>
+            <option value="sale">For sale</option>
+            <option value="land">Land</option>
+          </select>
+        </div>
+        <button class="btn finder-btn" id="f-go">Find houses</button>
+      </div>
+      <a class="browse-all" href="/browse.html">or browse all listed houses →</a>
+    </div>
+  </div></section>
+
+  <section class="section"><div class="wrap">
+    <h2 class="home-h2">Popular counties</h2>
+    <div class="county-grid" id="county-grid"></div>
+  </div></section>
+
+  <section class="section" style="padding-top:0"><div class="wrap">
+    <div class="home-cta">
+      <div>
+        <h2>Are you a landlord or agent?</h2>
+        <p>List your houses, manage them from a dashboard, and get enquiries — on a simple monthly plan.</p>
+      </div>
+      <div class="home-cta-actions">
+        <a class="btn" href="/account.html">Create an account</a>
+        <a class="btn ghost" href="/services.html">See plans</a>
+      </div>
+    </div>
+  </div></section>
+
+  <footer class="foot"><div class="wrap">NestKey · find a home anywhere in Kenya · <a href="/privacy.html">Privacy</a> · <a href="/cookies.html">Cookies</a></div></footer>
+  <script src="/assets/app.js"></script>
+</body>
+</html>
