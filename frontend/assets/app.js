@@ -1,6 +1,9 @@
 (function () {
   'use strict';
-  var API = '';
+  // API base. Same-origin by default (localhost). When the frontend is hosted
+  // separately (e.g. Vercel) point it at your backend by setting, in an inline
+  // <script> before app.js:  window.NESTKEY_API = 'https://your-backend-url';
+  var API = (typeof window !== 'undefined' && window.NESTKEY_API) ? String(window.NESTKEY_API).replace(/\/$/, '') : '';
   var ROOM_RATE = 100;
 
   // Inline "no photo" tile (local SVG data URI) — no external example images.

@@ -1,6 +1,6 @@
 /* NestKey — simple app-shell cache. Network-first for API, cache-first for shell. */
-var CACHE = 'nestkey-v17';
-var SHELL = ["/", "/index.html", "/browse.html", "/post.html", "/services.html", "/account.html", "/dashboard.html", "/admin.html", "/privacy.html", "/cookies.html", "/about.html", "/contact.html", "/blog.html",  "/assets/styles.css", "/assets/app.js", "/assets/logo.png", "/assets/hero-bg.svg", "/manifest.webmanifest"];
+var CACHE = 'nestkey-v18';
+var SHELL = ["/", "/index.html", "/browse.html", "/post.html", "/services.html", "/account.html", "/dashboard.html", "/admin.html", "/privacy.html", "/cookies.html", "/about.html", "/contact.html", "/blog.html",  "/assets/styles.css", "/assets/app.js", "/assets/config.js", "/assets/logo.png", "/assets/hero-bg.svg", "/manifest.webmanifest"];
 
 self.addEventListener('install', function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(SHELL); }).then(function () { return self.skipWaiting(); }));

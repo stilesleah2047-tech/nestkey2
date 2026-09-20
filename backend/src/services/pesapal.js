@@ -46,32 +46,43 @@ async function ipnId() {
  * loaded in an IFRAME on our own site (no full-page redirect).
  */
 async function submitOrder({ merchantRef, amount, description, email, phone }) {
-  if (!configured()) return { ok: false, error: 'Card payments not configured' };
+  if (!config.pesapal.key || !config.pesapal.secret) return { ok: false, error: 'Card payments are not set up: add PESAPAL_KEY and PESAPAL_SECRET in .env.' };
+  if (!config.pesapal.callbackUrl || /localhost|127\.0\.0\.1/.test(config.pesapal.callbackUrl) || !/^https:/.test(config.pesapal.callbackUrl)) {
+    return { ok: false, error: 'Card payments need a public HTTPS callback. Set PESAPAL_CALLBACK_URL and PESAPAL_IPN_URL to your public URL (e.g. a dev tunnel or ngrok), not localhost.' };
+  }
+  let idn;
+  try { idn = await ipnId(); } catch (e) { return { ok: false, error: 'Pesapal setup failed (' + e.message + '). Check your keys and that PESAPAL_IPN_URL is a public HTTPS URL.' }; }
   const body = {
     id: merchantRef,
     currency: config.currency,
     amount: Math.round(amount),
     description: String(description || 'NestKey').slice(0, 100),
     callback_url: config.pesapal.callbackUrl,
-    notification_id: await ipnId(),
+    notification_id: idn,
     billing_address: {
-      email_address: email || 'customer@househunt.app',
+      email_address: email || 'customer@nestkey.app',
       phone_number: phone || '',
       country_code: 'KE',
-      first_name: 'House',
-      last_name: 'Hunt',
+      first_name: 'NestKey',
+      last_name: 'Customer',
     },
   };
-  const res = await fetch(`${BASE()}/api/Transactions/SubmitOrderRequest`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Accept: 'application/json', Authorization: `Bearer ${await token()}` },
-    body: JSON.stringify(body),
-  });
-  const data = await res.json();
+  let data;
+  try {
+    const res = await fetch(`${BASE()}/api/Transactions/SubmitOrderRequest`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json', Authorization: `Bearer ${await token()}` },
+      body: JSON.stringify(body),
+    });
+    data = await res.json();
+  } catch (e) {
+    return { ok: false, error: 'Could not reach Pesapal: ' + e.message };
+  }
   if (data.order_tracking_id && data.redirect_url) {
     return { ok: true, orderTrackingId: data.order_tracking_id, redirectUrl: data.redirect_url };
   }
-  return { ok: false, error: (data.error && data.error.message) || 'Could not start card payment' };
+  const msg = (data.error && (data.error.message || data.error.code)) || data.message || 'Pesapal rejected the order';
+  return { ok: false, error: String(msg) };
 }
 
 /** Returns 'yes' | 'failed' | 'pending' */
