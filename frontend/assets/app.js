@@ -95,6 +95,30 @@
   }
   initCookieConsent();
 
+  // Favourites — synced to your account when signed in, else stored on the device.
+  var FAVS = [];
+  function favsLocal(v) { try { if (v) localStorage.setItem('nk_favs', JSON.stringify(v)); return JSON.parse(localStorage.getItem('nk_favs') || '[]'); } catch (e) { return []; } }
+  function isFav(id) { return FAVS.indexOf(String(id)) > -1; }
+  function loadFavs(cb) {
+    if (getToken()) {
+      var local = favsLocal();
+      var done = function (ids) { FAVS = (ids || []).map(String); try { localStorage.removeItem('nk_favs'); } catch (e) {} if (cb) cb(); };
+      if (local.length) {
+        fetch(API + '/api/favourites/merge/all', { method: 'POST', headers: authHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify({ ids: local }) })
+          .then(function (r) { return r.json(); }).then(function (d) { done(d.ids); }).catch(function () { done(local); });
+      } else {
+        fetch(API + '/api/favourites', { headers: authHeaders() }).then(function (r) { return r.json(); }).then(function (d) { done(d.ids); }).catch(function () { done([]); });
+      }
+    } else { FAVS = favsLocal().map(String); if (cb) cb(); }
+  }
+  function toggleFav(id) {
+    id = String(id); var i = FAVS.indexOf(id); var added = i === -1;
+    if (added) FAVS.push(id); else FAVS.splice(i, 1);
+    if (getToken()) fetch(API + '/api/favourites/' + encodeURIComponent(id), { method: added ? 'POST' : 'DELETE', headers: authHeaders() }).catch(function () {});
+    else favsLocal(FAVS);
+    return added;
+  }
+
   function toast(msg) {
     var t = document.createElement('div');
     t.className = 'toast'; t.textContent = msg;
@@ -308,19 +332,25 @@
       var deal = l.deal === 'sale' ? 'For sale' : (l.deal === 'land' ? 'Land' : 'For rent');
       var photos = (l.photos && l.photos.length > 1) ? '<span class="photos">' + l.photos.length + ' photos</span>' : '';
       var showcase = l.tier === 'showcase' ? '<span class="tier-badge">Video</span>' : '';
+      var feat = l.featured ? '<span class="feat-badge">Featured</span>' : '';
+      var verified = l.verified ? '<span class="verified-badge" title="Verified">' + icon('star') + ' Verified</span>' : '';
+      var heart = '<button class="fav-btn' + (isFav(l.id) ? ' on' : '') + '" data-fav="' + l.id + '" aria-label="Save">' +
+        '<svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none"><path d="M12 21s-7-4.5-9.5-9A5 5 0 0112 5a5 5 0 019.5 7c-2.5 4.5-9.5 9-9.5 9z"/></svg></button>';
       return '<article class="card" data-id="' + l.id + '">' +
-        '<div class="media"><span class="deal">' + deal + '</span>' + showcase + photos +
+        '<div class="media"><span class="deal">' + deal + '</span>' + feat + showcase + photos + heart +
         '<img loading="lazy" src="' + img + '" alt=""></div>' +
         '<div class="body"><div class="price">' + money(l.price) + '</div>' +
-        '<h3>' + escapeHtml(l.title) + '</h3>' +
+        '<h3>' + escapeHtml(l.title) + '</h3>' + (verified ? '<div class="vrow">' + verified + '</div>' : '') +
         '<div class="loc">' + icon('pin') + ' ' + escapeHtml(l.location || l.region || '') + '</div>' +
         '<div class="meta">' + (l.beds ? '<span>' + icon('bed') + ' ' + l.beds + ' bed</span>' : '') +
         (l.baths ? '<span>' + icon('bath') + ' ' + l.baths + ' bath</span>' : '') + '</div></div></article>';
     }
 
+    var savedOnly = false;
     function render(items) {
       var res = $('results');
-      if (!items.length) { res.innerHTML = '<div class="empty"><h3>No listings match your search</h3></div>'; return; }
+      if (savedOnly) items = items.filter(function (l) { return isFav(l.id); });
+      if (!items.length) { res.innerHTML = '<div class="empty"><h3>' + (savedOnly ? 'No saved listings yet — tap the heart on a listing to save it.' : 'No listings match your search') + '</h3></div>'; return; }
       // Group by region for a "by area" layout.
       var groups = {};
       items.forEach(function (l) { var r = l.region || 'Other areas'; (groups[r] = groups[r] || []).push(l); });
@@ -329,6 +359,14 @@
           groups[r].map(card).join('') + '</div>';
       }).join('');
       res.innerHTML = html;
+      Array.prototype.forEach.call(res.querySelectorAll('.fav-btn'), function (b) {
+        b.addEventListener('click', function (e) {
+          e.stopPropagation();
+          var on = toggleFav(b.getAttribute('data-fav'));
+          b.classList.toggle('on', on);
+          if (savedOnly && !on) load();
+        });
+      });
       Array.prototype.forEach.call(res.querySelectorAll('.card'), function (c) {
         c.addEventListener('click', function () { openModal(c.getAttribute('data-id')); });
       });
@@ -415,6 +453,8 @@
         var main = (l.photos && l.photos[0]) || NOPHOTO;
         var deal = l.deal === 'sale' ? 'For sale' : (l.deal === 'land' ? 'Land' : 'For rent');
         var badge = l.tier === 'showcase' ? '<span class="tier-badge">Video showcase</span>' : '';
+        if (l.verified) badge += '<span class="verified-badge">' + icon('star') + ' Verified</span>';
+        if (l.featured) badge += '<span class="feat-badge">Featured</span>';
         var ownerPhone = (l.submitter && l.submitter.phone) ? String(l.submitter.phone).replace(/\D/g, '') : '';
         var waLink = ownerPhone
           ? '<a class="btn" style="margin-bottom:12px" target="_blank" rel="noopener" href="https://wa.me/' + ownerPhone + '?text=' + encodeURIComponent('Hi, I saw your listing "' + l.title + '" on NestKey') + '">Chat on WhatsApp</a>'
@@ -545,8 +585,13 @@
 
     ['deal', 'beds', 'minPrice', 'maxPrice', 'sort'].forEach(function (id) { $(id).addEventListener('change', load); });
     $('q').addEventListener('input', debounce(load, 300));
+    if ($('savedToggle')) $('savedToggle').addEventListener('click', function () {
+      savedOnly = !savedOnly;
+      $('savedToggle').classList.toggle('active', savedOnly);
+      render(lastItems);
+    });
     loadRegions();
-    load();
+    loadFavs(function () { load(); });
 
     // Realtime-ready: refresh listings periodically so newly posted homes appear
     // without a manual reload. Pauses while a listing modal is open.
@@ -1395,7 +1440,31 @@
       }).catch(function () {});
     }
 
-    loadOverview(); loadFeed(); loadAdminListings();
+    function loadUsers() {
+      fetch(API + '/api/admin/users', { headers: authHeaders() }).then(function (r) { return r.json(); }).then(function (d) {
+        var items = (d && d.items) || [];
+        if (!items.length) { $('admin-users').innerHTML = '<p class="dc-sub">No users yet.</p>'; return; }
+        $('admin-users').innerHTML = '<table class="dash-table"><thead><tr><th>User</th><th>Role</th><th>KYC (ID / KRA)</th><th>Listings</th><th>Verified</th><th>Action</th></tr></thead><tbody>' +
+          items.map(function (u) {
+            var kyc = (u.idNumber || '—') + ' / ' + (u.kraPin || '—');
+            var act = u.verified
+              ? '<button class="mini-btn" data-v="unverify" data-id="' + u.id + '">Unverify</button>'
+              : '<button class="mini-btn primary" data-v="verify" data-id="' + u.id + '">Verify</button>';
+            return '<tr><td><strong>' + escapeHtml(u.name || '—') + '</strong><br><span class="dc-sub">' + escapeHtml(u.email) + (u.businessName ? ' · ' + escapeHtml(u.businessName) : '') + '</span></td>' +
+              '<td>' + escapeHtml(u.role || '') + '</td><td>' + escapeHtml(kyc) + '</td><td>' + (u.listings || 0) + '</td>' +
+              '<td><span class="pill ' + (u.verified ? 'ok' : 'muted') + '">' + (u.verified ? 'verified' : 'no') + '</span></td>' +
+              '<td>' + act + '</td></tr>';
+          }).join('') + '</tbody></table>';
+        Array.prototype.forEach.call($('admin-users').querySelectorAll('button[data-v]'), function (b) {
+          b.addEventListener('click', function () {
+            fetch(API + '/api/admin/users/' + b.getAttribute('data-id') + '/' + b.getAttribute('data-v'), { method: 'POST', headers: authHeaders() })
+              .then(function () { loadUsers(); });
+          });
+        });
+      }).catch(function () {});
+    }
+
+    loadOverview(); loadFeed(); loadAdminListings(); loadUsers();
     setInterval(function () { loadOverview(); loadAdminListings(); }, 60000);
 
     // Live: prepend new activity as it happens.

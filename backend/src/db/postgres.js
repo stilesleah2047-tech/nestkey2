@@ -27,6 +27,8 @@ function row(r) {
     videos: Array.isArray(r.videos) ? r.videos : [],
     rooms: Array.isArray(r.rooms) ? r.rooms : [],
     tier: r.tier || 'standard',
+    featured: !!r.featured,
+    verified: !!r.verified,
     ownerId: r.owner_id ? String(r.owner_id) : null,
     views: r.views || 0,
     status: r.status,
@@ -88,6 +90,7 @@ module.exports = {
     let order = 'created_at DESC';
     if (f.sort === 'price-asc') order = 'price ASC';
     else if (f.sort === 'price-desc') order = 'price DESC';
+    order = 'featured DESC, ' + order;
 
     const limit = Math.min(f.limit || 24, 100);
     const offset = ((f.page || 1) - 1) * limit;
@@ -243,6 +246,9 @@ Object.assign(module.exports, {
   },
   async setStatus(id, status) {
     await pool.query('UPDATE listings SET status = $1 WHERE id = $2', [status, id]);
+  },
+  async setListingFlags(id, { featured, verified }) {
+    await pool.query('UPDATE listings SET featured = $1, verified = $2 WHERE id = $3', [!!featured, !!verified, id]);
   },
   async updateOwned(id, ownerId, f) {
     await pool.query(
@@ -404,4 +410,36 @@ Object.assign(module.exports, {
     return rows.map(row);
   },
   async deleteAny(id) { await pool.query('DELETE FROM listings WHERE id = $1', [id]); },
+});
+
+Object.assign(module.exports, {
+  // Favourites
+  async listFavIds(userId) {
+    const { rows } = await pool.query('SELECT listing_id FROM favourites WHERE user_id=$1 ORDER BY created_at DESC', [userId]);
+    return rows.map((r) => String(r.listing_id));
+  },
+  async addFav(userId, listingId) {
+    await pool.query('INSERT INTO favourites (user_id, listing_id) VALUES ($1,$2) ON CONFLICT DO NOTHING', [userId, listingId]);
+  },
+  async removeFav(userId, listingId) {
+    await pool.query('DELETE FROM favourites WHERE user_id=$1 AND listing_id=$2', [userId, listingId]);
+  },
+
+  // Verification (admin)
+  async setUserVerified(userId, val) {
+    await pool.query('UPDATE users SET verified=$1 WHERE id=$2', [!!val, userId]);
+    await pool.query('UPDATE listings SET verified=$1 WHERE owner_id=$2', [!!val, userId]);
+  },
+  async listUsersForAdmin(limit) {
+    const { rows } = await pool.query(
+      `SELECT u.id, u.name, u.email, u.phone, u.role, u.company, u.business_name, u.id_number, u.kra_pin, u.verified, u.created_at,
+       (SELECT count(*)::int FROM listings l WHERE l.owner_id = u.id) AS listings
+       FROM users u ORDER BY u.verified ASC, u.created_at DESC LIMIT $1`, [limit || 100]
+    );
+    return rows.map((r) => ({
+      id: String(r.id), name: r.name, email: r.email, phone: r.phone, role: r.role,
+      company: r.company, businessName: r.business_name, idNumber: r.id_number, kraPin: r.kra_pin,
+      verified: r.verified, listings: r.listings, createdAt: r.created_at,
+    }));
+  },
 });

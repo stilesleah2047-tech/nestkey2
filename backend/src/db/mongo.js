@@ -20,6 +20,8 @@ const listingSchema = new mongoose.Schema({
   videos: { type: [String], default: [] },
   rooms: { type: Array, default: [] },
   tier: { type: String, default: 'standard' },
+  featured: { type: Boolean, default: false },
+  verified: { type: Boolean, default: false },
   ownerId: String,
   views: { type: Number, default: 0 },
   submitter: { name: String, phone: String, email: String },
@@ -46,7 +48,7 @@ function out(d) {
     beds: o.beds || 0, baths: o.baths || 0, size: o.size,
     region: o.region, county: o.county, areaAcres: o.areaAcres, lat: o.lat != null ? o.lat : null, lng: o.lng != null ? o.lng : null, location: o.location, description: o.description,
     photos: o.photos || [], status: o.status, paid: o.paid, amount: o.amount || 0,
-    videos: o.videos || [], rooms: o.rooms || [], tier: o.tier || 'standard',
+    videos: o.videos || [], rooms: o.rooms || [], tier: o.tier || 'standard', featured: !!o.featured, verified: !!o.verified,
     ownerId: o.ownerId ? String(o.ownerId) : null, views: o.views || 0,
     checkoutId: o.checkoutId, receipt: o.receipt,
     submitter: o.submitter || {}, createdAt: o.createdAt,
@@ -91,9 +93,9 @@ module.exports = {
       const re = new RegExp(escapeRe(f.q), 'i');
       query.$or = [{ title: re }, { location: re }, { type: re }];
     }
-    let sort = { createdAt: -1 };
-    if (f.sort === 'price-asc') sort = { price: 1 };
-    else if (f.sort === 'price-desc') sort = { price: -1 };
+    let sort = { featured: -1, createdAt: -1 };
+    if (f.sort === 'price-asc') sort = { featured: -1, price: 1 };
+    else if (f.sort === 'price-desc') sort = { featured: -1, price: -1 };
 
     const limit = Math.min(f.limit || 24, 100);
     const page = f.page || 1;
@@ -216,6 +218,7 @@ Object.assign(module.exports, {
   async getOwned(id, ownerId) { return mongoose.isValidObjectId(id) ? out(await Listing.findOne({ _id: id, ownerId })) : null; },
   async countPublishedByOwner(ownerId) { return Listing.countDocuments({ ownerId, status: 'published' }); },
   async setStatus(id, status) { await Listing.findByIdAndUpdate(id, { status }); },
+  async setListingFlags(id, { featured, verified }) { await Listing.findByIdAndUpdate(id, { featured: !!featured, verified: !!verified }); },
   async updateOwned(id, ownerId, f) { await Listing.findOneAndUpdate({ _id: id, ownerId }, f); },
   async deleteOwned(id, ownerId) { await Listing.findOneAndDelete({ _id: id, ownerId }); },
   async incrementViews(id) { if (mongoose.isValidObjectId(id)) await Listing.findByIdAndUpdate(id, { $inc: { views: 1 } }); },
@@ -358,4 +361,32 @@ Object.assign(module.exports, {
   },
   async adminListings(limit) { return (await Listing.find({}).sort({ createdAt: -1 }).limit(limit || 60)).map(out); },
   async deleteAny(id) { if (mongoose.isValidObjectId(id)) await Listing.findByIdAndDelete(id); },
+});
+
+const favSchema = new mongoose.Schema({ userId: String, listingId: String }, { timestamps: true });
+favSchema.index({ userId: 1, listingId: 1 }, { unique: true });
+const Fav = mongoose.model('Fav', favSchema);
+
+Object.assign(module.exports, {
+  async listFavIds(userId) {
+    return (await Fav.find({ userId }).sort({ createdAt: -1 })).map((f) => String(f.listingId));
+  },
+  async addFav(userId, listingId) {
+    try { await Fav.create({ userId, listingId: String(listingId) }); } catch (e) { /* dup */ }
+  },
+  async removeFav(userId, listingId) { await Fav.deleteOne({ userId, listingId: String(listingId) }); },
+
+  async setUserVerified(userId, val) {
+    await User.findByIdAndUpdate(userId, { verified: !!val });
+    await Listing.updateMany({ ownerId: String(userId) }, { verified: !!val });
+  },
+  async listUsersForAdmin(limit) {
+    const us = await User.find({}).sort({ verified: 1, createdAt: -1 }).limit(limit || 100);
+    const out = [];
+    for (const u of us) {
+      const listings = await Listing.countDocuments({ ownerId: String(u._id) });
+      out.push({ id: String(u._id), name: u.name, email: u.email, phone: u.phone, role: u.role, company: u.company, businessName: u.businessName, idNumber: u.idNumber, kraPin: u.kraPin, verified: u.verified, listings, createdAt: u.createdAt });
+    }
+    return out;
+  },
 });

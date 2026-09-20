@@ -23,6 +23,7 @@ app.use('/api/admin', require('./src/routes/admin'));
 app.use('/api/rent', require('./src/routes/rent'));
 app.use('/api/ratings', require('./src/routes/ratings'));
 app.use('/api/contact', require('./src/routes/contact'));
+app.use('/api/favourites', require('./src/routes/favourites'));
 
 // Real-time stream (Server-Sent Events). ?token= to also receive private/admin events.
 const events = require('./src/events');

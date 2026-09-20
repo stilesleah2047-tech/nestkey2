@@ -136,3 +136,14 @@ ALTER TABLE listings ADD COLUMN IF NOT EXISTS area_acres NUMERIC;
 
 ALTER TABLE listings ADD COLUMN IF NOT EXISTS lat NUMERIC;
 ALTER TABLE listings ADD COLUMN IF NOT EXISTS lng NUMERIC;
+
+ALTER TABLE listings ADD COLUMN IF NOT EXISTS featured BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE listings ADD COLUMN IF NOT EXISTS verified BOOLEAN NOT NULL DEFAULT false;
+CREATE INDEX IF NOT EXISTS idx_listings_featured ON listings (featured);
+
+CREATE TABLE IF NOT EXISTS favourites (
+  user_id     BIGINT NOT NULL,
+  listing_id  BIGINT NOT NULL,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (user_id, listing_id)
+);

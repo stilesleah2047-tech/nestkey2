@@ -112,6 +112,10 @@ router.post('/listings/:id/publish', async (req, res) => {
     }
   }
   await db.setStatus(req.params.id, 'published');
+  // Pro & Agency get featured placement; the verified badge comes from admin approval.
+  var isPremium = plan && (plan.id === 'pro' || plan.id === 'agency');
+  var owner = await db.findUserById(uid);
+  await db.setListingFlags(req.params.id, { featured: isPremium, verified: !!(owner && owner.verified) });
   const fresh = await db.getById(req.params.id);
   events.emit('listing.published', {
     id: fresh.id, title: fresh.title, price: fresh.price, region: fresh.region,

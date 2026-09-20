@@ -1,15 +1,15 @@
 // Subscription plans. `maxListings` caps how many published listings a poster
-// can have (null = unlimited). Consumer "hunter" plan doesn't post (maxListings 0).
+// can have (null = unlimited). Every feature listed here is delivered by the app.
 const PLANS = [
   {
     id: 'hunter', name: 'Hunter Plus', audience: 'For house hunters',
     monthly: 299, annual: 2990, maxListings: 0,
     features: [
-      'Instant alerts when a match is posted in your areas',
-      'Early access to new listings before everyone else',
-      'Unlimited saved searches & favourites',
-      'See verified, scam-checked listings only',
-      'Priority support',
+      'Save unlimited favourite listings',
+      'Contact owners directly by phone & WhatsApp',
+      'See exact map locations & get directions',
+      'Watch room-by-room video showcases',
+      'Priority email support',
     ],
   },
   {
@@ -18,8 +18,9 @@ const PLANS = [
     features: [
       'Publish up to 5 active properties',
       'Agent / landlord dashboard',
-      'Enquiries & leads inbox',
+      'Enquiries & leads inbox with WhatsApp',
       'Views analytics per listing',
+      'Photos, videos & exact map pin',
       'Pay by M-Pesa or card',
     ],
   },
@@ -29,9 +30,9 @@ const PLANS = [
     features: [
       'Publish up to 20 active properties',
       'Everything in Starter',
-      'Featured placement on your listings',
-      'Verified landlord badge',
-      'WhatsApp lead forwarding',
+      'Featured placement — your listings show first',
+      'Verified badge on your listings',
+      'Video showcase included',
     ],
   },
   {
@@ -39,10 +40,10 @@ const PLANS = [
     monthly: 4500, annual: 45000, maxListings: null,
     features: [
       'Unlimited listings',
-      'Top-of-search priority placement',
-      'Branded agency profile page',
-      'Team member access',
-      'Dedicated account support',
+      'Everything in Pro',
+      'Top-of-search featured placement',
+      'Verified badge on every listing',
+      'Priority support',
     ],
   },
 ];
