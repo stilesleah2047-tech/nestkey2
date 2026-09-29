@@ -927,6 +927,12 @@
       $('subLine').textContent = current.audience + ' · billed ' + billing;
       $('subAmount').textContent = money(amount) + (billing === 'annual' ? ' / year' : ' / month');
       $('subStatus').className = 'status'; $('subStatus').innerHTML = '';
+      subVia = 'mpesa';
+      if ($('subPayVia')) {
+        Array.prototype.forEach.call($('subPayVia').querySelectorAll('button'), function (x) {
+          x.classList.toggle('active', x.getAttribute('data-via') === 'mpesa');
+        });
+      }
       $('subPay').disabled = false; $('subPay').textContent = 'Pay with M-Pesa';
       $('subModal').classList.add('open');
     }
@@ -941,6 +947,9 @@
         b.addEventListener('click', function () {
           Array.prototype.forEach.call($('subPayVia').querySelectorAll('button'), function (x) { x.classList.remove('active'); });
           b.classList.add('active'); subVia = b.getAttribute('data-via');
+          if ($('subPay').textContent.indexOf('\u2713') === -1) {
+            $('subPay').textContent = subVia === 'pesapal' ? 'Pay by card' : 'Pay with M-Pesa';
+          }
         });
       });
     }
