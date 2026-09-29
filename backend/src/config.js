@@ -18,6 +18,17 @@ module.exports = {
   jwtSecret: process.env.JWT_SECRET || 'dev-secret-change-me-in-production',
   adminEmails: (process.env.ADMIN_EMAILS || '').split(',').map(function (s) { return s.trim().toLowerCase(); }).filter(Boolean),
   commissionRate: parseFloat(process.env.COMMISSION_RATE || '0.08'),
+  storage: {
+    // 's3' or 'r2' => object storage (both use the S3 API). Anything else => local disk.
+    driver: (process.env.STORAGE_DRIVER || (process.env.S3_BUCKET ? 's3' : 'local')).toLowerCase(),
+    bucket: process.env.S3_BUCKET || '',
+    region: process.env.S3_REGION || 'auto',
+    endpoint: process.env.S3_ENDPOINT || '',
+    accessKeyId: process.env.S3_ACCESS_KEY_ID || '',
+    secretAccessKey: process.env.S3_SECRET_ACCESS_KEY || '',
+    publicBase: process.env.S3_PUBLIC_BASE || '',
+    forcePathStyle: /^true$/i.test(process.env.S3_FORCE_PATH_STYLE || ''),
+  },
   publicUrlFront: process.env.PUBLIC_URL || 'http://localhost:4000',
   pesapal: {
     env: (process.env.PESAPAL_ENV || 'sandbox').toLowerCase(),
