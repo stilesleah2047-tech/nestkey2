@@ -33,7 +33,7 @@ router.get('/listings', async (_req, res) => {
 });
 
 router.post('/listings/:id/unpublish', async (req, res) => { await db.setStatus(req.params.id, 'draft'); res.json({ ok: true }); });
-router.post('/listings/:id/publish', async (req, res) => { await db.setStatus(req.params.id, 'published'); res.json({ ok: true }); });
+router.post('/listings/:id/publish', async (req, res) => { await db.markPaid(req.params.id, { receipt: 'admin-published' }); res.json({ ok: true }); });
 router.delete('/listings/:id', async (req, res) => { await db.deleteAny(req.params.id); res.json({ ok: true }); });
 
 // Users & verification
