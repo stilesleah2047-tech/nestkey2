@@ -111,7 +111,7 @@ router.post('/listings/:id/publish', async (req, res) => {
       return res.status(403).json({ error: `You've reached your plan limit of ${max} published listings. Upgrade to publish more.`, quota: true });
     }
   }
-  await db.setStatus(req.params.id, 'published');
+  await db.markPaid(req.params.id, { receipt: l.receipt || 'plan-published' });
   // Pro & Agency get featured placement; the verified badge comes from admin approval.
   var isPremium = plan && (plan.id === 'pro' || plan.id === 'agency');
   var owner = await db.findUserById(uid);
