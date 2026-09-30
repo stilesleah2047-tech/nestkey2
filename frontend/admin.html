@@ -7,42 +7,89 @@
   <meta name="theme-color" content="#0B1B2B">
   <link rel="icon" type="image/png" href="/assets/icon-192.png">
   <link rel="stylesheet" href="/assets/styles.css">
+  <link rel="stylesheet" href="/assets/admin.css">
 </head>
-<body>
-  <header class="top"><div class="wrap">
-    <a class="brand" href="/"><img class="brand-mark" src="/assets/logo.png" alt="NestKey"><span class="brand-word">Nest<b>Key</b></span></a>
-    <nav><a href="/admin.html" class="active">Command Center</a><a href="/browse.html">Browse</a><a href="#" id="signout">Sign out</a></nav>
-  </div></header>
+<body class="admin-body">
+  <div class="admin-shell" id="adminShell">
 
-  <section class="section"><div class="wrap" id="admin">
-    <div class="admin-head">
-      <h1>Command Center</h1>
-      <span class="live-dot" id="live-dot" title="Live">● live</span>
-    </div>
-
-    <div class="kpi-grid" id="kpis"></div>
-
-    <div class="admin-grid">
-      <div class="admin-col">
-        <h2>Activity feed</h2>
-        <div class="feed" id="feed"><p class="dc-sub">Loading…</p></div>
+    <!-- ---------------- Sidebar ---------------- -->
+    <aside class="side">
+      <a class="side-brand" href="/"><img src="/assets/logo.png" alt="NestKey"><b>Nest<i>Key</i></b></a>
+      <nav>
+        <div class="nav-label">Overview</div>
+        <a href="#top" class="active"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg> Dashboard</a>
+        <a href="#sec-listings"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg> Listings</a>
+        <a href="#sec-users"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg> Users</a>
+        <a href="#sec-activity"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg> Activity</a>
+        <div class="nav-label">Site</div>
+        <a href="/browse.html"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg> Browse site</a>
+        <a href="/services.html"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg> Plans</a>
+        <div class="side-sep"></div>
+        <a href="#" id="signout"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/></svg> Sign out</a>
+      </nav>
+      <div class="promo">
+        <div class="promo-ic"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg></div>
+        <h4>Better homes, faster</h4>
+        <p>Moderate listings, verify agents and keep NestKey trusted — all from one place.</p>
       </div>
-      <div class="admin-col">
-        <h2>Listings by county</h2>
-        <div class="bars" id="by-county"></div>
-        <h2 style="margin-top:24px">By type</h2>
-        <div class="bars" id="by-deal"></div>
-      </div>
+    </aside>
+
+    <!-- ---------------- Main ---------------- -->
+    <div class="main">
+      <header class="topbar">
+        <button class="dc-menu-btn" id="dcMenu" aria-label="Menu"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+        <div class="search">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
+          <input id="admin-search" type="search" placeholder="Search listings, users, or anything…" autocomplete="off">
+        </div>
+        <div class="tb-actions">
+          <a class="bell" href="#sec-activity" title="Activity"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9a6 6 0 1112 0c0 5 2 6 2 6H4s2-1 2-6z"/><path d="M10 21h4"/></svg><span class="dot"></span></a>
+          <div class="who">
+            <span class="avatar" id="dc-initials">A</span>
+            <span class="who-meta"><span class="who-name" id="dc-user-name">Admin</span><br><span class="who-role">Administrator</span></span>
+          </div>
+        </div>
+      </header>
+
+      <main class="canvas" id="admin">
+        <a id="top"></a>
+        <section class="dc-banner">
+          <img class="banner-art" src="/assets/hero-bg.svg" alt="" aria-hidden="true">
+          <h1>Command Center</h1>
+          <p>Everything happening on NestKey — listings, users, payments and activity — in real time.</p>
+          <span class="live-dot" id="live-dot" title="Live">Live</span>
+        </section>
+
+        <div class="kpi-grid" id="kpis"></div>
+
+        <div class="admin-grid">
+          <div class="admin-col" id="sec-activity">
+            <h2>Activity feed</h2>
+            <div class="feed" id="feed"><p class="dc-sub">Loading…</p></div>
+          </div>
+          <div class="admin-col">
+            <h2>Listings by county</h2>
+            <div class="bars" id="by-county"></div>
+            <h2 style="margin-top:22px">By type</h2>
+            <div class="bars" id="by-deal"></div>
+          </div>
+        </div>
+
+        <section class="dc-section" id="sec-listings">
+          <h2>Recent listings</h2>
+          <p class="dc-sub">Moderate what appears on the public site.</p>
+          <div class="dc-table-wrap" id="admin-listings"></div>
+        </section>
+
+        <section class="dc-section" id="sec-users">
+          <h2>Users &amp; verification</h2>
+          <p class="dc-sub">Review accounts and confirm ID / KRA verification.</p>
+          <div class="dc-table-wrap" id="admin-users"></div>
+        </section>
+      </main>
     </div>
+  </div>
 
-    <h2 style="margin-top:34px">Recent listings — moderation</h2>
-    <div id="admin-listings"></div>
-
-    <h2 style="margin-top:34px">Users &amp; verification</h2>
-    <div id="admin-users"></div>
-  </div></section>
-
-  <footer class="foot"><div class="wrap">NestKey · Command Center · <a href="/privacy.html">Privacy</a> · <a href="/cookies.html">Cookies</a></div></footer>
   <script src="/assets/config.js"></script>
   <script src="/assets/app.js"></script>
 </body>
