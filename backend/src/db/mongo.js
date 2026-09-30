@@ -361,6 +361,21 @@ Object.assign(module.exports, {
   },
   async adminListings(limit) { return (await Listing.find({}).sort({ createdAt: -1 }).limit(limit || 60)).map(out); },
   async deleteAny(id) { if (mongoose.isValidObjectId(id)) await Listing.findByIdAndDelete(id); },
+
+  // Enquiries (leads) for the admin Command Center
+  async adminLeads(limit) {
+    const lds = await Lead.find({}).sort({ createdAt: -1 }).limit(limit || 100);
+    const ids = lds.map((l) => l.listingId).filter((i) => i && mongoose.isValidObjectId(i));
+    const titles = {};
+    if (ids.length) {
+      (await Listing.find({ _id: { $in: ids } })).forEach((li) => { titles[String(li._id)] = li.title; });
+    }
+    return lds.map((l) => ({
+      id: String(l._id), name: l.name, phone: l.phone, message: l.message,
+      listingTitle: titles[String(l.listingId)] || null, createdAt: l.createdAt,
+    }));
+  },
+  async deleteLead(id) { if (mongoose.isValidObjectId(id)) await Lead.findByIdAndDelete(id); },
 });
 
 const favSchema = new mongoose.Schema({ userId: String, listingId: String }, { timestamps: true });
