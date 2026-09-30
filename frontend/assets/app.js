@@ -1396,7 +1396,7 @@
       if (!box) return;
       box.addEventListener('input', function () {
         var q = box.value.trim().toLowerCase();
-        ['admin-listings', 'admin-users'].forEach(function (id) {
+        ['admin-listings', 'admin-users', 'admin-leads'].forEach(function (id) {
           var host = document.getElementById(id);
           if (!host) return;
           Array.prototype.forEach.call(host.querySelectorAll('tbody tr'), function (tr) {
@@ -1406,7 +1406,7 @@
       });
     })();
 
-    var iconFor = {listing: icon('home'), user: icon('user'), subscription: icon('card'), payment: icon('cash'), lead: icon('mail'), rating: icon('star') };
+    var iconFor = { listing: icon('home'), user: icon('user'), subscription: icon('card'), payment: icon('cash'), lead: icon('mail'), rating: icon('star') };
 
     function timeAgo(d) {
       var s = Math.floor((Date.now() - new Date(d).getTime()) / 1000);
@@ -1418,7 +1418,8 @@
     function feedRow(it) {
       return '<div class="feed-row"><span class="feed-ic">' + (iconFor[it.kind] || '•') + '</span>' +
         '<span class="feed-text">' + escapeHtml(it.text) + '</span>' +
-        '<span class="feed-time">' + timeAgo(it.at) + '</span></div>';
+        '<span class="feed-time">' + timeAgo(it.at) + '</span>' +
+        '<button class="feed-x" type="button" title="Dismiss" aria-label="Dismiss">&times;</button></div>';
     }
 
     function bars(el, rows) {
@@ -1448,12 +1449,14 @@
           { n: money(s.salesValue || 0), l: 'Sales value', ic: 'cash', t: 'blue' },
           { n: money(s.commissionCollected || 0), l: 'Commission earned', ic: 'cash', t: 'green' },
           { n: money(s.commissionOwed || 0), l: 'Commission owed', ic: 'cash', t: 'amber' },
-          { n: s.leads || 0, l: 'Enquiries', ic: 'mail', t: 'blue' },
+          { n: s.leads || 0, l: 'Enquiries', ic: 'mail', t: 'blue', go: 'sec-enquiries' },
           { n: (d.ratings && d.ratings.count ? d.ratings.average.toFixed(1) : '—'), l: 'Avg rating', ic: 'star', t: 'amber' },
         ];
         $('kpis').innerHTML = kpis.map(function (k) {
-          return '<div class="kpi"><span class="kpi-ic ' + k.t + '">' + icon(k.ic) + '</span>' +
-            '<div class="kpi-body"><div class="kpi-num">' + k.n + '</div><div class="kpi-lbl">' + k.l + '</div></div></div>';
+          var inner = '<span class="kpi-ic ' + k.t + '">' + icon(k.ic) + '</span>' +
+            '<div class="kpi-body"><div class="kpi-num">' + k.n + '</div><div class="kpi-lbl">' + k.l + '</div></div>';
+          return k.go ? '<a class="kpi kpi-link" href="#' + k.go + '">' + inner + '</a>'
+                      : '<div class="kpi">' + inner + '</div>';
         }).join('');
         bars($('by-county'), s.byCounty);
         bars($('by-deal'), (s.byDeal || []).map(function (x) { return { label: (x.label === 'rent' ? 'For rent' : x.label === 'sale' ? 'For sale' : 'Land'), count: x.count }; }));
@@ -1464,6 +1467,46 @@
       fetch(API + '/api/admin/activity', { headers: authHeaders() }).then(function (r) { return r.json(); }).then(function (d) {
         var items = (d && d.items) || [];
         $('feed').innerHTML = items.length ? items.map(feedRow).join('') : '<p class="dc-sub">No activity yet.</p>';
+      }).catch(function () {});
+    }
+
+    function emptyFeed() { var f = $('feed'); if (f) f.innerHTML = '<p class="dc-sub">Feed cleared. New activity will appear here.</p>'; }
+    // Dismiss a single feed row, or clear the whole feed (view only — see note below).
+    (function () {
+      var feed = $('feed');
+      if (feed) feed.addEventListener('click', function (e) {
+        var x = e.target.closest && e.target.closest('.feed-x');
+        if (!x) return;
+        var row = x.closest('.feed-row');
+        if (row) row.parentNode.removeChild(row);
+        if (feed.children.length === 0) emptyFeed();
+      });
+      var clr = document.getElementById('feed-clear');
+      if (clr) clr.addEventListener('click', function () {
+        if (confirm('Clear the activity feed from view? (New activity will still appear.)')) emptyFeed();
+      });
+    })();
+
+    function loadLeads() {
+      fetch(API + '/api/admin/leads', { headers: authHeaders() }).then(function (r) { return r.json(); }).then(function (d) {
+        var items = (d && d.items) || [];
+        if (!items.length) { $('admin-leads').innerHTML = '<p class="dc-sub">No enquiries yet.</p>'; return; }
+        $('admin-leads').innerHTML = '<table class="dash-table"><thead><tr><th>From</th><th>Contact</th><th>Property</th><th>Message</th><th>When</th><th>Action</th></tr></thead><tbody>' +
+          items.map(function (l) {
+            return '<tr><td><strong>' + escapeHtml(l.name || 'Someone') + '</strong></td>' +
+              '<td>' + escapeHtml(l.phone || '—') + '</td>' +
+              '<td>' + escapeHtml(l.listingTitle || '—') + '</td>' +
+              '<td>' + escapeHtml(l.message || '') + '</td>' +
+              '<td><span class="dc-sub">' + timeAgo(l.createdAt) + '</span></td>' +
+              '<td class="acts"><button class="mini-btn danger" data-lead="' + l.id + '">Delete</button></td></tr>';
+          }).join('') + '</tbody></table>';
+        Array.prototype.forEach.call($('admin-leads').querySelectorAll('button[data-lead]'), function (b) {
+          b.addEventListener('click', function () {
+            if (!confirm('Delete this enquiry permanently?')) return;
+            fetch(API + '/api/admin/leads/' + b.getAttribute('data-lead'), { method: 'DELETE', headers: authHeaders() })
+              .then(function () { loadLeads(); loadOverview(); });
+          });
+        });
       }).catch(function () {});
     }
 
@@ -1518,7 +1561,7 @@
       }).catch(function () {});
     }
 
-    loadOverview(); loadFeed(); loadAdminListings(); loadUsers();
+    loadOverview(); loadFeed(); loadAdminListings(); loadUsers(); loadLeads();
     setInterval(function () { loadOverview(); loadAdminListings(); }, 60000);
 
     // Live: prepend new activity as it happens.
