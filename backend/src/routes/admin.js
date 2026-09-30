@@ -33,7 +33,7 @@ router.get('/listings', async (_req, res) => {
 });
 
 router.post('/listings/:id/unpublish', async (req, res) => { await db.setStatus(req.params.id, 'draft'); res.json({ ok: true }); });
-router.post('/listings/:id/publish', async (req, res) => { await db.markPaid(req.params.id, { receipt: 'admin-published' }); res.json({ ok: true }); });
+router.post('/listings/:id/publish', async (req, res) => { await db.setStatus(req.params.id, 'published'); res.json({ ok: true }); });
 router.delete('/listings/:id', async (req, res) => { await db.deleteAny(req.params.id); res.json({ ok: true }); });
 
 // Users & verification
@@ -43,5 +43,12 @@ router.get('/users', async (_req, res) => {
 });
 router.post('/users/:id/verify', async (req, res) => { await db.setUserVerified(req.params.id, true); res.json({ ok: true }); });
 router.post('/users/:id/unverify', async (req, res) => { await db.setUserVerified(req.params.id, false); res.json({ ok: true }); });
+
+// Enquiries (leads) — read + delete
+router.get('/leads', async (_req, res) => {
+  try { res.json({ items: await db.adminLeads(100) }); }
+  catch (e) { res.status(500).json({ error: 'Could not load enquiries' }); }
+});
+router.delete('/leads/:id', async (req, res) => { await db.deleteLead(req.params.id); res.json({ ok: true }); });
 
 module.exports = router;
