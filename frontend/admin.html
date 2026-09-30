@@ -20,6 +20,7 @@
         <a href="#top" class="active"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg> Dashboard</a>
         <a href="#sec-listings"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg> Listings</a>
         <a href="#sec-users"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg> Users</a>
+        <a href="#sec-enquiries"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v14H4z"/><path d="M4 7l8 6 8-6"/></svg> Enquiries</a>
         <a href="#sec-activity"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg> Activity</a>
         <div class="nav-label">Site</div>
         <a href="/browse.html"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg> Browse site</a>
@@ -64,7 +65,7 @@
 
         <div class="admin-grid">
           <div class="admin-col" id="sec-activity">
-            <h2>Activity feed</h2>
+            <div class="col-head"><h2>Activity feed</h2><button class="mini-btn" id="feed-clear" type="button">Clear</button></div>
             <div class="feed" id="feed"><p class="dc-sub">Loading…</p></div>
           </div>
           <div class="admin-col">
@@ -85,6 +86,12 @@
           <h2>Users &amp; verification</h2>
           <p class="dc-sub">Review accounts and confirm ID / KRA verification.</p>
           <div class="dc-table-wrap" id="admin-users"></div>
+        </section>
+
+        <section class="dc-section" id="sec-enquiries">
+          <h2>Enquiries</h2>
+          <p class="dc-sub">Messages buyers and tenants sent through property enquiry forms.</p>
+          <div class="dc-table-wrap" id="admin-leads"></div>
         </section>
       </main>
     </div>
