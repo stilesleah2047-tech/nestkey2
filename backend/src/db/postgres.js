@@ -410,6 +410,20 @@ Object.assign(module.exports, {
     return rows.map(row);
   },
   async deleteAny(id) { await pool.query('DELETE FROM listings WHERE id = $1', [id]); },
+
+  // Enquiries (leads) for the admin Command Center
+  async adminLeads(limit) {
+    const { rows } = await pool.query(
+      `SELECT l.id, l.name, l.phone, l.message, l.created_at, li.title AS listing_title
+       FROM leads l LEFT JOIN listings li ON li.id = l.listing_id
+       ORDER BY l.created_at DESC LIMIT $1`, [limit || 100]
+    );
+    return rows.map((r) => ({
+      id: String(r.id), name: r.name, phone: r.phone, message: r.message,
+      listingTitle: r.listing_title, createdAt: r.created_at,
+    }));
+  },
+  async deleteLead(id) { await pool.query('DELETE FROM leads WHERE id = $1', [id]); },
 });
 
 Object.assign(module.exports, {
