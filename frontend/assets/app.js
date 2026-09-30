@@ -1365,7 +1365,48 @@
     if (!getToken()) { location.href = '/account.html'; }
     if ($('signout')) $('signout').addEventListener('click', function (e) { e.preventDefault(); clearAuth(); location.href = '/'; });
 
-    var iconFor = { listing: icon('home'), user: icon('user'), subscription: icon('card'), payment: icon('cash'), lead: icon('mail'), rating: icon('star') };
+    // Populate topbar profile from the signed-in user
+    (function () {
+      var u = currentUser() || {};
+      var name = u.name || u.email || 'Admin';
+      if ($('dc-user-name')) $('dc-user-name').textContent = name;
+      if ($('dc-initials')) {
+        var parts = String(name).trim().split(/\s+/);
+        var ini = (parts[0] ? parts[0][0] : 'A') + (parts[1] ? parts[1][0] : '');
+        $('dc-initials').textContent = ini.toUpperCase();
+      }
+    })();
+
+    // Mobile sidebar toggle
+    (function () {
+      var shell = document.getElementById('adminShell'), btn = document.getElementById('dcMenu');
+      if (btn && shell) {
+        btn.addEventListener('click', function () { shell.classList.toggle('nav-open'); });
+        shell.addEventListener('click', function (e) {
+          if (shell.classList.contains('nav-open') && (e.target === shell || (e.target.closest && e.target.closest('.side a')))) {
+            shell.classList.remove('nav-open');
+          }
+        });
+      }
+    })();
+
+    // Live search filter over both admin tables
+    (function () {
+      var box = document.getElementById('admin-search');
+      if (!box) return;
+      box.addEventListener('input', function () {
+        var q = box.value.trim().toLowerCase();
+        ['admin-listings', 'admin-users'].forEach(function (id) {
+          var host = document.getElementById(id);
+          if (!host) return;
+          Array.prototype.forEach.call(host.querySelectorAll('tbody tr'), function (tr) {
+            tr.style.display = (!q || tr.textContent.toLowerCase().indexOf(q) !== -1) ? '' : 'none';
+          });
+        });
+      });
+    })();
+
+    var iconFor = {listing: icon('home'), user: icon('user'), subscription: icon('card'), payment: icon('cash'), lead: icon('mail'), rating: icon('star') };
 
     function timeAgo(d) {
       var s = Math.floor((Date.now() - new Date(d).getTime()) / 1000);
@@ -1399,19 +1440,20 @@
       }).then(function (d) {
         var s = d.stats || {}, li = s.listings || {};
         var kpis = [
-          { n: s.users || 0, l: 'Users' },
-          { n: li.published || 0, l: 'Live listings' },
-          { n: li.draft || 0, l: 'Drafts' },
-          { n: s.subsActive || 0, l: 'Active plans' },
-          { n: money(s.subRevenue || 0), l: 'Plan revenue' },
-          { n: money(s.salesValue || 0), l: 'Sales value' },
-          { n: money(s.commissionCollected || 0), l: 'Commission earned' },
-          { n: money(s.commissionOwed || 0), l: 'Commission owed' },
-          { n: s.leads || 0, l: 'Enquiries' },
-          { n: (d.ratings && d.ratings.count ? d.ratings.average.toFixed(1) : '—'), l: 'Avg rating' },
+          { n: s.users || 0, l: 'Users', ic: 'user', t: 'blue' },
+          { n: li.published || 0, l: 'Live listings', ic: 'home', t: 'green' },
+          { n: li.draft || 0, l: 'Drafts', ic: 'tag', t: 'slate' },
+          { n: s.subsActive || 0, l: 'Active plans', ic: 'card', t: 'violet' },
+          { n: money(s.subRevenue || 0), l: 'Plan revenue', ic: 'cash', t: 'green' },
+          { n: money(s.salesValue || 0), l: 'Sales value', ic: 'cash', t: 'blue' },
+          { n: money(s.commissionCollected || 0), l: 'Commission earned', ic: 'cash', t: 'green' },
+          { n: money(s.commissionOwed || 0), l: 'Commission owed', ic: 'cash', t: 'amber' },
+          { n: s.leads || 0, l: 'Enquiries', ic: 'mail', t: 'blue' },
+          { n: (d.ratings && d.ratings.count ? d.ratings.average.toFixed(1) : '—'), l: 'Avg rating', ic: 'star', t: 'amber' },
         ];
         $('kpis').innerHTML = kpis.map(function (k) {
-          return '<div class="kpi"><div class="kpi-num">' + k.n + '</div><div class="kpi-lbl">' + k.l + '</div></div>';
+          return '<div class="kpi"><span class="kpi-ic ' + k.t + '">' + icon(k.ic) + '</span>' +
+            '<div class="kpi-body"><div class="kpi-num">' + k.n + '</div><div class="kpi-lbl">' + k.l + '</div></div></div>';
         }).join('');
         bars($('by-county'), s.byCounty);
         bars($('by-deal'), (s.byDeal || []).map(function (x) { return { label: (x.label === 'rent' ? 'For rent' : x.label === 'sale' ? 'For sale' : 'Land'), count: x.count }; }));
