@@ -596,6 +596,13 @@
     loadRegions();
     loadFavs(function () { load(); });
 
+    // Deep link: /browse.html?view=<id> opens that listing directly (used by the
+    // title-deed verification page's "View listing" link).
+    (function () {
+      var vid = new URLSearchParams(location.search).get('view');
+      if (vid) setTimeout(function () { openModal(vid); }, 200);
+    })();
+
     // Realtime-ready: refresh listings periodically so newly posted homes appear
     // without a manual reload. Pauses while a listing modal is open.
     setInterval(function () {
@@ -674,6 +681,8 @@
       if ($('field-beds')) $('field-beds').style.display = isLand ? 'none' : '';
       if ($('field-baths')) $('field-baths').style.display = isLand ? 'none' : '';
       if ($('field-size')) $('field-size').style.display = isLand ? '' : 'none';
+      // Title deed number is required for both sale and land listings.
+      if ($('field-title-deed')) $('field-title-deed').style.display = isSale ? '' : 'none';
       if ($('field-type')) { var ti = $('field-type').querySelector('input'); if (ti) ti.placeholder = isLand ? 'Plot, Farm, Commercial…' : 'Bedsitter, 1-bed, Maisonette…'; }
       // Land has no rooms — hide the Standard/Video-Showcase toggle and rooms builder.
       var tierWrap = $('tier') ? $('tier').closest('.field') : null;
@@ -786,6 +795,12 @@
       if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
       var title = form.title.value.trim(), phone = form.phone.value.trim();
       if (title.length < 4) { show('err', 'Please add a clear listing title.'); return; }
+      var dealVal = form.deal ? form.deal.value : 'rent';
+      if ((dealVal === 'sale' || dealVal === 'land') && (!$('p-title-deed') || $('p-title-deed').value.trim().length < 3)) {
+        show('err', 'Please enter the title deed number for this sale/land listing.');
+        if ($('p-title-deed')) $('p-title-deed').focus();
+        return;
+      }
       if (payVia === 'mpesa' && phone.length < 9) { show('err', 'Enter the M-Pesa phone number to pay from.'); return; }
       if (payVia === 'pesapal' && !form.email.value.trim() && phone.length < 9) { show('err', 'Add your email or phone so we can send a receipt.'); return; }
       btn.disabled = true; show('info', 'Uploading media\u2026 (videos can take a moment)');
@@ -821,6 +836,7 @@
             region: form.region.value, location: form.region.value, beds: form.beds.value,
             baths: form.baths.value, description: form.description.value, county: form.county ? form.county.value : '',
             size: sizeStr, areaAcres: areaAcres,
+            titleDeed: $('p-title-deed') ? $('p-title-deed').value.trim() : '',
             lat: $('p-lat') ? $('p-lat').value : '', lng: $('p-lng') ? $('p-lng').value : '',
             name: form.name.value, email: form.email.value, phone: phone,
             tier: tier, photos: coverUrls, rooms: rooms,
@@ -1586,5 +1602,47 @@
     return String(s || '').replace(/[&<>"']/g, function (c) {
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
     });
+  }
+
+  // ---- Verify a title deed page ----
+  if ($('verify-form')) {
+    (function () {
+      var form = $('verify-form'), out = $('verify-result'), btn = $('verify-btn');
+      function card(kind, html) { out.className = 'verify-card show ' + kind; out.innerHTML = html; }
+      function dealLabel(d) { return d === 'land' ? 'Land' : (d === 'sale' ? 'For sale' : 'For rent'); }
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var deed = ($('verify-deed') ? $('verify-deed').value : '').trim();
+        if (deed.length < 3) { card('err', 'Please enter a valid title deed number.'); return; }
+        if (btn) { btn.disabled = true; btn.textContent = 'Checking\u2026'; }
+        out.className = 'verify-card show info'; out.innerHTML = 'Checking NestKey records\u2026';
+        api('/api/listings/verify/' + encodeURIComponent(deed)).then(function (res) {
+          if (!res || res.error) { card('err', escapeHtml((res && res.error) || 'Could not run the check right now.')); return; }
+          if (!res.match) {
+            card('warn',
+              '<strong>No match found on NestKey</strong>' +
+              '<p>We could not find a listing on NestKey with the title deed number <b>' + escapeHtml(deed) + '</b>.</p>' +
+              '<p class="vc-note">This only means it is not currently listed with us. It does not confirm anything about the real ownership of the land \u2014 always do an official search at the Ministry of Lands (or on eCitizen / Ardhisasa) before paying any money.</p>');
+            return;
+          }
+          var l = res.listing || {};
+          var place = [l.region, l.county].filter(Boolean).map(escapeHtml).join(', ') || 'Location not stated';
+          card('ok',
+            '<strong>\u2713 Matched a NestKey listing</strong>' +
+            '<p>A title deed number matching <b>' + escapeHtml(deed) + '</b> is attached to a live listing on NestKey:</p>' +
+            '<div class="vc-listing">' +
+              '<div class="vc-ltitle">' + escapeHtml(l.title || 'Listing') + '</div>' +
+              '<div class="vc-lmeta">' + dealLabel(l.deal) + ' \u00b7 ' + place +
+                (l.verifiedOwner ? ' \u00b7 <span class="vc-badge">Verified owner</span>' : '') + '</div>' +
+              (l.id ? '<a class="btn btn--sm" href="/browse.html?view=' + encodeURIComponent(l.id) + '">View listing \u2192</a>' : '') +
+            '</div>' +
+            '<p class="vc-note">This confirms the deed number was supplied to NestKey by the person who posted this listing. It is <b>not</b> proof of legal ownership. Before paying, insist on an official title search at the Ministry of Lands (eCitizen / Ardhisasa) and verify the seller\u2019s ID matches the title.</p>');
+        }).catch(function () {
+          card('err', 'Could not run the check right now. Please try again.');
+        }).then(function () {
+          if (btn) { btn.disabled = false; btn.textContent = 'Check title deed'; }
+        });
+      });
+    })();
   }
 })();
