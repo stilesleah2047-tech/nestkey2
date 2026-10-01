@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Verify a title deed — NestKey</title>
+  <meta name="description" content="Check whether a Kenyan title deed number matches a property currently listed on NestKey before you pay anything.">
+  <meta name="theme-color" content="#0B1B2B">
+  <link rel="icon" type="image/png" href="/assets/icon-192.png">
+  <link rel="apple-touch-icon" href="/assets/icon-192.png">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="stylesheet" href="/assets/styles.css">
+  <style>
+    .verify-wrap { max-width: 680px; }
+    .verify-card { display: none; margin-top: 18px; padding: 18px 20px; border-radius: 14px;
+      border: 1px solid #e3e8ec; background: #fff; line-height: 1.5; }
+    .verify-card.show { display: block; }
+    .verify-card.ok { border-color: #bfe6c9; background: #f3fbf5; }
+    .verify-card.warn { border-color: #f3dca2; background: #fffaf0; }
+    .verify-card.err { border-color: #f0c0c0; background: #fdf4f4; }
+    .verify-card.info { border-color: #c7d8ea; background: #f5f9fd; }
+    .verify-card strong { display: block; font-size: 1.05rem; margin-bottom: 6px; }
+    .verify-card p { margin: 8px 0; }
+    .vc-note { font-size: .9rem; color: #5a6b76; background: rgba(0,0,0,.03);
+      border-radius: 10px; padding: 10px 12px; margin-top: 12px; }
+    .vc-listing { border: 1px solid #d8e0e5; border-radius: 12px; padding: 14px; margin: 12px 0; background: #fff; }
+    .vc-ltitle { font-weight: 700; font-size: 1.05rem; }
+    .vc-lmeta { color: #5a6b76; margin: 6px 0 10px; font-size: .95rem; }
+    .vc-badge { background: #0A2342; color: #fff; border-radius: 999px; padding: 1px 9px; font-size: .78rem; }
+    .verify-steps { display: grid; gap: 10px; margin: 10px 0 0; padding: 0; list-style: none; }
+    .verify-steps li { padding-left: 26px; position: relative; color: #41525c; }
+    .verify-steps li::before { content: "✓"; position: absolute; left: 0; top: 0; color: #0A2342; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <header class="top"><div class="wrap">
+    <a class="brand" href="/"><img class="brand-mark" src="/assets/logo.png" alt="NestKey"><span class="brand-word">Nest<b>Key</b></span></a>
+    <nav><a href="/">Home</a><a href="/browse.html">Browse</a><a href="/services.html">Services</a><a href="/verify.html" class="active">Verify a deed</a><a href="/blog.html">Blog</a><a href="/about.html">About</a><a href="/contact.html">Contact</a><a href="/post.html" class="nav-post">Post a house</a><span id="navauth"></span></nav>
+  </div></header>
+
+  <section class="hero"><div class="wrap">
+    <h1>Verify a title deed</h1>
+    <p>Before you pay for land or a house, check that the title deed number the seller gave you matches a property that is genuinely listed on NestKey.</p>
+  </div></section>
+
+  <section class="section"><div class="wrap verify-wrap">
+    <form class="form" id="verify-form">
+      <div class="field full">
+        <label>Title deed number</label>
+        <input id="verify-deed" name="deed" placeholder="e.g. NAIROBI/BLOCK 123/456" autocomplete="off" required>
+        <small class="hint">Type the title deed / parcel number exactly as it appears on the document the seller shared.</small>
+      </div>
+      <button class="btn block" id="verify-btn" type="submit">Check title deed</button>
+    </form>
+
+    <div class="verify-card" id="verify-result"></div>
+
+    <div class="verify-card show info" style="margin-top:22px">
+      <strong>What this check does — and what it doesn't</strong>
+      <p>This tool only tells you whether the deed number is attached to a listing on NestKey. It is <b>not</b> a connection to the Ministry of Lands and is <b>not</b> proof of legal ownership.</p>
+      <p>Always confirm land before paying by:</p>
+      <ul class="verify-steps">
+        <li>Doing an official title search on eCitizen / Ardhisasa or at your local Lands registry.</li>
+        <li>Checking the seller's national ID matches the name on the title.</li>
+        <li>Using a licensed lawyer or surveyor for the transfer.</li>
+        <li>Never sending money for land you have not independently verified.</li>
+      </ul>
+    </div>
+  </div></section>
+
+  <footer class="foot"><div class="wrap">NestKey · find a home anywhere in Kenya · <a href="/privacy.html">Privacy</a> · <a href="/cookies.html">Cookies</a></div></footer>
+  <script src="/assets/config.js"></script>
+  <script src="/assets/app.js"></script>
+</body>
+</html>
