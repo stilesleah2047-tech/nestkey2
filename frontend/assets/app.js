@@ -169,7 +169,7 @@
   function initLocationPicker(o) {
     if (!window.L || !document.getElementById(o.mapId)) return null;
     var map = L.map(o.mapId).setView(o.center || [-1.286, 36.817], o.zoom || 12);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { maxZoom: 20, subdomains: 'abcd', attribution: '© OpenStreetMap, © CARTO' }).addTo(map);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(map);
     var marker = null;
     function status(msg) { var s = o.statusId && document.getElementById(o.statusId); if (s) s.textContent = msg; }
     function setVals(lat, lng) {
