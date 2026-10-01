@@ -16,6 +16,7 @@ function row(r) {
     beds: r.beds || 0,
     baths: r.baths || 0,
     size: r.size,
+    titleDeed: r.title_deed || null,
     areaAcres: r.area_acres != null ? Number(r.area_acres) : null,
     lat: r.lat != null ? Number(r.lat) : null,
     lng: r.lng != null ? Number(r.lng) : null,
@@ -51,8 +52,8 @@ module.exports = {
   async create(d) {
     const q = `INSERT INTO listings
       (title, deal, type, price, beds, baths, size, area_acres, lat, lng, region, county, location, description, photos, videos, rooms, tier,
-       submitter_name, submitter_phone, submitter_email, owner_id, status, paid)
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24)
+       submitter_name, submitter_phone, submitter_email, owner_id, status, paid, title_deed)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25)
       RETURNING *`;
     const vals = [
       d.title, d.deal || 'rent', d.type || null, d.price || 0, d.beds || 0, d.baths || 0,
@@ -62,6 +63,7 @@ module.exports = {
       d.tier === 'showcase' ? 'showcase' : 'standard',
       d.submitter?.name || null, d.submitter?.phone || null, d.submitter?.email || null,
       d.ownerId || null, d.status || 'pending', d.paid != null ? d.paid : false,
+      d.titleDeed || null,
     ];
     const { rows } = await pool.query(q, vals);
     return row(rows[0]);
@@ -118,6 +120,21 @@ module.exports = {
 
   async findByCheckout(checkoutId) {
     const { rows } = await pool.query('SELECT * FROM listings WHERE checkout_id = $1', [checkoutId]);
+    return row(rows[0]);
+  },
+
+  // Lookup a published, paid listing by its title deed number (buyer verification).
+  async findByTitleDeed(deed) {
+    const norm = String(deed || '').replace(/\s+/g, '').toLowerCase();
+    if (!norm) return null;
+    const { rows } = await pool.query(
+      `SELECT * FROM listings
+       WHERE paid = true AND status = 'published'
+         AND title_deed IS NOT NULL
+         AND lower(replace(title_deed, ' ', '')) = $1
+       ORDER BY created_at DESC LIMIT 1`,
+      [norm]
+    );
     return row(rows[0]);
   },
 
