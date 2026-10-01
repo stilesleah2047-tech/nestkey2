@@ -147,3 +147,7 @@ CREATE TABLE IF NOT EXISTS favourites (
   created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
   PRIMARY KEY (user_id, listing_id)
 );
+
+-- Title deed number captured for for-sale / land listings (buyer verification lookup)
+ALTER TABLE listings ADD COLUMN IF NOT EXISTS title_deed TEXT;
+CREATE INDEX IF NOT EXISTS idx_listings_title_deed ON listings (title_deed);
