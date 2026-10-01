@@ -9,6 +9,7 @@ const listingSchema = new mongoose.Schema({
   beds: { type: Number, default: 0 },
   baths: { type: Number, default: 0 },
   size: String,
+  titleDeed: String,
   region: String,
   county: String,
   areaAcres: Number,
@@ -46,6 +47,7 @@ function out(d) {
     id: String(o._id),
     title: o.title, deal: o.deal, type: o.type, price: o.price || 0,
     beds: o.beds || 0, baths: o.baths || 0, size: o.size,
+    titleDeed: o.titleDeed || null,
     region: o.region, county: o.county, areaAcres: o.areaAcres, lat: o.lat != null ? o.lat : null, lng: o.lng != null ? o.lng : null, location: o.location, description: o.description,
     photos: o.photos || [], status: o.status, paid: o.paid, amount: o.amount || 0,
     videos: o.videos || [], rooms: o.rooms || [], tier: o.tier || 'standard', featured: !!o.featured, verified: !!o.verified,
@@ -68,6 +70,7 @@ module.exports = {
       location: d.location, description: d.description, photos: d.photos || [],
       videos: d.videos || [], rooms: d.rooms || [], tier: d.tier === 'showcase' ? 'showcase' : 'standard',
       ownerId: d.ownerId || null,
+      titleDeed: d.titleDeed || null,
       submitter: d.submitter || {}, status: d.status || 'pending', paid: d.paid != null ? d.paid : false,
     });
     return out(doc);
@@ -120,6 +123,16 @@ module.exports = {
   },
   async findByCheckout(checkoutId) {
     return out(await Listing.findOne({ checkoutId }));
+  },
+  // Lookup a published, paid listing by its title deed number (buyer verification).
+  async findByTitleDeed(deed) {
+    const norm = String(deed || '').replace(/\s+/g, '').toLowerCase();
+    if (!norm) return null;
+    const docs = await Listing.find({ paid: true, status: 'published', titleDeed: { $nin: [null, ''] } });
+    const hit = docs.find(function (d) {
+      return String(d.titleDeed || '').replace(/\s+/g, '').toLowerCase() === norm;
+    });
+    return hit ? out(hit) : null;
   },
   async markPaid(id, { receipt }) {
     await Listing.findByIdAndUpdate(id, { paid: true, status: 'published', receipt });
