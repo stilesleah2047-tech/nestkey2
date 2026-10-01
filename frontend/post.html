@@ -15,7 +15,7 @@
 <body>
   <header class="top"><div class="wrap">
     <a class="brand" href="/"><img class="brand-mark" src="/assets/logo.png" alt="NestKey"><span class="brand-word">Nest<b>Key</b></span></a>
-    <nav><a href="/">Home</a><a href="/browse.html">Browse</a><a href="/services.html">Services</a><a href="/blog.html">Blog</a><a href="/about.html">About</a><a href="/contact.html">Contact</a><a href="/post.html" class="active nav-post">Post a house</a><span id="navauth"></span></nav>
+    <nav><a href="/">Home</a><a href="/browse.html">Browse</a><a href="/services.html">Services</a><a href="/verify.html">Verify a deed</a><a href="/blog.html">Blog</a><a href="/about.html">About</a><a href="/contact.html">Contact</a><a href="/post.html" class="active nav-post">Post a house</a><span id="navauth"></span></nav>
   </div></header>
 
   <section class="hero"><div class="wrap">
@@ -56,6 +56,11 @@
               <option value="sqm">sq metres</option>
             </select>
           </div>
+        </div>
+        <div class="field full" id="field-title-deed" style="display:none">
+          <label>Title deed number *</label>
+          <input name="titleDeed" id="p-title-deed" placeholder="e.g. NAIROBI/BLOCK 123/456" autocomplete="off">
+          <small class="hint">Required for property-for-sale and land listings. Buyers can type this number on our <a href="/verify.html">Verify a deed</a> page to confirm the property is genuinely listed on NestKey. This checks our records only — it is not an official search of the Ministry of Lands registry.</small>
         </div>
         <div class="field full"><label>Description</label><textarea name="description" placeholder="Describe the house or room, what's included (water, electricity, parking)…"></textarea></div>
 
