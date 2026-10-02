@@ -16,7 +16,6 @@ function row(r) {
     beds: r.beds || 0,
     baths: r.baths || 0,
     size: r.size,
-    titleDeed: r.title_deed || null,
     areaAcres: r.area_acres != null ? Number(r.area_acres) : null,
     lat: r.lat != null ? Number(r.lat) : null,
     lng: r.lng != null ? Number(r.lng) : null,
@@ -52,8 +51,8 @@ module.exports = {
   async create(d) {
     const q = `INSERT INTO listings
       (title, deal, type, price, beds, baths, size, area_acres, lat, lng, region, county, location, description, photos, videos, rooms, tier,
-       submitter_name, submitter_phone, submitter_email, owner_id, status, paid, title_deed)
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25)
+       submitter_name, submitter_phone, submitter_email, owner_id, status, paid)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24)
       RETURNING *`;
     const vals = [
       d.title, d.deal || 'rent', d.type || null, d.price || 0, d.beds || 0, d.baths || 0,
@@ -63,7 +62,6 @@ module.exports = {
       d.tier === 'showcase' ? 'showcase' : 'standard',
       d.submitter?.name || null, d.submitter?.phone || null, d.submitter?.email || null,
       d.ownerId || null, d.status || 'pending', d.paid != null ? d.paid : false,
-      d.titleDeed || null,
     ];
     const { rows } = await pool.query(q, vals);
     return row(rows[0]);
@@ -120,21 +118,6 @@ module.exports = {
 
   async findByCheckout(checkoutId) {
     const { rows } = await pool.query('SELECT * FROM listings WHERE checkout_id = $1', [checkoutId]);
-    return row(rows[0]);
-  },
-
-  // Lookup a published, paid listing by its title deed number (buyer verification).
-  async findByTitleDeed(deed) {
-    const norm = String(deed || '').replace(/\s+/g, '').toLowerCase();
-    if (!norm) return null;
-    const { rows } = await pool.query(
-      `SELECT * FROM listings
-       WHERE paid = true AND status = 'published'
-         AND title_deed IS NOT NULL
-         AND lower(replace(title_deed, ' ', '')) = $1
-       ORDER BY created_at DESC LIMIT 1`,
-      [norm]
-    );
     return row(rows[0]);
   },
 
@@ -263,6 +246,13 @@ Object.assign(module.exports, {
   },
   async setStatus(id, status) {
     await pool.query('UPDATE listings SET status = $1 WHERE id = $2', [status, id]);
+  },
+  // Admin override publish: make a listing publicly visible without a payment.
+  // The public browse query requires BOTH paid = true AND status = 'published',
+  // so an admin publish must flip paid = true as well, otherwise the listing
+  // stays hidden on browse.html even though the dashboard shows it as PUBLISHED.
+  async publish(id) {
+    await pool.query("UPDATE listings SET paid = true, status = 'published' WHERE id = $1", [id]);
   },
   async setListingFlags(id, { featured, verified }) {
     await pool.query('UPDATE listings SET featured = $1, verified = $2 WHERE id = $3', [!!featured, !!verified, id]);
@@ -427,20 +417,6 @@ Object.assign(module.exports, {
     return rows.map(row);
   },
   async deleteAny(id) { await pool.query('DELETE FROM listings WHERE id = $1', [id]); },
-
-  // Enquiries (leads) for the admin Command Center
-  async adminLeads(limit) {
-    const { rows } = await pool.query(
-      `SELECT l.id, l.name, l.phone, l.message, l.created_at, li.title AS listing_title
-       FROM leads l LEFT JOIN listings li ON li.id = l.listing_id
-       ORDER BY l.created_at DESC LIMIT $1`, [limit || 100]
-    );
-    return rows.map((r) => ({
-      id: String(r.id), name: r.name, phone: r.phone, message: r.message,
-      listingTitle: r.listing_title, createdAt: r.created_at,
-    }));
-  },
-  async deleteLead(id) { await pool.query('DELETE FROM leads WHERE id = $1', [id]); },
 });
 
 Object.assign(module.exports, {
