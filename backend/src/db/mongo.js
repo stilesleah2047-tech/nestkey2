@@ -9,7 +9,6 @@ const listingSchema = new mongoose.Schema({
   beds: { type: Number, default: 0 },
   baths: { type: Number, default: 0 },
   size: String,
-  titleDeed: String,
   region: String,
   county: String,
   areaAcres: Number,
@@ -47,7 +46,6 @@ function out(d) {
     id: String(o._id),
     title: o.title, deal: o.deal, type: o.type, price: o.price || 0,
     beds: o.beds || 0, baths: o.baths || 0, size: o.size,
-    titleDeed: o.titleDeed || null,
     region: o.region, county: o.county, areaAcres: o.areaAcres, lat: o.lat != null ? o.lat : null, lng: o.lng != null ? o.lng : null, location: o.location, description: o.description,
     photos: o.photos || [], status: o.status, paid: o.paid, amount: o.amount || 0,
     videos: o.videos || [], rooms: o.rooms || [], tier: o.tier || 'standard', featured: !!o.featured, verified: !!o.verified,
@@ -70,7 +68,6 @@ module.exports = {
       location: d.location, description: d.description, photos: d.photos || [],
       videos: d.videos || [], rooms: d.rooms || [], tier: d.tier === 'showcase' ? 'showcase' : 'standard',
       ownerId: d.ownerId || null,
-      titleDeed: d.titleDeed || null,
       submitter: d.submitter || {}, status: d.status || 'pending', paid: d.paid != null ? d.paid : false,
     });
     return out(doc);
@@ -123,16 +120,6 @@ module.exports = {
   },
   async findByCheckout(checkoutId) {
     return out(await Listing.findOne({ checkoutId }));
-  },
-  // Lookup a published, paid listing by its title deed number (buyer verification).
-  async findByTitleDeed(deed) {
-    const norm = String(deed || '').replace(/\s+/g, '').toLowerCase();
-    if (!norm) return null;
-    const docs = await Listing.find({ paid: true, status: 'published', titleDeed: { $nin: [null, ''] } });
-    const hit = docs.find(function (d) {
-      return String(d.titleDeed || '').replace(/\s+/g, '').toLowerCase() === norm;
-    });
-    return hit ? out(hit) : null;
   },
   async markPaid(id, { receipt }) {
     await Listing.findByIdAndUpdate(id, { paid: true, status: 'published', receipt });
@@ -231,6 +218,9 @@ Object.assign(module.exports, {
   async getOwned(id, ownerId) { return mongoose.isValidObjectId(id) ? out(await Listing.findOne({ _id: id, ownerId })) : null; },
   async countPublishedByOwner(ownerId) { return Listing.countDocuments({ ownerId, status: 'published' }); },
   async setStatus(id, status) { await Listing.findByIdAndUpdate(id, { status }); },
+  // Admin override publish: public browse requires paid === true AND status === 'published',
+  // so flip both here, otherwise an admin-published listing stays hidden on browse.
+  async publish(id) { await Listing.findByIdAndUpdate(id, { paid: true, status: 'published' }); },
   async setListingFlags(id, { featured, verified }) { await Listing.findByIdAndUpdate(id, { featured: !!featured, verified: !!verified }); },
   async updateOwned(id, ownerId, f) { await Listing.findOneAndUpdate({ _id: id, ownerId }, f); },
   async deleteOwned(id, ownerId) { await Listing.findOneAndDelete({ _id: id, ownerId }); },
@@ -374,21 +364,6 @@ Object.assign(module.exports, {
   },
   async adminListings(limit) { return (await Listing.find({}).sort({ createdAt: -1 }).limit(limit || 60)).map(out); },
   async deleteAny(id) { if (mongoose.isValidObjectId(id)) await Listing.findByIdAndDelete(id); },
-
-  // Enquiries (leads) for the admin Command Center
-  async adminLeads(limit) {
-    const lds = await Lead.find({}).sort({ createdAt: -1 }).limit(limit || 100);
-    const ids = lds.map((l) => l.listingId).filter((i) => i && mongoose.isValidObjectId(i));
-    const titles = {};
-    if (ids.length) {
-      (await Listing.find({ _id: { $in: ids } })).forEach((li) => { titles[String(li._id)] = li.title; });
-    }
-    return lds.map((l) => ({
-      id: String(l._id), name: l.name, phone: l.phone, message: l.message,
-      listingTitle: titles[String(l.listingId)] || null, createdAt: l.createdAt,
-    }));
-  },
-  async deleteLead(id) { if (mongoose.isValidObjectId(id)) await Lead.findByIdAndDelete(id); },
 });
 
 const favSchema = new mongoose.Schema({ userId: String, listingId: String }, { timestamps: true });
