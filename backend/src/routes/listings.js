@@ -2,6 +2,7 @@ const express = require('express');
 const db = require('../db');
 const { sortRooms, labelFor } = require('../rooms');
 const { countyForTown } = require('../locations');
+const { parsePrice } = require('../price');
 
 const router = express.Router();
 
@@ -34,34 +35,6 @@ router.get('/regions', async (_req, res) => {
     res.json(await db.regions());
   } catch (e) {
     res.status(500).json({ error: 'Could not load regions' });
-  }
-});
-
-// GET /api/listings/verify/:deed — public title-deed lookup against NestKey listings
-router.get('/verify/:deed', async (req, res) => {
-  try {
-    const deed = String(req.params.deed || '').trim();
-    if (deed.length < 3) {
-      return res.status(400).json({ error: 'Please enter a valid title deed number.' });
-    }
-    const l = await db.findByTitleDeed(deed);
-    if (!l) return res.json({ match: false });
-    // Return only minimal, safe public info — never the submitter's contact details.
-    res.json({
-      match: true,
-      listing: {
-        id: l.id,
-        title: l.title,
-        deal: l.deal,
-        region: l.region || null,
-        county: l.county || null,
-        verifiedOwner: !!l.verified,
-        createdAt: l.createdAt,
-      },
-    });
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: 'Could not run the check right now.' });
   }
 });
 
@@ -106,12 +79,6 @@ router.post('/', async (req, res) => {
     if (!b.title || String(b.title).trim().length < 4) {
       return res.status(400).json({ error: 'Please provide a clear listing title.' });
     }
-    // For-sale and land listings must carry a title deed number for buyer verification.
-    if (['sale', 'land'].includes(b.deal)) {
-      if (!b.titleDeed || String(b.titleDeed).trim().length < 3) {
-        return res.status(400).json({ error: 'A title deed number is required for sale and land listings.' });
-      }
-    }
     // Sanitize + auto-order rooms into a canonical walk-through.
     var rooms = [];
     if (Array.isArray(b.rooms)) {
@@ -137,14 +104,11 @@ router.post('/', async (req, res) => {
       title: String(b.title).slice(0, 160),
       deal: ['rent', 'sale', 'land'].includes(b.deal) ? b.deal : 'rent',
       type: b.type ? String(b.type).slice(0, 80) : '',
-      price: parseFloat(b.price) || 0,
+      price: parsePrice(b.price),
       beds: parseInt(b.beds, 10) || 0,
       baths: parseInt(b.baths, 10) || 0,
+      roomCount: Math.min(parseInt(b.roomCount, 10) || 0, 999),
       size: b.size ? String(b.size).slice(0, 40) : '',
-      // Title deed number only applies to for-sale / land listings.
-      titleDeed: (['sale', 'land'].includes(b.deal) && b.titleDeed)
-        ? String(b.titleDeed).slice(0, 60).trim()
-        : null,
       areaAcres: b.areaAcres != null && b.areaAcres !== '' ? parseFloat(b.areaAcres) : null,
       lat: b.lat != null && b.lat !== '' ? parseFloat(b.lat) : null,
       lng: b.lng != null && b.lng !== '' ? parseFloat(b.lng) : null,
