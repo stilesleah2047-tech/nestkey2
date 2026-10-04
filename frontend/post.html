@@ -15,7 +15,7 @@
 <body>
   <header class="top"><div class="wrap">
     <a class="brand" href="/"><img class="brand-mark" src="/assets/logo.png" alt="NestKey"><span class="brand-word">Nest<b>Key</b></span></a>
-    <nav><a href="/">Home</a><a href="/browse.html">Browse</a><a href="/services.html">Services</a><a href="/verify.html">Verify a deed</a><a href="/blog.html">Blog</a><a href="/about.html">About</a><a href="/contact.html">Contact</a><a href="/post.html" class="active nav-post">Post a house</a><span id="navauth"></span></nav>
+    <nav><a href="/">Home</a><a href="/browse.html">Browse</a><a href="/services.html">Services</a><a href="/blog.html">Blog</a><a href="/about.html">About</a><a href="/contact.html">Contact</a><a href="/post.html" class="active nav-post">Post a house</a><span id="navauth"></span></nav>
   </div></header>
 
   <section class="hero"><div class="wrap">
@@ -30,7 +30,7 @@
         <div class="field"><label>Type</label>
           <select name="deal" id="h-deal"><option value="rent">For rent</option><option value="sale">For sale</option><option value="land">Land</option></select></div>
         <div class="field" id="field-type"><label>Property type</label><input name="type" placeholder="Bedsitter, 1-bed, Maisonette…"></div>
-        <div class="field"><label id="price-label">Monthly rent (KSh)</label><input name="price" id="h-price" type="number" min="0" placeholder="12000"></div>
+        <div class="field"><label id="price-label">Monthly rent (KSh)</label><input name="price" id="h-price" type="text" inputmode="text" autocomplete="off" placeholder="e.g. KSh 50,000, 50k, or fifty thousand"><small class="dc-sub" id="h-price-echo"></small></div>
         <div class="field"><label>County</label><input name="county" id="p-county" list="p-county-list" placeholder="Type or pick a county"><datalist id="p-county-list"></datalist></div>
         <div class="field"><label>Town / area</label><input name="region" id="region" list="p-townlist" placeholder="e.g. Roysambu"><datalist id="p-townlist"></datalist></div>
         <div class="field full">
@@ -46,6 +46,7 @@
         </div>
         <div class="field" id="field-beds"><label>Bedrooms</label><input name="beds" id="beds" type="number" min="0" placeholder="1"></div>
         <div class="field" id="field-baths"><label>Bathrooms</label><input name="baths" type="number" min="0" placeholder="1"></div>
+        <div class="field" id="field-rooms"><label>General rooms (total)</label><input name="roomCount" id="roomCount" type="number" min="0" placeholder="e.g. 8"><small class="hint">Total number of rooms in the whole property (all spaces, not just bedrooms).</small></div>
         <div class="field" id="field-size" style="display:none"><label>Plot size</label>
           <div style="display:flex;gap:8px">
             <input id="p-size-value" type="number" min="0" step="0.01" placeholder="e.g. 2" style="flex:1">
@@ -57,12 +58,7 @@
             </select>
           </div>
         </div>
-        <div class="field full" id="field-title-deed" style="display:none">
-          <label>Title deed number *</label>
-          <input name="titleDeed" id="p-title-deed" placeholder="e.g. NAIROBI/BLOCK 123/456" autocomplete="off">
-          <small class="hint">Required for property-for-sale and land listings. Buyers can type this number on our <a href="/verify.html">Verify a deed</a> page to confirm the property is genuinely listed on NestKey. This checks our records only — it is not an official search of the Ministry of Lands registry.</small>
-        </div>
-        <div class="field full"><label>Description</label><textarea name="description" placeholder="Describe the house or room, what's included (water, electricity, parking)…"></textarea></div>
+        <div class="field full"><label>Description</label><textarea name="description" id="h-desc" rows="8" placeholder="Write one point per line — we keep your layout tidy on the listing.&#10;&#10;Example:&#10;- Spacious living room with lots of natural light&#10;- Modern fitted kitchen&#10;- Water &amp; electricity included&#10;- Secure compound with parking&#10;- 5 min walk to the main road&#10;&#10;Tip: you can number points (1. 2. 3.) or use dashes — they turn into a neat list."></textarea><small class="hint">Put each feature on its own line. Numbered lists (1. 2. 3.) and dashes (-) are automatically formatted into a clean, organized list.</small></div>
 
         <div class="field full" id="commission-preview" style="display:none">
           <div class="commission-note">
