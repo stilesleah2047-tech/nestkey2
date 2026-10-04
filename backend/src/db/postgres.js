@@ -15,6 +15,7 @@ function row(r) {
     price: Number(r.price) || 0,
     beds: r.beds || 0,
     baths: r.baths || 0,
+    roomCount: r.room_count || 0,
     size: r.size,
     areaAcres: r.area_acres != null ? Number(r.area_acres) : null,
     lat: r.lat != null ? Number(r.lat) : null,
@@ -51,8 +52,8 @@ module.exports = {
   async create(d) {
     const q = `INSERT INTO listings
       (title, deal, type, price, beds, baths, size, area_acres, lat, lng, region, county, location, description, photos, videos, rooms, tier,
-       submitter_name, submitter_phone, submitter_email, owner_id, status, paid)
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24)
+       submitter_name, submitter_phone, submitter_email, owner_id, status, paid, room_count)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25)
       RETURNING *`;
     const vals = [
       d.title, d.deal || 'rent', d.type || null, d.price || 0, d.beds || 0, d.baths || 0,
@@ -62,6 +63,7 @@ module.exports = {
       d.tier === 'showcase' ? 'showcase' : 'standard',
       d.submitter?.name || null, d.submitter?.phone || null, d.submitter?.email || null,
       d.ownerId || null, d.status || 'pending', d.paid != null ? d.paid : false,
+      d.roomCount || 0,
     ];
     const { rows } = await pool.query(q, vals);
     return row(rows[0]);
