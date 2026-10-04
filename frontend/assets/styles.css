@@ -398,3 +398,13 @@ footer.foot { background: var(--navy); color: #9fb4cc; padding: 24px 0; text-ali
 .verified-badge .ico { width: .9em; height: .9em; }
 .vrow { margin: 2px 0 4px; }
 #savedToggle.active { background: #e23744; color: #fff; border-color: #e23744; }
+
+/* Organized listing description */
+.modal .desc, .desc { margin: 10px 0 4px; color: #2a3542; line-height: 1.6; }
+.modal .desc p, .desc p { margin: 0 0 10px; }
+.modal .desc p:last-child, .desc p:last-child { margin-bottom: 0; }
+.desc-list { margin: 6px 0 12px; padding-left: 1.3em; }
+.desc-list li { margin: 4px 0; line-height: 1.55; }
+ul.desc-list { list-style: disc; }
+ol.desc-list { list-style: decimal; }
+.desc-list li::marker { color: var(--cerulean-dk, #0fb5a6); font-weight: 700; }
