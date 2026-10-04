@@ -24,6 +24,94 @@
   function money(n) { return 'KSh ' + Number(n || 0).toLocaleString('en-KE'); }
   function $(id) { return document.getElementById(id); }
 
+  // Robust asking-price parser (mirrors backend/src/price.js). Accepts numbers,
+  // currency symbols/words, thousands separators, k/m/b suffixes and spelled-out
+  // amounts e.g. "KSh 50,000", "50k", "1.2 million", "fifty thousand".
+  var PRICE_UNITS = { zero:0, one:1, two:2, three:3, four:4, five:5, six:6, seven:7, eight:8, nine:9, ten:10, eleven:11, twelve:12, thirteen:13, fourteen:14, fifteen:15, sixteen:16, seventeen:17, eighteen:18, nineteen:19 };
+  var PRICE_TENS = { twenty:20, thirty:30, forty:40, fourty:40, fifty:50, sixty:60, seventy:70, eighty:80, ninety:90 };
+  var PRICE_SCALES = { hundred:100, k:1e3, thousand:1e3, grand:1e3, m:1e6, mil:1e6, million:1e6, millions:1e6, b:1e9, bn:1e9, billion:1e9, billions:1e9 };
+  function parsePrice(input) {
+    if (input == null) return 0;
+    if (typeof input === 'number') return isFinite(input) && input > 0 ? Math.round(input) : 0;
+    var s = String(input).toLowerCase().trim();
+    if (!s) return 0;
+    s = s.replace(/kshs?|kes|shillings?|shs?|bob|usd|dollars?|eur|euros?|gbp|pounds?|ngn|tzs|ugx/g, ' ');
+    s = s.replace(/[$\u20ac\u00a3]/g, ' ');
+    s = s.replace(/\/[=-]/g, ' ');
+    s = s.replace(/,/g, '');
+    s = s.replace(/(\d)\s+(?=\d{3}\b)/g, '$1');
+    s = s.replace(/\s+/g, ' ').trim();
+    if (!s) return 0;
+    var tokens = s.split(/[\s-]+/).filter(Boolean);
+    var total = 0, current = 0, matched = false;
+    for (var i = 0; i < tokens.length; i++) {
+      var t = tokens[i];
+      if (t === 'and' || t === 'a' || t === 'of') continue;
+      var nm = t.match(/^(\d+(?:\.\d+)?)(k|m|b|bn|mil)?$/);
+      if (nm) { var val = parseFloat(nm[1]); if (nm[2]) val *= PRICE_SCALES[nm[2]]; current += val; matched = true; continue; }
+      if (PRICE_UNITS[t] != null) { current += PRICE_UNITS[t]; matched = true; continue; }
+      if (PRICE_TENS[t] != null) { current += PRICE_TENS[t]; matched = true; continue; }
+      if (t === 'hundred') { current = (current || 1) * 100; matched = true; continue; }
+      if (PRICE_SCALES[t] != null) { current = (current || 1) * PRICE_SCALES[t]; total += current; current = 0; matched = true; continue; }
+    }
+    total += current;
+    if (!matched) { var f = parseFloat(s); return isFinite(f) && f > 0 ? Math.round(f) : 0; }
+    return total > 0 ? Math.round(total) : 0;
+  }
+
+  // Live "this is what we'll save" echo under a free-text price input.
+  function priceEcho(inputId, echoId) {
+    var el = $(inputId), out = $(echoId);
+    if (!el || !out) return;
+    function render() {
+      var v = String(el.value || '').trim();
+      var n = parsePrice(v);
+      out.textContent = v ? (n > 0 ? ('\u2248 ' + money(n)) : 'Enter a valid amount') : '';
+    }
+    el.addEventListener('input', render);
+    render();
+  }
+
+  // Turn a free-text description into tidy, organized HTML.
+  // Keeps the author's line breaks, groups consecutive numbered lines
+  // (1. / 1) ) into an ordered list and dash/bullet lines (- * •) into a
+  // bulleted list; everything else becomes paragraphs. Blank lines separate
+  // blocks. All text is HTML-escaped first, so this is XSS-safe.
+  function formatDescription(text) {
+    var raw = String(text == null ? '' : text).replace(/\r\n?/g, '\n').trim();
+    if (!raw) return '';
+    var lines = raw.split('\n');
+    var html = '';
+    var listType = null;   // 'ol' | 'ul' | null
+    var para = [];
+    function flushPara() {
+      if (para.length) { html += '<p>' + para.join('<br>') + '</p>'; para = []; }
+    }
+    function flushList() {
+      if (listType) { html += '</' + listType + '>'; listType = null; }
+    }
+    for (var i = 0; i < lines.length; i++) {
+      var line = lines[i].trim();
+      if (!line) { flushPara(); flushList(); continue; }
+      var mOl = line.match(/^(\d+)[.)]\s+(.*)$/);
+      var mUl = line.match(/^[-*\u2022]\s+(.*)$/);
+      if (mOl) {
+        flushPara();
+        if (listType !== 'ol') { flushList(); html += '<ol class="desc-list">'; listType = 'ol'; }
+        html += '<li>' + escapeHtml(mOl[2]) + '</li>';
+      } else if (mUl) {
+        flushPara();
+        if (listType !== 'ul') { flushList(); html += '<ul class="desc-list">'; listType = 'ul'; }
+        html += '<li>' + escapeHtml(mUl[1]) + '</li>';
+      } else {
+        flushList();
+        para.push(escapeHtml(line));
+      }
+    }
+    flushPara(); flushList();
+    return '<div class="desc">' + html + '</div>';
+  }
+
   // Simple line icons (no emoji).
   function icon(name) {
     var p = {
@@ -169,7 +257,7 @@
   function initLocationPicker(o) {
     if (!window.L || !document.getElementById(o.mapId)) return null;
     var map = L.map(o.mapId).setView(o.center || [-1.286, 36.817], o.zoom || 12);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(map);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { maxZoom: 20, subdomains: 'abcd', attribution: '© OpenStreetMap, © CARTO' }).addTo(map);
     var marker = null;
     function status(msg) { var s = o.statusId && document.getElementById(o.statusId); if (s) s.textContent = msg; }
     function setVals(lat, lng) {
@@ -346,7 +434,8 @@
         '<h3>' + escapeHtml(l.title) + '</h3>' + (verified ? '<div class="vrow">' + verified + '</div>' : '') +
         '<div class="loc">' + icon('pin') + ' ' + escapeHtml(l.location || l.region || '') + '</div>' +
         '<div class="meta">' + (l.beds ? '<span>' + icon('bed') + ' ' + l.beds + ' bed</span>' : '') +
-        (l.baths ? '<span>' + icon('bath') + ' ' + l.baths + ' bath</span>' : '') + '</div></div></article>';
+        (l.baths ? '<span>' + icon('bath') + ' ' + l.baths + ' bath</span>' : '') +
+        (l.roomCount ? '<span>' + icon('home') + ' ' + l.roomCount + ' rm</span>' : '') + '</div></div></article>';
     }
 
     var savedOnly = false;
@@ -405,7 +494,9 @@
     function ensureMap() {
       if (map || !window.L) return;
       map = L.map('map', { scrollWheelZoom: false }).setView([-1.286, 36.817], 11);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(map);
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+        maxZoom: 20, subdomains: 'abcd', attribution: '© OpenStreetMap, © CARTO',
+      }).addTo(map);
       markersLayer = L.layerGroup().addTo(map);
     }
     function drawMarkers() {
@@ -504,15 +595,16 @@
           '<div class="meta" style="display:flex;gap:16px;color:#5c6b7e;margin:10px 0">' +
           (l.beds ? '<span>' + icon('bed') + ' ' + l.beds + ' bed</span>' : '') +
           (l.baths ? '<span>' + icon('bath') + ' ' + l.baths + ' bath</span>' : '') +
+          (l.roomCount ? '<span>' + icon('home') + ' ' + l.roomCount + ' room' + (l.roomCount > 1 ? 's' : '') + '</span>' : '') +
           (l.type ? '<span>' + icon('tag') + ' ' + escapeHtml(l.type) + '</span>' : '') + '</div>' +
-          '<p>' + escapeHtml(l.description || '') + '</p>' +
+          formatDescription(l.description) +
           generalVideos + showcase + flat + locBlock + enquire + '</div>';
         $('modal').classList.add('open');
         if (hasGeo && window.L) {
           setTimeout(function () {
             try {
               var dm = L.map('detail-map', { scrollWheelZoom: false }).setView([l.lat, l.lng], 16);
-              L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(dm);
+              L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { maxZoom: 20, subdomains: 'abcd', attribution: '© OpenStreetMap, © CARTO' }).addTo(dm);
               L.marker([l.lat, l.lng]).addTo(dm);
               dm.invalidateSize();
             } catch (e) {}
@@ -594,13 +686,6 @@
     loadRegions();
     loadFavs(function () { load(); });
 
-    // Deep link: /browse.html?view=<id> opens that listing directly (used by the
-    // title-deed verification page's "View listing" link).
-    (function () {
-      var vid = new URLSearchParams(location.search).get('view');
-      if (vid) setTimeout(function () { openModal(vid); }, 200);
-    })();
-
     // Realtime-ready: refresh listings periodically so newly posted homes appear
     // without a manual reload. Pauses while a listing modal is open.
     setInterval(function () {
@@ -678,9 +763,8 @@
       if ($('price-label')) $('price-label').textContent = d === 'rent' ? 'Monthly rent (KSh)' : (isLand ? 'Price (KSh)' : 'Asking price (KSh)');
       if ($('field-beds')) $('field-beds').style.display = isLand ? 'none' : '';
       if ($('field-baths')) $('field-baths').style.display = isLand ? 'none' : '';
+      if ($('field-rooms')) $('field-rooms').style.display = isLand ? 'none' : '';
       if ($('field-size')) $('field-size').style.display = isLand ? '' : 'none';
-      // Title deed number is required for both sale and land listings.
-      if ($('field-title-deed')) $('field-title-deed').style.display = isSale ? '' : 'none';
       if ($('field-type')) { var ti = $('field-type').querySelector('input'); if (ti) ti.placeholder = isLand ? 'Plot, Farm, Commercial…' : 'Bedsitter, 1-bed, Maisonette…'; }
       // Land has no rooms — hide the Standard/Video-Showcase toggle and rooms builder.
       var tierWrap = $('tier') ? $('tier').closest('.field') : null;
@@ -699,7 +783,7 @@
       var isSale = d === 'sale' || d === 'land';
       if (!isSale) { box.style.display = 'none'; return; }
       box.style.display = '';
-      var price = parseFloat((($('h-price') || form.price) || {}).value) || 0;
+      var price = parsePrice((($('h-price') || form.price) || {}).value);
       var pct = Math.round(COMMISSION_RATE * 100);
       if ($('cp-headline')) $('cp-headline').textContent = 'Commission on sale (' + pct + '%)';
       if ($('cp-detail')) {
@@ -713,6 +797,7 @@
     }
     if (dealEl) dealEl.addEventListener('change', updateDeal);
     if ($('h-price')) $('h-price').addEventListener('input', updateCommission);
+    priceEcho('h-price', 'h-price-echo');
     if ($('p-size-value')) $('p-size-value').addEventListener('input', updateFee);
     if ($('p-size-unit')) $('p-size-unit').addEventListener('change', updateFee);
 
@@ -793,12 +878,6 @@
       if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
       var title = form.title.value.trim(), phone = form.phone.value.trim();
       if (title.length < 4) { show('err', 'Please add a clear listing title.'); return; }
-      var dealVal = form.deal ? form.deal.value : 'rent';
-      if ((dealVal === 'sale' || dealVal === 'land') && (!$('p-title-deed') || $('p-title-deed').value.trim().length < 3)) {
-        show('err', 'Please enter the title deed number for this sale/land listing.');
-        if ($('p-title-deed')) $('p-title-deed').focus();
-        return;
-      }
       if (payVia === 'mpesa' && phone.length < 9) { show('err', 'Enter the M-Pesa phone number to pay from.'); return; }
       if (payVia === 'pesapal' && !form.email.value.trim() && phone.length < 9) { show('err', 'Add your email or phone so we can send a receipt.'); return; }
       btn.disabled = true; show('info', 'Uploading media\u2026 (videos can take a moment)');
@@ -833,8 +912,8 @@
             title: title, deal: form.deal.value, type: form.type.value, price: form.price.value,
             region: form.region.value, location: form.region.value, beds: form.beds.value,
             baths: form.baths.value, description: form.description.value, county: form.county ? form.county.value : '',
+            roomCount: ($('roomCount') ? $('roomCount').value : ''),
             size: sizeStr, areaAcres: areaAcres,
-            titleDeed: $('p-title-deed') ? $('p-title-deed').value.trim() : '',
             lat: $('p-lat') ? $('p-lat').value : '', lng: $('p-lng') ? $('p-lng').value : '',
             name: form.name.value, email: form.email.value, phone: phone,
             tier: tier, photos: coverUrls, rooms: rooms,
@@ -941,12 +1020,6 @@
       $('subLine').textContent = current.audience + ' · billed ' + billing;
       $('subAmount').textContent = money(amount) + (billing === 'annual' ? ' / year' : ' / month');
       $('subStatus').className = 'status'; $('subStatus').innerHTML = '';
-      subVia = 'mpesa';
-      if ($('subPayVia')) {
-        Array.prototype.forEach.call($('subPayVia').querySelectorAll('button'), function (x) {
-          x.classList.toggle('active', x.getAttribute('data-via') === 'mpesa');
-        });
-      }
       $('subPay').disabled = false; $('subPay').textContent = 'Pay with M-Pesa';
       $('subModal').classList.add('open');
     }
@@ -961,9 +1034,6 @@
         b.addEventListener('click', function () {
           Array.prototype.forEach.call($('subPayVia').querySelectorAll('button'), function (x) { x.classList.remove('active'); });
           b.classList.add('active'); subVia = b.getAttribute('data-via');
-          if ($('subPay').textContent.indexOf('\u2713') === -1) {
-            $('subPay').textContent = subVia === 'pesapal' ? 'Pay by card' : 'Pay with M-Pesa';
-          }
         });
       });
     }
@@ -1164,7 +1234,7 @@
         if (!isSale) { box.style.display = 'none'; }
         else {
           box.style.display = '';
-          var price = parseFloat(($('ag-price') || {}).value) || 0;
+          var price = parsePrice(($('ag-price') || {}).value);
           var pct = Math.round(COMMISSION_RATE * 100);
           if ($('ag-cp-headline')) $('ag-cp-headline').textContent = 'Commission on sale (' + pct + '%)';
           if ($('ag-cp-detail')) $('ag-cp-detail').innerHTML = price > 0
@@ -1175,6 +1245,7 @@
     }
     if (agDeal) agDeal.addEventListener('change', agUpdateDeal);
     if ($('ag-price')) $('ag-price').addEventListener('input', agUpdateDeal);
+    priceEcho('ag-price', 'ag-price-echo');
 
     function guard(res) { if (res && res.status === 401) { clearAuth(); location.href = '/account.html'; } return res; }
 
@@ -1379,47 +1450,6 @@
     if (!getToken()) { location.href = '/account.html'; }
     if ($('signout')) $('signout').addEventListener('click', function (e) { e.preventDefault(); clearAuth(); location.href = '/'; });
 
-    // Populate topbar profile from the signed-in user
-    (function () {
-      var u = currentUser() || {};
-      var name = u.name || u.email || 'Admin';
-      if ($('dc-user-name')) $('dc-user-name').textContent = name;
-      if ($('dc-initials')) {
-        var parts = String(name).trim().split(/\s+/);
-        var ini = (parts[0] ? parts[0][0] : 'A') + (parts[1] ? parts[1][0] : '');
-        $('dc-initials').textContent = ini.toUpperCase();
-      }
-    })();
-
-    // Mobile sidebar toggle
-    (function () {
-      var shell = document.getElementById('adminShell'), btn = document.getElementById('dcMenu');
-      if (btn && shell) {
-        btn.addEventListener('click', function () { shell.classList.toggle('nav-open'); });
-        shell.addEventListener('click', function (e) {
-          if (shell.classList.contains('nav-open') && (e.target === shell || (e.target.closest && e.target.closest('.side a')))) {
-            shell.classList.remove('nav-open');
-          }
-        });
-      }
-    })();
-
-    // Live search filter over both admin tables
-    (function () {
-      var box = document.getElementById('admin-search');
-      if (!box) return;
-      box.addEventListener('input', function () {
-        var q = box.value.trim().toLowerCase();
-        ['admin-listings', 'admin-users', 'admin-leads'].forEach(function (id) {
-          var host = document.getElementById(id);
-          if (!host) return;
-          Array.prototype.forEach.call(host.querySelectorAll('tbody tr'), function (tr) {
-            tr.style.display = (!q || tr.textContent.toLowerCase().indexOf(q) !== -1) ? '' : 'none';
-          });
-        });
-      });
-    })();
-
     var iconFor = { listing: icon('home'), user: icon('user'), subscription: icon('card'), payment: icon('cash'), lead: icon('mail'), rating: icon('star') };
 
     function timeAgo(d) {
@@ -1432,8 +1462,7 @@
     function feedRow(it) {
       return '<div class="feed-row"><span class="feed-ic">' + (iconFor[it.kind] || '•') + '</span>' +
         '<span class="feed-text">' + escapeHtml(it.text) + '</span>' +
-        '<span class="feed-time">' + timeAgo(it.at) + '</span>' +
-        '<button class="feed-x" type="button" title="Dismiss" aria-label="Dismiss">&times;</button></div>';
+        '<span class="feed-time">' + timeAgo(it.at) + '</span></div>';
     }
 
     function bars(el, rows) {
@@ -1455,22 +1484,19 @@
       }).then(function (d) {
         var s = d.stats || {}, li = s.listings || {};
         var kpis = [
-          { n: s.users || 0, l: 'Users', ic: 'user', t: 'blue' },
-          { n: li.published || 0, l: 'Live listings', ic: 'home', t: 'green' },
-          { n: li.draft || 0, l: 'Drafts', ic: 'tag', t: 'slate' },
-          { n: s.subsActive || 0, l: 'Active plans', ic: 'card', t: 'violet' },
-          { n: money(s.subRevenue || 0), l: 'Plan revenue', ic: 'cash', t: 'green' },
-          { n: money(s.salesValue || 0), l: 'Sales value', ic: 'cash', t: 'blue' },
-          { n: money(s.commissionCollected || 0), l: 'Commission earned', ic: 'cash', t: 'green' },
-          { n: money(s.commissionOwed || 0), l: 'Commission owed', ic: 'cash', t: 'amber' },
-          { n: s.leads || 0, l: 'Enquiries', ic: 'mail', t: 'blue', go: 'sec-enquiries' },
-          { n: (d.ratings && d.ratings.count ? d.ratings.average.toFixed(1) : '—'), l: 'Avg rating', ic: 'star', t: 'amber' },
+          { n: s.users || 0, l: 'Users' },
+          { n: li.published || 0, l: 'Live listings' },
+          { n: li.draft || 0, l: 'Drafts' },
+          { n: s.subsActive || 0, l: 'Active plans' },
+          { n: money(s.subRevenue || 0), l: 'Plan revenue' },
+          { n: money(s.salesValue || 0), l: 'Sales value' },
+          { n: money(s.commissionCollected || 0), l: 'Commission earned' },
+          { n: money(s.commissionOwed || 0), l: 'Commission owed' },
+          { n: s.leads || 0, l: 'Enquiries' },
+          { n: (d.ratings && d.ratings.count ? d.ratings.average.toFixed(1) : '—'), l: 'Avg rating' },
         ];
         $('kpis').innerHTML = kpis.map(function (k) {
-          var inner = '<span class="kpi-ic ' + k.t + '">' + icon(k.ic) + '</span>' +
-            '<div class="kpi-body"><div class="kpi-num">' + k.n + '</div><div class="kpi-lbl">' + k.l + '</div></div>';
-          return k.go ? '<a class="kpi kpi-link" href="#' + k.go + '">' + inner + '</a>'
-                      : '<div class="kpi">' + inner + '</div>';
+          return '<div class="kpi"><div class="kpi-num">' + k.n + '</div><div class="kpi-lbl">' + k.l + '</div></div>';
         }).join('');
         bars($('by-county'), s.byCounty);
         bars($('by-deal'), (s.byDeal || []).map(function (x) { return { label: (x.label === 'rent' ? 'For rent' : x.label === 'sale' ? 'For sale' : 'Land'), count: x.count }; }));
@@ -1481,46 +1507,6 @@
       fetch(API + '/api/admin/activity', { headers: authHeaders() }).then(function (r) { return r.json(); }).then(function (d) {
         var items = (d && d.items) || [];
         $('feed').innerHTML = items.length ? items.map(feedRow).join('') : '<p class="dc-sub">No activity yet.</p>';
-      }).catch(function () {});
-    }
-
-    function emptyFeed() { var f = $('feed'); if (f) f.innerHTML = '<p class="dc-sub">Feed cleared. New activity will appear here.</p>'; }
-    // Dismiss a single feed row, or clear the whole feed (view only — see note below).
-    (function () {
-      var feed = $('feed');
-      if (feed) feed.addEventListener('click', function (e) {
-        var x = e.target.closest && e.target.closest('.feed-x');
-        if (!x) return;
-        var row = x.closest('.feed-row');
-        if (row) row.parentNode.removeChild(row);
-        if (feed.children.length === 0) emptyFeed();
-      });
-      var clr = document.getElementById('feed-clear');
-      if (clr) clr.addEventListener('click', function () {
-        if (confirm('Clear the activity feed from view? (New activity will still appear.)')) emptyFeed();
-      });
-    })();
-
-    function loadLeads() {
-      fetch(API + '/api/admin/leads', { headers: authHeaders() }).then(function (r) { return r.json(); }).then(function (d) {
-        var items = (d && d.items) || [];
-        if (!items.length) { $('admin-leads').innerHTML = '<p class="dc-sub">No enquiries yet.</p>'; return; }
-        $('admin-leads').innerHTML = '<table class="dash-table"><thead><tr><th>From</th><th>Contact</th><th>Property</th><th>Message</th><th>When</th><th>Action</th></tr></thead><tbody>' +
-          items.map(function (l) {
-            return '<tr><td><strong>' + escapeHtml(l.name || 'Someone') + '</strong></td>' +
-              '<td>' + escapeHtml(l.phone || '—') + '</td>' +
-              '<td>' + escapeHtml(l.listingTitle || '—') + '</td>' +
-              '<td>' + escapeHtml(l.message || '') + '</td>' +
-              '<td><span class="dc-sub">' + timeAgo(l.createdAt) + '</span></td>' +
-              '<td class="acts"><button class="mini-btn danger" data-lead="' + l.id + '">Delete</button></td></tr>';
-          }).join('') + '</tbody></table>';
-        Array.prototype.forEach.call($('admin-leads').querySelectorAll('button[data-lead]'), function (b) {
-          b.addEventListener('click', function () {
-            if (!confirm('Delete this enquiry permanently?')) return;
-            fetch(API + '/api/admin/leads/' + b.getAttribute('data-lead'), { method: 'DELETE', headers: authHeaders() })
-              .then(function () { loadLeads(); loadOverview(); });
-          });
-        });
       }).catch(function () {});
     }
 
@@ -1575,7 +1561,7 @@
       }).catch(function () {});
     }
 
-    loadOverview(); loadFeed(); loadAdminListings(); loadUsers(); loadLeads();
+    loadOverview(); loadFeed(); loadAdminListings(); loadUsers();
     setInterval(function () { loadOverview(); loadAdminListings(); }, 60000);
 
     // Live: prepend new activity as it happens.
@@ -1600,47 +1586,5 @@
     return String(s || '').replace(/[&<>"']/g, function (c) {
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
     });
-  }
-
-  // ---- Verify a title deed page ----
-  if ($('verify-form')) {
-    (function () {
-      var form = $('verify-form'), out = $('verify-result'), btn = $('verify-btn');
-      function card(kind, html) { out.className = 'verify-card show ' + kind; out.innerHTML = html; }
-      function dealLabel(d) { return d === 'land' ? 'Land' : (d === 'sale' ? 'For sale' : 'For rent'); }
-      form.addEventListener('submit', function (e) {
-        e.preventDefault();
-        var deed = ($('verify-deed') ? $('verify-deed').value : '').trim();
-        if (deed.length < 3) { card('err', 'Please enter a valid title deed number.'); return; }
-        if (btn) { btn.disabled = true; btn.textContent = 'Checking\u2026'; }
-        out.className = 'verify-card show info'; out.innerHTML = 'Checking NestKey records\u2026';
-        api('/api/listings/verify/' + encodeURIComponent(deed)).then(function (res) {
-          if (!res || res.error) { card('err', escapeHtml((res && res.error) || 'Could not run the check right now.')); return; }
-          if (!res.match) {
-            card('warn',
-              '<strong>No match found on NestKey</strong>' +
-              '<p>We could not find a listing on NestKey with the title deed number <b>' + escapeHtml(deed) + '</b>.</p>' +
-              '<p class="vc-note">This only means it is not currently listed with us. It does not confirm anything about the real ownership of the land \u2014 always do an official search at the Ministry of Lands (or on eCitizen / Ardhisasa) before paying any money.</p>');
-            return;
-          }
-          var l = res.listing || {};
-          var place = [l.region, l.county].filter(Boolean).map(escapeHtml).join(', ') || 'Location not stated';
-          card('ok',
-            '<strong>\u2713 Matched a NestKey listing</strong>' +
-            '<p>A title deed number matching <b>' + escapeHtml(deed) + '</b> is attached to a live listing on NestKey:</p>' +
-            '<div class="vc-listing">' +
-              '<div class="vc-ltitle">' + escapeHtml(l.title || 'Listing') + '</div>' +
-              '<div class="vc-lmeta">' + dealLabel(l.deal) + ' \u00b7 ' + place +
-                (l.verifiedOwner ? ' \u00b7 <span class="vc-badge">Verified owner</span>' : '') + '</div>' +
-              (l.id ? '<a class="btn btn--sm" href="/browse.html?view=' + encodeURIComponent(l.id) + '">View listing \u2192</a>' : '') +
-            '</div>' +
-            '<p class="vc-note">This confirms the deed number was supplied to NestKey by the person who posted this listing. It is <b>not</b> proof of legal ownership. Before paying, insist on an official title search at the Ministry of Lands (eCitizen / Ardhisasa) and verify the seller\u2019s ID matches the title.</p>');
-        }).catch(function () {
-          card('err', 'Could not run the check right now. Please try again.');
-        }).then(function () {
-          if (btn) { btn.disabled = false; btn.textContent = 'Check title deed'; }
-        });
-      });
-    })();
   }
 })();
