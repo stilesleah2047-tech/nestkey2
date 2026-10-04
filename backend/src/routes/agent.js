@@ -4,6 +4,7 @@ const { requireAuth } = require('../auth');
 const { getPlan } = require('../plans');
 const { sortRooms, labelFor } = require('../rooms');
 const { countyForTown } = require('../locations');
+const { parsePrice } = require('../price');
 const mpesa = require('../services/mpesa');
 const pesapal = require('../services/pesapal');
 const events = require('../events');
@@ -57,9 +58,10 @@ router.post('/listings', async (req, res) => {
       title: String(b.title).slice(0, 160),
       deal: ['rent', 'sale', 'land'].includes(b.deal) ? b.deal : 'rent',
       type: b.type ? String(b.type).slice(0, 80) : '',
-      price: parseFloat(b.price) || 0,
+      price: parsePrice(b.price),
       beds: parseInt(b.beds, 10) || 0,
       baths: parseInt(b.baths, 10) || 0,
+      roomCount: Math.min(parseInt(b.roomCount, 10) || 0, 999),
       region: b.region ? String(b.region).slice(0, 80) : '',
       county: (b.county && String(b.county).slice(0, 80)) || countyForTown(b.region) || '',
       size: b.size ? String(b.size).slice(0, 40) : '',
@@ -87,7 +89,7 @@ router.put('/listings/:id', async (req, res) => {
   const b = req.body || {};
   await db.updateOwned(req.params.id, req.user.id, {
     title: b.title || l.title, deal: b.deal || l.deal, type: b.type || l.type,
-    price: parseFloat(b.price) || l.price, beds: parseInt(b.beds, 10) || l.beds,
+    price: (b.price != null && String(b.price).trim() !== '') ? parsePrice(b.price) : l.price, beds: parseInt(b.beds, 10) || l.beds,
     baths: parseInt(b.baths, 10) || l.baths, region: b.region || l.region,
     location: b.location || l.location, description: b.description || l.description,
   });
@@ -111,7 +113,7 @@ router.post('/listings/:id/publish', async (req, res) => {
       return res.status(403).json({ error: `You've reached your plan limit of ${max} published listings. Upgrade to publish more.`, quota: true });
     }
   }
-  await db.markPaid(req.params.id, { receipt: l.receipt || 'plan-published' });
+  await db.setStatus(req.params.id, 'published');
   // Pro & Agency get featured placement; the verified badge comes from admin approval.
   var isPremium = plan && (plan.id === 'pro' || plan.id === 'agency');
   var owner = await db.findUserById(uid);
