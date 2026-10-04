@@ -8,6 +8,7 @@ const listingSchema = new mongoose.Schema({
   price: { type: Number, default: 0 },
   beds: { type: Number, default: 0 },
   baths: { type: Number, default: 0 },
+  roomCount: { type: Number, default: 0 },
   size: String,
   region: String,
   county: String,
@@ -45,7 +46,7 @@ function out(d) {
   return {
     id: String(o._id),
     title: o.title, deal: o.deal, type: o.type, price: o.price || 0,
-    beds: o.beds || 0, baths: o.baths || 0, size: o.size,
+    beds: o.beds || 0, baths: o.baths || 0, roomCount: o.roomCount || 0, size: o.size,
     region: o.region, county: o.county, areaAcres: o.areaAcres, lat: o.lat != null ? o.lat : null, lng: o.lng != null ? o.lng : null, location: o.location, description: o.description,
     photos: o.photos || [], status: o.status, paid: o.paid, amount: o.amount || 0,
     videos: o.videos || [], rooms: o.rooms || [], tier: o.tier || 'standard', featured: !!o.featured, verified: !!o.verified,
@@ -64,7 +65,7 @@ module.exports = {
   async create(d) {
     const doc = await Listing.create({
       title: d.title, deal: d.deal || 'rent', type: d.type, price: d.price || 0,
-      beds: d.beds || 0, baths: d.baths || 0, size: d.size, region: d.region, county: d.county, areaAcres: d.areaAcres != null ? d.areaAcres : null, lat: d.lat != null ? d.lat : null, lng: d.lng != null ? d.lng : null,
+      beds: d.beds || 0, baths: d.baths || 0, roomCount: d.roomCount || 0, size: d.size, region: d.region, county: d.county, areaAcres: d.areaAcres != null ? d.areaAcres : null, lat: d.lat != null ? d.lat : null, lng: d.lng != null ? d.lng : null,
       location: d.location, description: d.description, photos: d.photos || [],
       videos: d.videos || [], rooms: d.rooms || [], tier: d.tier === 'showcase' ? 'showcase' : 'standard',
       ownerId: d.ownerId || null,
