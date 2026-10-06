@@ -20,7 +20,7 @@
 
   <section class="hero"><div class="wrap">
     <h1>Post your house or room</h1>
-    <p>List it in minutes, pay a small fee by M-Pesa, and reach house hunters across every area.</p>
+    <p>List it in minutes, pay a small fee securely by M-Pesa, card or bank, and reach house hunters across every area.</p>
   </div></section>
 
   <section class="section"><div class="wrap" style="max-width:760px">
@@ -86,26 +86,17 @@
 
         <div class="field"><label>Your name</label><input name="name" placeholder="Full name"></div>
         <div class="field"><label>Your email</label><input name="email" type="email" placeholder="you@email.com"></div>
-        <div class="field full"><label id="phone-label">M-Pesa phone number *</label><input name="phone" id="phone" placeholder="07xx xxx xxx"></div>
-      </div>
-
-      <div class="field full" style="margin-top:6px">
-        <label>Pay with</label>
-        <div class="pay-toggle" id="payVia">
-          <button type="button" data-via="mpesa" class="active">M-Pesa (STK)</button>
-          <button type="button" data-via="pesapal">Card / Pesapal</button>
-        </div>
-        <small class="hint" id="card-hint" style="display:none">You'll enter your card (or mobile money) details securely on the next screen — no redirect off the site.</small>
+        <div class="field full"><label id="phone-label">Phone number (optional)</label><input name="phone" id="phone" placeholder="07xx xxx xxx"></div>
       </div>
 
       <div class="fee-box">
-        <div class="sub" id="fee-caption">Listing fee — one-off, paid by M-Pesa</div>
+        <div class="sub" id="fee-caption">Listing fee — one-off, pay securely with M-Pesa, card or bank via Pesapal</div>
         <div class="total" id="feeTotal">KSh 100</div>
         <div class="sub" id="feeBreak">KSh 100 per room × 1 room</div>
       </div>
 
       <div class="status" id="status"></div>
-      <button class="btn block" id="submitBtn" type="submit">Post house &amp; pay <span id="feeBtn">KSh 100</span></button>
+      <button class="btn block" id="submitBtn" type="submit">Pay now <span id="feeBtn">KSh 100</span></button>
     </form>
   </div></section>
 
