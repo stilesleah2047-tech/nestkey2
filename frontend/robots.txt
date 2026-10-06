@@ -1,0 +1,13 @@
+# NestKey robots.txt
+# Allow all search engines to crawl the public site.
+User-agent: *
+Allow: /
+
+# Keep private / app-only areas out of the index.
+Disallow: /account.html
+Disallow: /dashboard.html
+Disallow: /admin.html
+Disallow: /uploads/
+
+# Sitemap location (absolute URL, as required by Google).
+Sitemap: https://nestkey.co.ke/sitemap.xml
