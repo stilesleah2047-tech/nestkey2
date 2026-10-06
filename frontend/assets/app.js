@@ -257,7 +257,7 @@
   function initLocationPicker(o) {
     if (!window.L || !document.getElementById(o.mapId)) return null;
     var map = L.map(o.mapId).setView(o.center || [-1.286, 36.817], o.zoom || 12);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(map);
+   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(map);
     var marker = null;
     function status(msg) { var s = o.statusId && document.getElementById(o.statusId); if (s) s.textContent = msg; }
     function setVals(lat, lng) {
@@ -842,22 +842,9 @@
       });
     }
 
-    var payVia = 'mpesa';
-    function updatePayVia() {
-      var card = payVia === 'pesapal';
-      if ($('card-hint')) $('card-hint').style.display = card ? '' : 'none';
-      if ($('phone-label')) $('phone-label').textContent = card ? 'Phone number (optional)' : 'M-Pesa phone number *';
-      if ($('fee-caption')) $('fee-caption').textContent = card ? 'Listing fee — one-off, paid by card / Pesapal' : 'Listing fee — one-off, paid by M-Pesa';
-    }
-    if ($('payVia')) {
-      Array.prototype.forEach.call($('payVia').querySelectorAll('button'), function (b) {
-        b.addEventListener('click', function () {
-          Array.prototype.forEach.call($('payVia').querySelectorAll('button'), function (x) { x.classList.remove('active'); });
-          b.classList.add('active'); payVia = b.getAttribute('data-via');
-          updatePayVia();
-        });
-      });
-    }
+    // Single "Pay now" flow — Pesapal handles M-Pesa, card and bank on one secure
+    // screen, so there is no payment-method chooser any more.
+    if ($('fee-caption')) $('fee-caption').textContent = 'Listing fee — one-off, pay securely with M-Pesa, card or bank via Pesapal';
 
     function show(kind, html) { statusEl.className = 'status show ' + kind; statusEl.innerHTML = html; }
 
@@ -878,8 +865,6 @@
       if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
       var title = form.title.value.trim(), phone = form.phone.value.trim();
       if (title.length < 4) { show('err', 'Please add a clear listing title.'); return; }
-      if (payVia === 'mpesa' && phone.length < 9) { show('err', 'Enter the M-Pesa phone number to pay from.'); return; }
-      if (payVia === 'pesapal' && !form.email.value.trim() && phone.length < 9) { show('err', 'Add your email or phone so we can send a receipt.'); return; }
       btn.disabled = true; show('info', 'Uploading media\u2026 (videos can take a moment)');
 
       uploadFiles($('photos') ? $('photos').files : []).then(function (cover) {
@@ -928,28 +913,17 @@
           form.reset(); if ($('rooms-builder')) $('rooms-builder').innerHTML = ''; tier = 'standard'; updateFee(); btn.textContent = 'Submitted \u2713';
           showRating('listing');
         }
-        if (payVia === 'pesapal') {
-          show('info', 'Opening secure card payment\u2026');
-          return api('/api/payments/pesapal', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ listingId: id }),
-          }).then(function (p) {
-            if (!p || p.error) throw new Error(p && p.error ? p.error : 'Card payment failed to start');
-            statusEl.className = 'status'; statusEl.innerHTML = '';
-            openPesapal(p.iframeUrl, p.orderTrackingId, function (st) {
-              if (st === 'yes') onPaid();
-              else if (st === 'failed') { show('err', 'The payment was not completed. Please try again.'); btn.disabled = false; }
-              else { show('info', 'Payment window closed. If you paid, your listing will publish shortly.'); btn.disabled = false; }
-            });
-          });
-        }
-        show('info', 'Sending the M-Pesa prompt to your phone\u2026');
-        return api('/api/payments/stk', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ listingId: id, phone: phone }),
+        show('info', 'Opening secure payment\u2026');
+        return api('/api/payments/pesapal', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ listingId: id }),
         }).then(function (p) {
           if (!p || p.error) throw new Error(p && p.error ? p.error : 'Payment failed to start');
-          show('info', '<strong>Check your phone</strong><br>Enter your M-Pesa PIN to pay ' + money(p.amount) + ' and publish your listing.');
-          poll(id);
+          statusEl.className = 'status'; statusEl.innerHTML = '';
+          openPesapal(p.iframeUrl, p.orderTrackingId, function (st) {
+            if (st === 'yes') onPaid();
+            else if (st === 'failed') { show('err', 'The payment was not completed. Please try again.'); btn.disabled = false; }
+            else { show('info', 'Payment window closed. If you paid, your listing will publish shortly.'); btn.disabled = false; }
+          });
         });
       }).catch(function (err) {
         show('err', err.message || 'Something went wrong. Please try again.');
@@ -1020,7 +994,7 @@
       $('subLine').textContent = current.audience + ' · billed ' + billing;
       $('subAmount').textContent = money(amount) + (billing === 'annual' ? ' / year' : ' / month');
       $('subStatus').className = 'status'; $('subStatus').innerHTML = '';
-      $('subPay').disabled = false; $('subPay').textContent = 'Pay with M-Pesa';
+      $('subPay').disabled = false; $('subPay').textContent = 'Pay now';
       $('subModal').classList.add('open');
     }
     function closeSub() { $('subModal').classList.remove('open'); if (subTimer) { clearInterval(subTimer); subTimer = null; } }
@@ -1028,15 +1002,7 @@
     $('subModal').addEventListener('click', function (e) { if (e.target === $('subModal')) closeSub(); });
     function subShow(kind, html) { var s = $('subStatus'); s.className = 'status show ' + kind; s.innerHTML = html; }
 
-    var subVia = 'mpesa';
-    if ($('subPayVia')) {
-      Array.prototype.forEach.call($('subPayVia').querySelectorAll('button'), function (b) {
-        b.addEventListener('click', function () {
-          Array.prototype.forEach.call($('subPayVia').querySelectorAll('button'), function (x) { x.classList.remove('active'); });
-          b.classList.add('active'); subVia = b.getAttribute('data-via');
-        });
-      });
-    }
+    // Single "Pay now" flow — Pesapal offers M-Pesa, card and bank on one screen.
 
     function subActivated(periodEnd) {
       var end = periodEnd ? new Date(periodEnd).toLocaleDateString() : '';
@@ -1047,41 +1013,18 @@
 
     $('subPay').addEventListener('click', function () {
       var phone = $('subPhone').value.trim();
-      if (phone.length < 9 && subVia === 'mpesa') { subShow('err', 'Enter the M-Pesa number to pay from.'); return; }
       var pay = $('subPay'); pay.disabled = true; subShow('info', 'Starting payment\u2026');
 
-      if (subVia === 'pesapal') {
-        fetch(API + '/api/subscriptions/pesapal', {
-          method: 'POST', headers: authHeaders({ 'Content-Type': 'application/json' }),
-          body: JSON.stringify({ planId: current.id, billing: billing, phone: phone, name: $('subName').value, email: $('subEmail').value }),
-        }).then(function (r) { return r.json(); }).then(function (res) {
-          if (!res || res.error) throw new Error(res && res.error ? res.error : 'Could not start');
-          subShow('info', 'Opening secure card payment\u2026');
-          openPesapal(res.iframeUrl, res.orderTrackingId, function (st) {
-            if (st === 'yes') { subActivated(null); }
-            else { subShow('err', 'Payment was not completed. Please try again.'); pay.disabled = false; }
-          });
-        }).catch(function (err) { subShow('err', err.message || 'Something went wrong.'); pay.disabled = false; });
-        return;
-      }
-
-      // M-Pesa STK
-      fetch(API + '/api/subscriptions/subscribe', {
+      fetch(API + '/api/subscriptions/pesapal', {
         method: 'POST', headers: authHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ planId: current.id, billing: billing, phone: phone, name: $('subName').value, email: $('subEmail').value }),
       }).then(function (r) { return r.json(); }).then(function (res) {
         if (!res || res.error) throw new Error(res && res.error ? res.error : 'Could not start');
-        subShow('info', '<strong>Check your phone</strong><br>Enter your M-Pesa PIN to pay ' + money(res.amount) + '.');
-        var n = 0;
-        subTimer = setInterval(function () {
-          n++;
-          if (n > 25) { clearInterval(subTimer); subTimer = null; subShow('info', 'Still waiting. If you paid, your plan will activate shortly.'); pay.disabled = false; return; }
-          fetch(API + '/api/subscriptions/status/' + res.id).then(function (r) { return r.json(); }).then(function (s) {
-            if (!s) return;
-            if (s.status === 'yes') { clearInterval(subTimer); subTimer = null; subActivated(s.periodEnd); }
-            else if (s.status === 'failed') { clearInterval(subTimer); subTimer = null; subShow('err', 'Payment was not completed. Please try again.'); pay.disabled = false; }
-          });
-        }, 4000);
+        subShow('info', 'Opening secure payment\u2026');
+        openPesapal(res.iframeUrl, res.orderTrackingId, function (st) {
+          if (st === 'yes') { subActivated(null); }
+          else { subShow('err', 'Payment was not completed. Please try again.'); pay.disabled = false; }
+        });
       }).catch(function (err) { subShow('err', err.message || 'Something went wrong.'); pay.disabled = false; });
     });
 
@@ -1198,6 +1141,8 @@
   if ($('dashboard')) {
     if (!getToken()) { location.href = '/account.html'; }
     var user = currentUser();
+    var editId = null;      // id of the listing currently being edited (null = create)
+    var myItems = [];       // last-loaded listings, so Edit can prefill the form
     if (user && $('hello')) $('hello').textContent = 'Welcome, ' + (user.name || 'there');
     if ($('signout')) $('signout').addEventListener('click', function (e) { e.preventDefault(); clearAuth(); location.href = '/'; });
     if ($('ag-county')) wireCountyDatalist($('ag-county'), $('ag-region'), $('ag-townlist'), $('ag-county-list'));
@@ -1274,10 +1219,12 @@
     function loadListings() {
       fetch(API + '/api/agent/listings', { headers: authHeaders() }).then(guard).then(function (r) { return r.json(); }).then(function (d) {
         var items = (d && d.items) || [];
+        myItems = items;
         if (!items.length) { $('my-listings').innerHTML = '<p class="dc-sub">No properties yet — add your first one above.</p>'; return; }
         $('my-listings').innerHTML = '<table class="dash-table"><thead><tr><th>Property</th><th>Status</th><th>Views</th><th>Actions</th></tr></thead><tbody>' +
           items.map(function (l) {
-            var act = (l.status === 'published')
+            var act = '<button class="mini-btn" data-act="edit" data-id="' + l.id + '">Edit</button>';
+            act += (l.status === 'published')
               ? '<button class="mini-btn" data-act="unpublish" data-id="' + l.id + '">Unpublish</button>'
               : '<button class="mini-btn primary" data-act="publish" data-id="' + l.id + '">Publish</button>';
             act += '<button class="mini-btn danger" data-act="delete" data-id="' + l.id + '">Delete</button>';
@@ -1291,6 +1238,7 @@
     }
 
     function doAct(act, id) {
+      if (act === 'edit') { startEdit(id); return; }
       if (act === 'delete') {
         if (!confirm('Delete this property?')) return;
         fetch(API + '/api/agent/listings/' + id, { method: 'DELETE', headers: authHeaders() }).then(guard).then(function () { loadListings(); loadSummary(); });
@@ -1325,39 +1273,108 @@
       var fd = new FormData(); files.slice(0, 12).forEach(function (f) { fd.append('files', f); });
       return fetch(API + '/api/uploads', { method: 'POST', body: fd }).then(function (r) { return r.json(); }).then(function (res) { return (res && res.files) ? res.files : []; });
     }
+    // Switch the form between "create" and "edit" presentation.
+    function resetFormMode() {
+      editId = null;
+      if ($('agent-form-title')) $('agent-form-title').textContent = 'Add a property';
+      if ($('agent-submit')) $('agent-submit').textContent = 'Save as draft';
+      if ($('agent-cancel')) $('agent-cancel').style.display = 'none';
+    }
+
+    // Prefill the form with an existing listing so the user can edit it (drafts or published).
+    function startEdit(id) {
+      var l = null;
+      for (var i = 0; i < myItems.length; i++) { if (String(myItems[i].id) === String(id)) { l = myItems[i]; break; } }
+      if (!l) { toast('Could not load that property.'); return; }
+      var f = $('agent-form');
+      editId = l.id;
+      f.title.value = l.title || '';
+      if (f.deal) f.deal.value = l.deal || 'rent';
+      if (f.type) f.type.value = l.type || '';
+      if (f.price) f.price.value = l.price != null ? String(l.price) : '';
+      if (f.county) f.county.value = l.county || '';
+      if (f.region) f.region.value = l.region || '';
+      if (f.beds) f.beds.value = l.beds != null ? l.beds : '';
+      if (f.baths) f.baths.value = l.baths != null ? l.baths : '';
+      if ($('ag-roomCount')) $('ag-roomCount').value = l.roomCount != null ? l.roomCount : '';
+      if (f.description) f.description.value = l.description || '';
+      if ($('ag-lat')) $('ag-lat').value = (l.lat != null ? l.lat : '');
+      if ($('ag-lng')) $('ag-lng').value = (l.lng != null ? l.lng : '');
+      // Plot size: split "2 acres" back into value + unit.
+      if ($('ag-size-value')) {
+        var sv = '', su = 'acres';
+        if (l.size) { var m = String(l.size).match(/^\s*([\d.]+)\s*(\w+)?/); if (m) { sv = m[1]; if (m[2]) su = m[2]; } }
+        $('ag-size-value').value = sv;
+        if ($('ag-size-unit') && su) $('ag-size-unit').value = su;
+      }
+      agUpdateDeal();
+      // Reflect the new price in the commission preview.
+      if ($('ag-price')) { try { $('ag-price').dispatchEvent(new Event('input')); } catch (e) {} }
+      // Recenter the map picker on the saved coordinates, if any.
+      if (agPicker && l.lat != null && l.lng != null && agPicker.place) {
+        try { agPicker.place(Number(l.lat), Number(l.lng), 16); } catch (e) {}
+      }
+      if ($('agent-form-title')) $('agent-form-title').textContent = 'Edit property';
+      if ($('agent-submit')) $('agent-submit').textContent = 'Save changes';
+      if ($('agent-cancel')) $('agent-cancel').style.display = '';
+      try { $('agent-form').scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) {}
+    }
+
+    if ($('agent-cancel')) {
+      $('agent-cancel').addEventListener('click', function () {
+        var f = $('agent-form'); f.reset(); resetFormMode(); agUpdateDeal();
+        var s = $('agent-status'); if (s) { s.className = 'status'; s.textContent = ''; }
+      });
+    }
+
     $('agent-form').addEventListener('submit', function (e) {
       e.preventDefault();
       var f = e.target, s = $('agent-status');
       if (f.title.value.trim().length < 4) { s.className = 'status show err'; s.textContent = 'Add a clear title.'; return; }
-      s.className = 'status show info'; s.textContent = 'Uploading & saving…';
+      var isEdit = !!editId;
+      s.className = 'status show info'; s.textContent = isEdit ? 'Saving changes…' : 'Uploading & saving…';
       upFiles($('ag-photos').files).then(function (pf) {
         var isLandDeal = f.deal.value === 'land';
         var vidsPromise = isLandDeal ? Promise.resolve([]) : upFiles($('ag-videos').files);
         return vidsPromise.then(function (vf) {
           var photos = pf.filter(function (x) { return x.type === 'image'; }).map(function (x) { return x.url; });
           var videos = vf.filter(function (x) { return x.type === 'video'; }).map(function (x) { return x.url; });
-          var tier = videos.length ? 'showcase' : 'standard';
           var sizeStr = '', areaAcres = null;
           if (isLandDeal && $('ag-size-value') && $('ag-size-value').value) {
             var su = ($('ag-size-unit') || {}).value || 'acres';
             sizeStr = $('ag-size-value').value + ' ' + su;
             areaAcres = acresOf($('ag-size-value').value, su);
           }
+          var body = {
+            title: f.title.value, deal: f.deal.value, type: f.type.value, price: f.price.value,
+            region: f.region.value, county: f.county ? f.county.value : '', beds: f.beds.value, baths: f.baths.value,
+            roomCount: $('ag-roomCount') ? $('ag-roomCount').value : '',
+            size: sizeStr, areaAcres: areaAcres,
+            lat: $('ag-lat') ? $('ag-lat').value : '', lng: $('ag-lng') ? $('ag-lng').value : '',
+            description: f.description.value,
+          };
+          if (isEdit) {
+            // On edit, only overwrite media when the user actually uploaded new files.
+            if (photos.length) { body.photos = photos; body.tier = videos.length ? 'showcase' : 'standard'; }
+            if (videos.length) { body.videos = videos; body.tier = 'showcase'; }
+            return fetch(API + '/api/agent/listings/' + editId, {
+              method: 'PUT', headers: authHeaders({ 'Content-Type': 'application/json' }),
+              body: JSON.stringify(body),
+            }).then(guard).then(function (r) { return r.json(); });
+          }
+          body.photos = photos; body.videos = videos;
+          body.tier = videos.length ? 'showcase' : 'standard';
+          body.phone = (user && user.phone) || '';
           return fetch(API + '/api/agent/listings', {
             method: 'POST', headers: authHeaders({ 'Content-Type': 'application/json' }),
-            body: JSON.stringify({
-              title: f.title.value, deal: f.deal.value, type: f.type.value, price: f.price.value,
-              region: f.region.value, county: f.county ? f.county.value : '', beds: f.beds.value, baths: f.baths.value,
-              size: sizeStr, areaAcres: areaAcres,
-              lat: $('ag-lat') ? $('ag-lat').value : '', lng: $('ag-lng') ? $('ag-lng').value : '',
-              description: f.description.value, photos: photos, videos: videos, tier: tier, phone: (user && user.phone) || '',
-            }),
+            body: JSON.stringify(body),
           }).then(guard).then(function (r) { return r.json(); });
         });
       }).then(function (res) {
         if (!res || res.error) throw new Error(res && res.error ? res.error : 'Could not save');
-        s.className = 'status show ok'; s.textContent = 'Saved as draft — hit Publish when ready.';
-        f.reset(); agUpdateDeal(); loadListings(); loadSummary();
+        s.className = 'status show ok';
+        s.textContent = isEdit ? 'Changes saved.' : 'Saved as draft — hit Publish when ready.';
+        f.reset(); resetFormMode(); agUpdateDeal(); loadListings(); loadSummary();
       }).catch(function (err) { s.className = 'status show err'; s.textContent = err.message; });
     });
 
@@ -1429,17 +1446,15 @@
     }
 
     function payCommission() {
-      var phone = (user && user.phone) || prompt('M-Pesa number to pay from:');
-      if (!phone) return;
-      fetch(API + '/api/agent/commission/pay', { method: 'POST', headers: authHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify({ provider: 'mpesa', phone: phone }) })
+      var btn = $('pay-commission'); if (btn) btn.disabled = true;
+      fetch(API + '/api/agent/commission/pay', { method: 'POST', headers: authHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify({ provider: 'pesapal' }) })
         .then(guard).then(function (r) { return r.json(); }).then(function (res) {
-          if (!res || res.error) { toast(res && res.error ? res.error : 'Could not start'); return; }
-          toast('Check your phone to approve the commission payment.');
-          var n = 0, t = setInterval(function () {
-            n++; if (n > 20) { clearInterval(t); return; }
-            loadTransactions();
-          }, 5000);
-        });
+          if (!res || res.error) { toast(res && res.error ? res.error : 'Could not start'); if (btn) btn.disabled = false; return; }
+          openPesapal(res.iframeUrl, res.orderTrackingId, function (st) {
+            if (st === 'yes') { toast('Commission payment received — thank you!'); loadTransactions(); }
+            else { toast('Payment was not completed. Please try again.'); if (btn) btn.disabled = false; }
+          });
+        }).catch(function () { toast('Something went wrong.'); if (btn) btn.disabled = false; });
     }
 
     loadSummary(); loadListings(); loadLeads(); loadTransactions();
