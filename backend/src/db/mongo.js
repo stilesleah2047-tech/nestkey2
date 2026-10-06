@@ -223,7 +223,14 @@ Object.assign(module.exports, {
   // so flip both here, otherwise an admin-published listing stays hidden on browse.
   async publish(id) { await Listing.findByIdAndUpdate(id, { paid: true, status: 'published' }); },
   async setListingFlags(id, { featured, verified }) { await Listing.findByIdAndUpdate(id, { featured: !!featured, verified: !!verified }); },
-  async updateOwned(id, ownerId, f) { await Listing.findOneAndUpdate({ _id: id, ownerId }, f); },
+  async updateOwned(id, ownerId, f) {
+    if (!mongoose.isValidObjectId(id)) return;
+    const allow = ['title', 'deal', 'type', 'price', 'beds', 'baths', 'roomCount', 'region', 'county', 'location', 'description', 'size', 'areaAcres', 'lat', 'lng', 'photos', 'videos', 'tier'];
+    const upd = {};
+    allow.forEach((k) => { if (f[k] !== undefined) upd[k] = f[k]; });
+    if (!Object.keys(upd).length) return;
+    await Listing.findOneAndUpdate({ _id: id, ownerId }, upd);
+  },
   async deleteOwned(id, ownerId) { await Listing.findOneAndDelete({ _id: id, ownerId }); },
   async incrementViews(id) { if (mongoose.isValidObjectId(id)) await Listing.findByIdAndUpdate(id, { $inc: { views: 1 } }); },
 
