@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Dashboard ~ NestKey</title>
+  <title>Dashboard — NestKey</title>
   <meta name="theme-color" content="#0B1B2B">
   <link rel="icon" type="image/png" href="/assets/icon-192.png">
   <link rel="apple-touch-icon" href="/assets/icon-192.png">
@@ -24,13 +24,13 @@
 
     <div class="dash-grid">
       <div>
-        <h2>Add a property</h2>
+        <h2 id="agent-form-title">Add a property</h2>
         <form class="form" id="agent-form">
           <div class="row">
             <div class="field full"><label>Title *</label><input name="title" required placeholder="e.g. 2-bedroom apartment in Kilimani"></div>
             <div class="field"><label>Deal</label><select name="deal" id="ag-deal"><option value="rent">For rent</option><option value="sale">For sale</option><option value="land">Land</option></select></div>
             <div class="field" id="ag-field-type"><label>Type</label><input name="type" placeholder="Apartment, Maisonette…"></div>
-            <div class="field"><label id="ag-price-label">Monthly rent (KSh)</label><input name="price" id="ag-price" type="number" min="0"></div>
+            <div class="field"><label id="ag-price-label">Monthly rent (KSh)</label><input name="price" id="ag-price" type="text" inputmode="text" autocomplete="off" placeholder="e.g. KSh 50,000, 50k, or fifty thousand"><small class="dc-sub" id="ag-price-echo"></small></div>
             <div class="field"><label>County</label><input name="county" id="ag-county" list="ag-county-list" placeholder="Type or pick a county"><datalist id="ag-county-list"></datalist></div>
             <div class="field"><label>Town / area</label><input name="region" id="ag-region" list="ag-townlist" placeholder="e.g. Kilimani"><datalist id="ag-townlist"></datalist></div>
             <div class="field full">
@@ -46,6 +46,7 @@
             </div>
             <div class="field" id="ag-field-beds"><label>Bedrooms</label><input name="beds" type="number" min="0"></div>
             <div class="field" id="ag-field-baths"><label>Bathrooms</label><input name="baths" type="number" min="0"></div>
+            <div class="field" id="ag-field-rooms"><label>General rooms (total)</label><input name="roomCount" id="ag-roomCount" type="number" min="0" placeholder="e.g. 8"><small class="hint">Total rooms in the whole property (all spaces, not just bedrooms).</small></div>
             <div class="field" id="ag-field-size" style="display:none"><label>Plot size</label>
               <div style="display:flex;gap:8px">
                 <input id="ag-size-value" type="number" min="0" step="0.01" placeholder="e.g. 2" style="flex:1">
@@ -58,7 +59,10 @@
             <div class="field full" id="ag-field-videos"><label>Videos (optional)</label><input id="ag-videos" type="file" accept="video/*" multiple></div>
           </div>
           <div class="status" id="agent-status"></div>
-          <button class="btn block" type="submit">Save as draft</button>
+          <div class="form-actions" style="display:flex;gap:10px;flex-wrap:wrap">
+            <button class="btn block" id="agent-submit" type="submit">Save as draft</button>
+            <button class="btn ghost" id="agent-cancel" type="button" style="display:none">Cancel edit</button>
+          </div>
         </form>
       </div>
 
@@ -74,7 +78,7 @@
     <div class="dash-split">
       <div>
         <h2 style="margin-top:34px">Payment details</h2>
-        <p class="dc-sub">Where buyers pay you directly for properties you're selling. The money goes straight to your account  NestKey records the sale and invoices our 8% separately. Rentals are commission-free (covered by your monthly plan).</p>
+        <p class="dc-sub">Where buyers pay you directly for properties you're selling. The money goes straight to your account — NestKey records the sale and invoices our 8% separately. Rentals are commission-free (covered by your monthly plan).</p>
         <form class="form" id="payout-form">
           <div class="field"><label>Receive payments by</label>
             <select name="payoutMethod" id="pm-method"><option value="">Select…</option><option value="mpesa">M-Pesa</option><option value="bank">Bank</option></select></div>
