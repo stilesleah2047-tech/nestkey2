@@ -259,11 +259,31 @@ Object.assign(module.exports, {
   async setListingFlags(id, { featured, verified }) {
     await pool.query('UPDATE listings SET featured = $1, verified = $2 WHERE id = $3', [!!featured, !!verified, id]);
   },
+  // Robust owner edit — updates ONLY the fields that were supplied, so an
+  // agent can edit any property (including a published one) without wiping
+  // untouched columns or changing its published status.
   async updateOwned(id, ownerId, f) {
+    const map = {
+      title: 'title', deal: 'deal', type: 'type', price: 'price', beds: 'beds', baths: 'baths',
+      roomCount: 'room_count', region: 'region', county: 'county', location: 'location',
+      description: 'description', size: 'size', areaAcres: 'area_acres', lat: 'lat', lng: 'lng',
+      photos: 'photos', videos: 'videos', tier: 'tier',
+    };
+    const sets = [];
+    const vals = [];
+    let i = 1;
+    for (const k in map) {
+      if (f[k] === undefined) continue;
+      let v = f[k];
+      if (k === 'photos' || k === 'videos') v = JSON.stringify(v || []);
+      sets.push(`${map[k]}=$${i++}`);
+      vals.push(v);
+    }
+    if (!sets.length) return;
+    vals.push(id, ownerId);
     await pool.query(
-      `UPDATE listings SET title=$1, deal=$2, type=$3, price=$4, beds=$5, baths=$6,
-       region=$7, location=$8, description=$9 WHERE id=$10 AND owner_id=$11`,
-      [f.title, f.deal, f.type, f.price, f.beds, f.baths, f.region, f.location, f.description, id, ownerId]
+      `UPDATE listings SET ${sets.join(', ')} WHERE id=$${i++} AND owner_id=$${i++}`,
+      vals
     );
   },
   async deleteOwned(id, ownerId) {
