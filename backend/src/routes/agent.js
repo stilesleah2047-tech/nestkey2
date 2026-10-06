@@ -82,17 +82,32 @@ router.post('/listings', async (req, res) => {
   }
 });
 
-// PUT /api/agent/listings/:id — edit
+// PUT /api/agent/listings/:id — edit (works on drafts AND published listings;
+// does not change the published status, so a live listing stays live).
 router.put('/listings/:id', async (req, res) => {
   const l = await db.getOwned(req.params.id, req.user.id);
   if (!l) return res.status(404).json({ error: 'Not found' });
   const b = req.body || {};
-  await db.updateOwned(req.params.id, req.user.id, {
-    title: b.title || l.title, deal: b.deal || l.deal, type: b.type || l.type,
-    price: (b.price != null && String(b.price).trim() !== '') ? parsePrice(b.price) : l.price, beds: parseInt(b.beds, 10) || l.beds,
-    baths: parseInt(b.baths, 10) || l.baths, region: b.region || l.region,
-    location: b.location || l.location, description: b.description || l.description,
-  });
+  const f = {};
+  if (b.title != null && String(b.title).trim().length >= 4) f.title = String(b.title).slice(0, 160);
+  if (['rent', 'sale', 'land'].includes(b.deal)) f.deal = b.deal;
+  if (b.type != null) f.type = String(b.type).slice(0, 80);
+  if (b.price != null && String(b.price).trim() !== '') f.price = parsePrice(b.price);
+  if (b.beds != null && b.beds !== '') f.beds = parseInt(b.beds, 10) || 0;
+  if (b.baths != null && b.baths !== '') f.baths = parseInt(b.baths, 10) || 0;
+  if (b.roomCount != null && b.roomCount !== '') f.roomCount = Math.min(parseInt(b.roomCount, 10) || 0, 999);
+  if (b.region != null) f.region = String(b.region).slice(0, 80);
+  if (b.county != null && b.county !== '') f.county = String(b.county).slice(0, 80);
+  if (b.location != null) f.location = String(b.location).slice(0, 160);
+  if (b.description != null) f.description = String(b.description).slice(0, 4000);
+  if (b.size != null) f.size = String(b.size).slice(0, 40);
+  if (b.areaAcres != null && b.areaAcres !== '') f.areaAcres = parseFloat(b.areaAcres);
+  if (b.lat != null && b.lat !== '') f.lat = parseFloat(b.lat);
+  if (b.lng != null && b.lng !== '') f.lng = parseFloat(b.lng);
+  if (Array.isArray(b.photos) && b.photos.length) f.photos = b.photos.slice(0, 12);
+  if (Array.isArray(b.videos) && b.videos.length) f.videos = b.videos.slice(0, 6);
+  if (b.tier === 'standard' || b.tier === 'showcase') f.tier = b.tier;
+  await db.updateOwned(req.params.id, req.user.id, f);
   res.json({ ok: true });
 });
 
