@@ -170,6 +170,49 @@
   }
   initNav();
 
+  // Admin Command Center sidebar — the #dcMenu hamburger had no handler, so it did
+  // nothing. Wire it up as a self-contained off-canvas drawer (styles injected here
+  // so it works regardless of admin.css).
+  function initAdminNav() {
+    var shell = document.getElementById('adminShell');
+    var btn = document.getElementById('dcMenu');
+    if (!shell || !btn) return;
+    var side = shell.querySelector('.side');
+    if (!side) return;
+
+    if (!document.getElementById('dc-nav-style')) {
+      var st = document.createElement('style');
+      st.id = 'dc-nav-style';
+      st.textContent =
+        '@media (max-width:900px){' +
+          '.admin-shell{display:block !important;}' +
+          '.admin-shell .side{position:fixed;top:0;left:0;bottom:0;width:260px;max-width:82vw;' +
+            'transform:translateX(-100%);transition:transform .25s ease;z-index:1200;overflow-y:auto;}' +
+          '.admin-shell.nav-open .side{transform:translateX(0);box-shadow:0 20px 60px rgba(11,27,43,.35);}' +
+          '.dc-backdrop{position:fixed;inset:0;background:rgba(11,27,43,.5);opacity:0;visibility:hidden;' +
+            'transition:opacity .25s ease;z-index:1100;}' +
+          '.admin-shell.nav-open .dc-backdrop{opacity:1;visibility:visible;}' +
+          '.dc-menu-btn{display:inline-flex !important;}' +
+        '}' +
+        '@media (min-width:901px){.dc-menu-btn{display:none !important;}.dc-backdrop{display:none;}}';
+      document.head.appendChild(st);
+    }
+
+    var backdrop = shell.querySelector('.dc-backdrop');
+    if (!backdrop) { backdrop = document.createElement('div'); backdrop.className = 'dc-backdrop'; shell.appendChild(backdrop); }
+
+    btn.setAttribute('aria-expanded', 'false');
+    function closeNav() { shell.classList.remove('nav-open'); btn.setAttribute('aria-expanded', 'false'); }
+    function openNav() { shell.classList.add('nav-open'); btn.setAttribute('aria-expanded', 'true'); }
+    btn.addEventListener('click', function (e) {
+      e.preventDefault();
+      if (shell.classList.contains('nav-open')) closeNav(); else openNav();
+    });
+    backdrop.addEventListener('click', closeNav);
+    side.addEventListener('click', function (e) { if (e.target.closest('a')) closeNav(); });
+  }
+  initAdminNav();
+
   // Cookie consent banner.
   function initCookieConsent() {
     var KEY = 'nk_cookie_consent';
@@ -443,14 +486,9 @@
       var res = $('results');
       if (savedOnly) items = items.filter(function (l) { return isFav(l.id); });
       if (!items.length) { res.innerHTML = '<div class="empty"><h3>' + (savedOnly ? 'No saved listings yet — tap the heart on a listing to save it.' : 'No listings match your search') + '</h3></div>'; return; }
-      // Group by region for a "by area" layout.
-      var groups = {};
-      items.forEach(function (l) { var r = l.region || 'Other areas'; (groups[r] = groups[r] || []).push(l); });
-      var html = Object.keys(groups).sort().map(function (r) {
-        return '<h2 class="region-title">' + icon('pin') + ' ' + escapeHtml(r) + '</h2><div class="grid">' +
-          groups[r].map(card).join('') + '</div>';
-      }).join('');
-      res.innerHTML = html;
+      // One continuous grid — cards flow left-to-right and wrap to the next row
+      // once the row is full, instead of one card per area block.
+      res.innerHTML = '<div class="grid">' + items.map(card).join('') + '</div>';
       Array.prototype.forEach.call(res.querySelectorAll('.fav-btn'), function (b) {
         b.addEventListener('click', function (e) {
           e.stopPropagation();
