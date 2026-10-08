@@ -4,10 +4,10 @@ User-agent: *
 Allow: /
 
 # Keep private / app-only areas out of the index.
-Disallow: /account.html
-Disallow: /dashboard.html
-Disallow: /admin.html
-Disallow: /uploads/
+allow: /account.html
+allow: /dashboard.html
+allow: /admin.html
+allow: /uploads/
 
 # Sitemap location (absolute URL, as required by Google).
 Sitemap: https://nestkey.co.ke/sitemap.xml
