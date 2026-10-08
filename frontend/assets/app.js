@@ -1641,3 +1641,21 @@
     });
   }
 })();
+window.onGoogleCredential = function (resp) {
+  var s = document.getElementById('google-status');
+  if (s) { s.className = 'status show info'; s.textContent = 'Signing you in…'; }
+  fetch('/api/auth/google', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ credential: resp.credential }),
+  }).then(function (r) { return r.json(); }).then(function (res) {
+    if (!res || res.error) throw new Error(res && res.error ? res.error : 'Sign-in failed');
+    try {
+      localStorage.setItem('hh_token', res.token);
+      localStorage.setItem('hh_user', JSON.stringify(res.user));
+    } catch (e) {}
+    location.href = res.user && res.user.isAdmin ? '/admin.html' : '/dashboard.html';
+  }).catch(function (err) {
+    if (s) { s.className = 'status show err'; s.textContent = err.message; }
+  });
+};
