@@ -498,7 +498,7 @@
         });
       });
       Array.prototype.forEach.call(res.querySelectorAll('.card'), function (c) {
-        c.addEventListener('click', function () { openModal(c.getAttribute('data-id')); });
+        c.addEventListener('click', function () { location.href = 'property.html?id=' + encodeURIComponent(c.getAttribute('data-id')); });
       });
     }
 
@@ -553,7 +553,7 @@
         var m = L.marker(c).addTo(markersLayer).bindPopup(html);
         m.on('popupopen', function () {
           var btn = document.querySelector('.map-pop .mp-view[data-id="' + l.id + '"]');
-          if (btn) btn.onclick = function () { openModal(l.id); };
+          if (btn) btn.onclick = function () { location.href = 'property.html?id=' + encodeURIComponent(l.id); };
         });
       });
       if (pts.length) map.fitBounds(pts, { padding: [40, 40], maxZoom: 14 });
