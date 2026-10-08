@@ -19,35 +19,103 @@
   <section class="section">
     <div class="wrap" style="max-width:900px">
       <p style="margin:0 0 14px"><a href="/browse.html" style="color:var(--cerulean-dk);font-weight:600">&larr; Back to listings</a></p>
-      <div id="property-shell" class="detail-page">
-        <p class="dc-sub" style="padding:40px;text-align:center">Loading property…</p>
+      <div class="modal open" style="position:static;display:block;background:none;padding:0">
+        <div class="panel" id="property-panel" style="max-width:none;max-height:none;box-shadow:none;border:1px solid var(--line)">
+          <p class="dc-sub" style="padding:50px;text-align:center">Loading property…</p>
+        </div>
       </div>
     </div>
   </section>
 
   <footer class="foot"><div class="wrap">NestKey · find a home anywhere in Kenya · <a href="/privacy.html">Privacy</a> · <a href="/cookies.html">Cookies</a></div></footer>
 
-  <!-- Reuse the exact modal markup app.js writes into, but shown inline as a page -->
-  <div class="modal open" id="modal" style="position:static;display:block;background:none;padding:0">
-    <div class="panel" id="modalPanel"></div>
-    <button id="modalClose" style="display:none"></button>
-  </div>
-
-  <script>
-    (function () {
-      var id = new URLSearchParams(location.search).get('id');
-      var shell = document.getElementById('property-shell');
-      if (!id) { shell.innerHTML = '<p class="dc-sub" style="padding:40px;text-align:center">No property specified.</p>'; return; }
-      var base = (window.NESTKEY_API ? String(window.NESTKEY_API).replace(/\/$/, '') : '');
-      fetch(base + '/api/listings/' + id).then(function (r) { return r.json(); }).then(function (l) {
-        if (!l || l.error) { shell.innerHTML = '<p class="dc-sub" style="padding:40px;text-align:center">Property not found. <a href="/browse.html">Browse all →</a></p>'; return; }
-        document.title = l.title + ' — NestKey';
-        shell.style.display = 'none';            // hide the "Loading…" box
-      });
-    })();
-  </script>
-
   <script src="/assets/config.js"></script>
+  <script>
+  (function () {
+    var API = (window.NESTKEY_API ? String(window.NESTKEY_API).replace(/\/$/, '') : '');
+    var id = new URLSearchParams(location.search).get('id');
+    var panel = document.getElementById('property-panel');
+    function esc(s){ return String(s||'').replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+    function money(n){ return 'KSh ' + Number(n||0).toLocaleString('en-KE'); }
+    function mediaGrid(photos, videos){
+      var v=(videos||[]).map(function(u){return '<video controls preload="metadata" src="'+u+'"></video>';}).join('');
+      var p=(photos||[]).map(function(u){return '<img src="'+u+'" data-full="'+u+'" alt="">';}).join('');
+      return '<div class="room-media">'+v+p+'</div>';
+    }
+    if (!id) { panel.innerHTML = '<p class="dc-sub" style="padding:50px;text-align:center">No property specified.</p>'; return; }
+
+    fetch(API + '/api/listings/' + id).then(function(r){return r.json();}).then(function(l){
+      if (!l || l.error) { panel.innerHTML = '<p class="dc-sub" style="padding:50px;text-align:center">Property not found. <a href="/browse.html">Browse all listings &rarr;</a></p>'; return; }
+      document.title = l.title + ' — NestKey';
+
+      var main = (l.photos && l.photos[0]) || '';
+      var deal = l.deal==='sale'?'For sale':(l.deal==='land'?'Land':'For rent');
+      var badge = l.tier==='showcase' ? '<span class="tier-badge">Video showcase</span>' : '';
+      if (l.verified) badge += '<span class="verified-badge">★ Verified</span>';
+      if (l.featured) badge += '<span class="feat-badge">Featured</span>';
+
+      var ownerPhone = (l.submitter && l.submitter.phone) ? String(l.submitter.phone).replace(/\D/g,'') : '';
+      var waLink = ownerPhone ? '<a class="btn" style="margin-bottom:12px" target="_blank" rel="noopener" href="https://wa.me/'+ownerPhone+'?text='+encodeURIComponent('Hi, I saw your listing "'+l.title+'" on NestKey')+'">Chat on WhatsApp</a>' : '';
+
+      var generalVideos = (l.videos && l.videos.length) ? '<div class="showcase-section"><h3>Video tour</h3>'+mediaGrid([], l.videos)+'</div>' : '';
+      var showcase = '';
+      if (l.rooms && l.rooms.length) {
+        showcase = l.rooms.map(function(r){
+          if (!(r.photos&&r.photos.length)&&!(r.videos&&r.videos.length)&&!r.description) return '';
+          return '<div class="showcase-section"><h3>'+esc(r.label||'Room')+'</h3>'+(r.description?'<p class="rdesc">'+esc(r.description)+'</p>':'')+mediaGrid(r.photos,r.videos)+'</div>';
+        }).join('');
+      }
+      var flat = (!l.rooms || !l.rooms.length) ? '<div class="thumbs">'+(l.photos||[]).map(function(u){return '<img src="'+u+'" data-full="'+u+'">';}).join('')+'</div>' : '';
+
+      var hasGeo = (l.lat!=null && l.lng!=null);
+      var locBlock = hasGeo ? ('<div class="showcase-section"><h3>Location</h3><div id="detail-map" class="detail-map"></div>'+
+        '<div class="dir-actions"><a class="btn" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination='+l.lat+','+l.lng+'">Get directions</a>'+
+        '<a class="btn ghost" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query='+l.lat+','+l.lng+'">Open in Google Maps</a></div></div>') : '';
+
+      var enquire = '<div class="enquire"><h3>Enquire about this property</h3>'+waLink+
+        '<input id="enq-name" placeholder="Your name"><input id="enq-phone" placeholder="Your phone (for a callback)">'+
+        '<textarea id="enq-msg" placeholder="Your message"></textarea>'+
+        '<div class="status" id="enq-status"></div><button class="btn" id="enq-send">Send enquiry</button></div>';
+
+      panel.innerHTML =
+        (main ? '<img class="hero-img" id="mMain" src="'+main+'" alt="">' : '') +
+        '<div class="pad"><div class="price" style="font-size:1.5rem;font-weight:800">'+money(l.price)+'</div>'+
+        '<h2>'+esc(l.title)+' '+badge+'</h2>'+
+        '<p class="loc">'+esc(l.location||l.region||'')+' · '+deal+'</p>'+
+        '<div class="meta" style="display:flex;gap:16px;color:#5c6b7e;margin:10px 0">'+
+        (l.beds?'<span>'+l.beds+' bed</span>':'')+
+        (l.baths?'<span>'+l.baths+' bath</span>':'')+
+        (l.type?'<span>'+esc(l.type)+'</span>':'')+'</div>'+
+        '<p style="white-space:pre-line">'+esc(l.description||'')+'</p>'+
+        generalVideos+showcase+flat+locBlock+enquire+'</div>';
+
+      if (hasGeo && window.L) {
+        setTimeout(function(){
+          try {
+            var dm = L.map('detail-map',{scrollWheelZoom:false}).setView([l.lat,l.lng],16);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(dm);
+            L.marker([l.lat,l.lng]).addTo(dm); dm.invalidateSize();
+          } catch(e){}
+        },150);
+      }
+      var mMain = document.getElementById('mMain');
+      Array.prototype.forEach.call(panel.querySelectorAll('img[data-full]'), function(t){
+        t.addEventListener('click', function(){ if(mMain) mMain.src = t.getAttribute('data-full'); });
+      });
+      var send = document.getElementById('enq-send');
+      if (send) send.addEventListener('click', function(){
+        var st = document.getElementById('enq-status');
+        if ((document.getElementById('enq-phone').value||'').trim().length < 7) { st.className='status show err'; st.textContent='Add a phone number so the owner can reach you.'; return; }
+        st.className='status show info'; st.textContent='Sending…';
+        fetch(API+'/api/listings/'+l.id+'/enquire',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:document.getElementById('enq-name').value,phone:document.getElementById('enq-phone').value,message:document.getElementById('enq-msg').value})})
+          .then(function(r){return r.json();}).then(function(res){ if(!res||res.error) throw 0; st.className='status show ok'; st.textContent='Sent! The owner will get your details.'; })
+          .catch(function(){ st.className='status show err'; st.textContent='Could not send. Please try again.'; });
+      });
+    }).catch(function(){
+      panel.innerHTML = '<p class="dc-sub" style="padding:50px;text-align:center">Could not load this property.</p>';
+    });
+  })();
+  </script>
   <script src="/assets/app.js"></script>
 </body>
 </html>
