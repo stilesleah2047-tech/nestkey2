@@ -24,7 +24,8 @@ app.use('/api/rent', require('./src/routes/rent'));
 app.use('/api/ratings', require('./src/routes/ratings'));
 app.use('/api/contact', require('./src/routes/contact'));
 app.use('/api/favourites', require('./src/routes/favourites'));
-
+app.use('/api/auth', require('./src/routes/auth'));
+app.use('/api/auth', require('./src/routes/google'));   // <-- add this line
 // Real-time stream (Server-Sent Events). ?token= to also receive private/admin events.
 const events = require('./src/events');
 const { verify, isAdmin } = require('./src/auth');
