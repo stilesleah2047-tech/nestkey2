@@ -6,7 +6,6 @@
   <title>Property — NestKey</title>
   <meta name="theme-color" content="#0B1B2B">
   <link rel="icon" type="image/png" href="/assets/icon-192.png">
-  <link rel="apple-touch-icon" href="/assets/icon-192.png">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <link rel="stylesheet" href="/assets/styles.css">
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -17,14 +16,37 @@
     <nav><a href="/">Home</a><a href="/browse.html">Browse</a><a href="/services.html">Services</a><a href="/post.html" class="nav-post">Post a house</a><span id="navauth"></span></nav>
   </div></header>
 
-  <section class="section" style="padding-top:18px">
-    <div class="detail-back"><a href="/browse.html">&larr; Back to listings</a></div>
-    <div class="detail-page" id="property-detail">
-      <p class="dc-sub" style="padding:40px;text-align:center">Loading property…</p>
+  <section class="section">
+    <div class="wrap" style="max-width:900px">
+      <p style="margin:0 0 14px"><a href="/browse.html" style="color:var(--cerulean-dk);font-weight:600">&larr; Back to listings</a></p>
+      <div id="property-shell" class="detail-page">
+        <p class="dc-sub" style="padding:40px;text-align:center">Loading property…</p>
+      </div>
     </div>
   </section>
 
   <footer class="foot"><div class="wrap">NestKey · find a home anywhere in Kenya · <a href="/privacy.html">Privacy</a> · <a href="/cookies.html">Cookies</a></div></footer>
+
+  <!-- Reuse the exact modal markup app.js writes into, but shown inline as a page -->
+  <div class="modal open" id="modal" style="position:static;display:block;background:none;padding:0">
+    <div class="panel" id="modalPanel"></div>
+    <button id="modalClose" style="display:none"></button>
+  </div>
+
+  <script>
+    (function () {
+      var id = new URLSearchParams(location.search).get('id');
+      var shell = document.getElementById('property-shell');
+      if (!id) { shell.innerHTML = '<p class="dc-sub" style="padding:40px;text-align:center">No property specified.</p>'; return; }
+      var base = (window.NESTKEY_API ? String(window.NESTKEY_API).replace(/\/$/, '') : '');
+      fetch(base + '/api/listings/' + id).then(function (r) { return r.json(); }).then(function (l) {
+        if (!l || l.error) { shell.innerHTML = '<p class="dc-sub" style="padding:40px;text-align:center">Property not found. <a href="/browse.html">Browse all →</a></p>'; return; }
+        document.title = l.title + ' — NestKey';
+        shell.style.display = 'none';            // hide the "Loading…" box
+      });
+    })();
+  </script>
+
   <script src="/assets/config.js"></script>
   <script src="/assets/app.js"></script>
 </body>
