@@ -408,3 +408,11 @@ footer.foot { background: var(--navy); color: #9fb4cc; padding: 24px 0; text-ali
 ul.desc-list { list-style: disc; }
 ol.desc-list { list-style: decimal; }
 .desc-list li::marker { color: var(--cerulean-dk, #0fb5a6); font-weight: 700; }
+/* Standalone property page */
+.detail-page { max-width: 900px; margin: 24px auto 40px; background: #fff; border: 1px solid var(--line); border-radius: var(--r-lg); overflow: hidden; box-shadow: var(--shadow); }
+.detail-page .hero-img { width: 100%; aspect-ratio: 16/9; object-fit: cover; display: block; }
+.detail-page .pad { padding: 22px 24px 30px; }
+.detail-page .thumbs { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+.detail-page .thumbs img { width: 92px; height: 70px; object-fit: cover; border-radius: 8px; cursor: pointer; }
+.detail-back { max-width: 900px; margin: 18px auto 0; }
+.detail-back a { color: var(--cerulean-dk); font-weight: 600; }
