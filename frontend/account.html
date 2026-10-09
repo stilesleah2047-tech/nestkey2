@@ -9,61 +9,174 @@
   <link rel="apple-touch-icon" href="/assets/icon-192.png">
   <link rel="stylesheet" href="/assets/styles.css">
   <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <style>
+    /* ---------------- Split-screen auth page (NestKey theme) ---------------- */
+    body.auth-page { margin: 0; background: var(--navy); }
+    .auth-split { display: grid; grid-template-columns: 46% 54%; min-height: 100vh; }
+
+    /* Left hero */
+    .auth-hero {
+      position: relative; color: #fff; padding: 44px 52px; display: flex; flex-direction: column;
+      justify-content: space-between; overflow: hidden;
+      background:
+        linear-gradient(150deg, rgba(11,27,43,.90), rgba(14,147,132,.72)),
+        url('https://images.unsplash.com/photo-1613977257363-707ba9348227?auto=format&fit=crop&w=1400&q=70') center/cover no-repeat;
+    }
+    .auth-hero::after {
+      content: ""; position: absolute; right: -40px; top: 0; bottom: 0; width: 90px;
+      background: #fff; border-radius: 60% 0 0 60% / 50% 0 0 50%; transform: translateX(60%);
+    }
+    .ah-top { position: relative; z-index: 2; }
+    .ah-brand { display: inline-flex; align-items: center; gap: 10px; color: #fff; font-weight: 800; font-size: 1.4rem; text-decoration: none; }
+    .ah-brand img { height: 40px; width: 40px; object-fit: contain; }
+    .ah-brand b { color: var(--cerulean); }
+    .ah-tag { display: block; margin-top: 10px; color: #cfe6e2; font-size: .9rem; letter-spacing: .02em; }
+    .ah-mid { position: relative; z-index: 2; }
+    .ah-mid h1 { font-size: clamp(1.9rem, 3.4vw, 2.8rem); line-height: 1.12; margin: 0 0 14px; font-weight: 800; }
+    .ah-mid h1 span { color: var(--gold); }
+    .ah-mid > p { color: #dbe7f0; font-size: 1.05rem; max-width: 440px; margin: 0 0 30px; }
+    .ah-features { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; max-width: 500px; }
+    .ah-feat { text-align: center; }
+    .ah-feat .fic { width: 44px; height: 44px; margin: 0 auto 8px; border-radius: 12px; display: grid; place-items: center; background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.18); }
+    .ah-feat .fic svg { width: 22px; height: 22px; color: var(--cerulean); }
+    .ah-feat span { font-size: .78rem; color: #e6eef5; line-height: 1.25; display: block; }
+    .ah-foot { position: relative; z-index: 2; font-style: italic; color: #cfe6e2; font-size: 1.05rem; }
+
+    /* Right panel */
+    .auth-panel { background: #fff; display: flex; align-items: center; justify-content: center; padding: 40px 24px; position: relative; }
+    .auth-panel::before, .auth-panel::after { content: ""; position: absolute; border-radius: 50%; background: rgba(15,181,166,.07); }
+    .auth-panel::before { width: 220px; height: 220px; top: -70px; right: -60px; }
+    .auth-panel::after { width: 180px; height: 180px; bottom: -60px; left: -50px; }
+    .auth-card { position: relative; z-index: 2; width: 100%; max-width: 420px; }
+    .ac-brand { text-align: center; margin-bottom: 18px; }
+    .ac-brand img { height: 46px; width: 46px; object-fit: contain; }
+    .ac-brand h2 { margin: 12px 0 4px; font-size: 1.5rem; color: var(--navy); }
+    .ac-brand p { margin: 0; color: var(--muted); font-size: .92rem; }
+
+    .auth-card .auth-tabs { margin-bottom: 18px; }
+    .auth-card .form { border: none; box-shadow: none; padding: 0; }
+    .auth-card .form h3 { display: none; }
+
+    /* OR divider */
+    .auth-divider { display: flex; align-items: center; gap: 12px; margin: 18px 0; color: var(--muted); font-size: .8rem; font-weight: 700; letter-spacing: .08em; }
+    .auth-divider::before, .auth-divider::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+
+    /* Password field with show/hide */
+    .pw-wrap { position: relative; }
+    .pw-wrap input { width: 100%; padding-right: 44px; }
+    .pw-eye { position: absolute; top: 50%; right: 10px; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--muted); padding: 4px; display: grid; place-items: center; }
+    .pw-eye svg { width: 20px; height: 20px; }
+
+    .login-row { display: flex; align-items: center; justify-content: space-between; margin: 4px 0 14px; font-size: .88rem; }
+    .login-row label { display: inline-flex; align-items: center; gap: 7px; color: var(--ink); font-weight: 600; }
+    .login-row a { font-weight: 700; }
+
+    .btn.block { gap: 8px; }
+
+    @media (max-width: 900px) {
+      .auth-split { grid-template-columns: 1fr; }
+      .auth-hero { display: none; }
+      .auth-panel { min-height: 100vh; }
+    }
+  </style>
 </head>
-<body>
-  <header class="top"><div class="wrap">
-    <a class="brand" href="/"><img class="brand-mark" src="/assets/logo.png" alt="NestKey"><span class="brand-word">Nest<b>Key</b></span></a>
-    <nav><a href="/browse.html">Browse</a><a href="/services.html">Services</a><span id="navauth"></span></nav>
-  </div></header>
+<body class="auth-page">
+  <div class="auth-split">
 
-  <section class="section"><div class="wrap" style="max-width:460px" id="account">
-    <div class="auth-tabs">
-      <button data-tab="login" class="active">Sign in</button>
-      <button data-tab="register">Create account</button>
-    </div>
+    <!-- ---------------- Left hero ---------------- -->
+    <aside class="auth-hero">
+      <div class="ah-top">
+        <a class="ah-brand" href="/"><img src="/assets/logo.png" alt="NestKey"> Nest<b>Key</b></a>
+        <span class="ah-tag">Find • Book • Make It Home</span>
+      </div>
 
-    <!-- Google sign-in -->
-    <div id="google-area" style="margin:18px 0 6px">
-      <div id="g_id_onload"
-           data-client_id="YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com"
-           data-callback="onGoogleCredential"
-           data-auto_select="false"
-           data-itp_support="true"></div>
-      <div class="g_id_signin"
-           data-type="standard"
-           data-theme="outline"
-           data-size="large"
-           data-text="continue_with"
-           data-shape="pill"
-           data-logo_alignment="left"
-           style="display:flex;justify-content:center"></div>
-      <div class="status" id="google-status"></div>
-      <div style="text-align:center;color:#8aa0a8;margin:14px 0;font-size:.85rem">— or use your email —</div>
-    </div>
+      <div class="ah-mid">
+        <h1>Your Next Home Is<br>Just a <span>Click Away</span></h1>
+        <p>Discover, explore and find the perfect property — all in one place.</p>
+        <div class="ah-features">
+          <div class="ah-feat"><div class="fic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"/><path d="M9 12l2 2 4-4"/></svg></div><span>Verified Listings</span></div>
+          <div class="ah-feat"><div class="fic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 018 0v3"/></svg></div><span>Secure Transactions</span></div>
+          <div class="ah-feat"><div class="fic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-5.5-7-11a7 7 0 0114 0c0 5.5-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg></div><span>Prime Locations</span></div>
+          <div class="ah-feat"><div class="fic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14v-2a8 8 0 0116 0v2"/><rect x="2" y="14" width="4" height="6" rx="1"/><rect x="18" y="14" width="4" height="6" rx="1"/><path d="M18 20a4 4 0 01-4 3h-2"/></svg></div><span>Dedicated Support</span></div>
+        </div>
+      </div>
 
-    <form class="form" id="login-form">
-      <h3 style="margin:0 0 14px">Welcome back</h3>
-      <div class="field"><label>Email</label><input name="email" type="email" required></div>
-      <div class="field"><label>Password</label><input name="password" type="password" required></div>
-      <div class="status" id="login-status"></div>
-      <button class="btn block" type="submit">Sign in</button>
-    </form>
+      <div class="ah-foot">Better Homes. Brighter Futures.</div>
+    </aside>
 
-    <form class="form" id="register-form" style="display:none">
-      <h3 style="margin:0 0 14px">Create your account</h3>
-      <div class="field"><label>Name</label><input name="name" type="text" placeholder="Your name"></div>
-      <div class="field"><label>I am a…</label>
-        <select name="role"><option value="landlord">Landlord</option><option value="agent">Agent / Agency</option><option value="individual">Individual</option></select></div>
-      <div class="field"><label>Company (optional)</label><input name="company" type="text"></div>
-      <div class="field"><label>Phone</label><input name="phone" type="tel" placeholder="07xx xxx xxx"></div>
-      <div class="field"><label>Email</label><input name="email" type="email" required></div>
-      <div class="field"><label>Password</label><input name="password" type="password" required placeholder="At least 6 characters"></div>
-      <div class="status" id="register-status"></div>
-      <button class="btn block" type="submit">Create account</button>
-    </form>
-  </div></section>
+    <!-- ---------------- Right panel ---------------- -->
+    <main class="auth-panel">
+      <div class="auth-card" id="account">
+        <div class="ac-brand">
+          <img src="/assets/logo.png" alt="NestKey">
+          <h2>Welcome back!</h2>
+          <p>Sign in to manage your listings and enquiries.</p>
+        </div>
 
-  <footer class="foot"><div class="wrap">NestKey · <a href="/privacy.html">Privacy</a> · <a href="/cookies.html">Cookies</a></div></footer>
+        <div class="auth-tabs">
+          <button data-tab="login" class="active">Sign in</button>
+          <button data-tab="register">Create account</button>
+        </div>
+
+        <!-- Google sign-in -->
+        <div id="google-area">
+          <div id="g_id_onload"
+               data-client_id="YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com"
+               data-callback="onGoogleCredential"
+               data-auto_select="false"
+               data-itp_support="true"></div>
+          <div class="g_id_signin"
+               data-type="standard"
+               data-theme="outline"
+               data-size="large"
+               data-text="continue_with"
+               data-shape="pill"
+               data-logo_alignment="left"
+               style="display:flex;justify-content:center"></div>
+          <div class="status" id="google-status"></div>
+        </div>
+
+        <div class="auth-divider"><span>OR</span></div>
+
+        <form class="form" id="login-form">
+          <h3>Welcome back</h3>
+          <div class="field"><label>Email</label><input name="email" type="email" placeholder="you@example.com" required></div>
+          <div class="field"><label>Password</label>
+            <div class="pw-wrap">
+              <input name="password" type="password" required>
+              <button type="button" class="pw-eye" data-eye aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg></button>
+            </div>
+          </div>
+          <div class="login-row">
+            <label><input type="checkbox" name="remember" checked> Remember me</label>
+            <a href="/contact.html">Forgot password?</a>
+          </div>
+          <div class="status" id="login-status"></div>
+          <button class="btn block" type="submit">Sign in
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg>
+          </button>
+        </form>
+
+        <form class="form" id="register-form" style="display:none">
+          <h3>Create your account</h3>
+          <div class="field"><label>Name</label><input name="name" type="text" placeholder="Your name"></div>
+          <div class="field"><label>I am a…</label>
+            <select name="role"><option value="landlord">Landlord</option><option value="agent">Agent / Agency</option><option value="individual">Individual</option></select></div>
+          <div class="field"><label>Company (optional)</label><input name="company" type="text"></div>
+          <div class="field"><label>Phone</label><input name="phone" type="tel" placeholder="07xx xxx xxx"></div>
+          <div class="field"><label>Email</label><input name="email" type="email" required></div>
+          <div class="field"><label>Password</label>
+            <div class="pw-wrap">
+              <input name="password" type="password" required placeholder="At least 6 characters">
+              <button type="button" class="pw-eye" data-eye aria-label="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg></button>
+            </div>
+          </div>
+          <div class="status" id="register-status"></div>
+          <button class="btn block" type="submit">Create account</button>
+        </form>
+      </div>
+    </main>
+  </div>
 
   <!-- Google credential handler (must be defined before the GSI callback fires) -->
   <script>
@@ -85,6 +198,17 @@
         if (s) { s.className = 'status show err'; s.textContent = err.message; }
       });
     };
+
+    /* Password show/hide toggle */
+    document.addEventListener('click', function (e) {
+      var btn = e.target.closest('[data-eye]');
+      if (!btn) return;
+      var input = btn.parentNode.querySelector('input');
+      if (!input) return;
+      var show = input.type === 'password';
+      input.type = show ? 'text' : 'password';
+      btn.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+    });
   </script>
   <script src="/assets/config.js"></script>
   <script src="/assets/app.js"></script>
