@@ -12,7 +12,7 @@
   <style>
     /* ---------------- Split-screen auth page (NestKey theme) ---------------- */
     body.auth-page { margin: 0; background: var(--navy); }
-    .auth-split { display: grid; grid-template-columns: 46% 54%; min-height: 100vh; }
+    .auth-split { display: grid; grid-template-columns: 46% 54%; min-height: calc(100vh - 63px); }
 
     /* Left hero */
     .auth-hero {
@@ -76,11 +76,16 @@
     @media (max-width: 900px) {
       .auth-split { grid-template-columns: 1fr; }
       .auth-hero { display: none; }
-      .auth-panel { min-height: 100vh; }
+      .auth-panel { min-height: calc(100vh - 63px); }
     }
   </style>
 </head>
 <body class="auth-page">
+  <header class="top"><div class="wrap">
+    <a class="brand" href="/"><img class="brand-mark" src="/assets/logo.png" alt="NestKey"><span class="brand-word">Nest<b>Key</b></span></a>
+    <nav><a href="/browse.html">Browse</a><a href="/services.html">Services</a><span id="navauth"></span></nav>
+  </div></header>
+
   <div class="auth-split">
 
     <!-- ---------------- Left hero ---------------- -->
