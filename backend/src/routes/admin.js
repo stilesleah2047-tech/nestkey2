@@ -1,6 +1,7 @@
 const express = require('express');
 const db = require('../db');
 const { requireAuth, isAdmin } = require('../auth');
+const events = require('../events');
 
 const router = express.Router();
 
@@ -33,7 +34,22 @@ router.get('/listings', async (_req, res) => {
 });
 
 router.post('/listings/:id/unpublish', async (req, res) => { await db.setStatus(req.params.id, 'draft'); res.json({ ok: true }); });
-router.post('/listings/:id/publish', async (req, res) => { await db.publish(req.params.id); res.json({ ok: true }); });
+router.post('/listings/:id/publish', async (req, res) => {
+  // Load the listing first so we only fire the social webhook on the
+  // first time it goes live (re-publishing a live listing won't re-post).
+  const before = await db.getById(req.params.id);
+  await db.publish(req.params.id);
+  if (!before || before.status !== 'published') {
+    const fresh = await db.getById(req.params.id);
+    const src = fresh || before;
+    if (src) events.emit('listing.published', {
+      id: src.id, title: src.title, price: src.price, region: src.region,
+      location: src.location, county: src.county, deal: src.deal, beds: src.beds,
+      description: src.description, photo: (src.photos || [])[0] || '',
+    });
+  }
+  res.json({ ok: true });
+});
 router.delete('/listings/:id', async (req, res) => { await db.deleteAny(req.params.id); res.json({ ok: true }); });
 
 // Users & verification
