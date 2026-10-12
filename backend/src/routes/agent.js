@@ -136,7 +136,8 @@ router.post('/listings/:id/publish', async (req, res) => {
   const fresh = await db.getById(req.params.id);
   events.emit('listing.published', {
     id: fresh.id, title: fresh.title, price: fresh.price, region: fresh.region,
-    location: fresh.location, deal: fresh.deal, beds: fresh.beds, photo: (fresh.photos || [])[0] || '',
+    location: fresh.location, county: fresh.county, deal: fresh.deal, beds: fresh.beds,
+    description: fresh.description, photo: (fresh.photos || [])[0] || '',
   });
   events.emitAdmin('activity', { kind: 'listing', at: new Date(), text: 'Listing live: ' + fresh.title + ' (' + fresh.deal + ')' });
   res.json({ ok: true });
