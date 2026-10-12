@@ -3,12 +3,29 @@ const db = require('../db');
 const mpesa = require('../services/mpesa');
 const pesapal = require('../services/pesapal');
 const config = require('../config');
+const events = require('../events');
 
 const router = express.Router();
 
 function feeFor(beds) {
   const rooms = Math.max(1, parseInt(beds, 10) || 0);
   return config.roomRate * rooms;
+}
+
+// Mark a listing paid and — only on the first transition to paid — fire the
+// social-video webhook via the shared 'listing.published' choke point.
+async function publishPaidListing(listing, receipt) {
+  const wasPaid = !!(listing && listing.paid);
+  await db.markPaid(listing.id, { receipt: receipt || '' });
+  if (!wasPaid) {
+    const fresh = await db.getById(listing.id);
+    const src = fresh || listing;
+    events.emit('listing.published', {
+      id: src.id, title: src.title, price: src.price, region: src.region,
+      location: src.location, county: src.county, deal: src.deal, beds: src.beds,
+      description: src.description, photo: (src.photos || [])[0] || '',
+    });
+  }
 }
 
 // Amount for a listing (per-room fee + showcase upgrade, waived for Pro/Agency).
@@ -33,7 +50,7 @@ async function listingAmount(listing) {
 async function settlePayment(ref, ok, receipt, error) {
   const listing = await db.findByCheckout(ref);
   if (listing) {
-    if (ok) await db.markPaid(listing.id, { receipt });
+    if (ok) await publishPaidListing(listing, receipt);
     else await db.markFailed(listing.id, { error });
     return true;
   }
@@ -147,7 +164,7 @@ router.post('/callback', async (req, res) => {
         (stk.CallbackMetadata?.Item || []).forEach((it) => {
           if (it.Name === 'MpesaReceiptNumber') receipt = it.Value;
         });
-        await db.markPaid(listing.id, { receipt });
+        await publishPaidListing(listing, receipt);
       } else {
         await db.markFailed(listing.id, { error: stk.ResultDesc });
       }
@@ -191,7 +208,7 @@ router.get('/status/:listingId', async (req, res) => {
     if (status === 'pending' && listing.checkoutId) {
       const q = await mpesa.stkQuery(listing.checkoutId);
       if (q && String(q.ResultCode) === '0') {
-        await db.markPaid(listing.id, { receipt: '' });
+        await publishPaidListing(listing, '');
         status = 'yes';
       } else if (q && ['1032', '1', '1037', '2001'].includes(String(q.ResultCode))) {
         await db.markFailed(listing.id, { error: q.ResultDesc });
