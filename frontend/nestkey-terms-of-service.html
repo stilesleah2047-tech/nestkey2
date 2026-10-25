@@ -1,301 +1,104 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Terms of Service — NestKey</title>
-<meta name="description" content="Terms of Service for NestKey (nestkey.co.ke), a property listings marketplace in Kenya for renting and selling houses and rooms.">
-<style>
-  :root{
-    --teal:#0d9488; --teal-dark:#0f5c56; --teal-700:#115e59;
-    --gold:#d4a017; --gold-light:#f3c969;
-    --ink:#1f2937; --muted:#556070; --line:#e5e7eb; --bg:#f7faf9; --card:#ffffff;
-  }
-  *{box-sizing:border-box}
-  html{scroll-behavior:smooth}
-  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--ink);background:var(--bg);line-height:1.65}
-  a{color:var(--teal-700)}
-  .wrap{max-width:900px;margin:0 auto;padding:0 20px}
-  header.site{background:linear-gradient(135deg,var(--teal),var(--teal-dark));color:#fff;padding:48px 0 40px}
-  .brand{display:flex;align-items:center;gap:12px;margin-bottom:22px}
-  .brand .mark{width:40px;height:40px;flex:0 0 40px}
-  .brand .name{font-size:22px;font-weight:700;letter-spacing:.3px}
-  .brand .name span{color:var(--gold-light)}
-  header.site h1{margin:0 0 8px;font-size:30px;line-height:1.2}
-  header.site .meta{color:#d7f0ec;font-size:14px;margin-top:6px}
-  main{padding:34px 0 20px}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:26px 28px;box-shadow:0 1px 3px rgba(16,24,40,.04)}
-  .toc{margin:0 0 30px}
-  .toc h2{font-size:15px;text-transform:uppercase;letter-spacing:.08em;color:var(--teal-700);margin:0 0 12px}
-  .toc ol{margin:0;padding-left:20px;columns:2;column-gap:34px}
-  .toc li{margin:4px 0;break-inside:avoid}
-  .toc a{text-decoration:none}
-  .toc a:hover{text-decoration:underline}
-  section.clause{margin:30px 0;scroll-margin-top:16px}
-  section.clause h2{font-size:20px;color:var(--teal-dark);border-left:4px solid var(--gold);padding-left:12px;margin:0 0 12px}
-  section.clause h3{font-size:16px;color:var(--teal-700);margin:18px 0 6px}
-  p{margin:10px 0}
-  ul{margin:10px 0;padding-left:22px}
-  li{margin:6px 0}
-  .note{background:#fdf6e3;border:1px solid var(--gold-light);border-radius:10px;padding:14px 16px;font-size:14px;color:#5c4a12;margin:16px 0}
-  table{width:100%;border-collapse:collapse;margin:14px 0;font-size:14px}
-  th,td{border:1px solid var(--line);padding:9px 11px;text-align:left;vertical-align:top}
-  th{background:#eef7f5;color:var(--teal-dark)}
-  .placeholder{color:#b91c1c;font-weight:600}
-  footer.site{border-top:1px solid var(--line);margin-top:40px;padding:26px 0 46px;color:var(--muted);font-size:13px;text-align:center}
-  .backtop{font-size:13px}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Terms of Service — NestKey</title>
+  <meta name="description" content="Terms of Service for NestKey, a property listings marketplace in Kenya for renting and selling houses and rooms.">
+  <meta name="theme-color" content="#0B1B2B">
+  <link rel="icon" type="image/png" href="/assets/icon-192.png">
+  <link rel="stylesheet" href="/assets/styles.css">
 </head>
 <body>
-<header class="site">
-  <div class="wrap">
-    <div class="brand">
-      <svg class="mark" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <path d="M12 30 32 13l20 17v19a3 3 0 0 1-3 3H15a3 3 0 0 1-3-3V30Z" fill="#ffffff" fill-opacity=".16" stroke="#ffffff" stroke-width="2.5" stroke-linejoin="round"/>
-        <circle cx="30" cy="34" r="7" stroke="#f3c969" stroke-width="3"/>
-        <line x1="35" y1="39" x2="43" y2="47" stroke="#f3c969" stroke-width="3" stroke-linecap="round"/>
-      </svg>
-      <div class="name">Nest<span>Key</span></div>
-    </div>
+  <header class="top"><div class="wrap">
+    <a class="brand" href="/"><img class="brand-mark" src="/assets/logo.png" alt="NestKey"><span class="brand-word">Nest<b>Key</b></span></a>
+    <nav><a href="/">Home</a><a href="/browse.html">Browse</a><a href="/services.html">Services</a><a href="/blog.html">Blog</a><a href="/about.html">About</a><a href="/contact.html">Contact</a><a href="/post.html" class="nav-post">Post a house</a><span id="navauth"></span></nav>
+  </div></header>
+
+  <section class="section"><div class="wrap legal">
     <h1>Terms of Service</h1>
-    <div class="meta">Applies to nestkey.co.ke and the NestKey web application</div>
-    <div class="meta">Last updated: <span class="placeholder">[INSERT DATE]</span> &nbsp;&middot;&nbsp; Effective date: <span class="placeholder">[INSERT DATE]</span></div>
-  </div>
-</header>
-<main>
-<div class="wrap">
-<div class="card toc">
-  <h2>Contents</h2>
-  <ol>
-    <li><a href="#acceptance">Acceptance of these Terms</a></li>
-    <li><a href="#about">About NestKey</a></li>
-    <li><a href="#definitions">Definitions</a></li>
-    <li><a href="#eligibility">Eligibility &amp; accounts</a></li>
-    <li><a href="#listings">Posting listings</a></li>
-    <li><a href="#fees">Fees &amp; payments</a></li>
-    <li><a href="#subscriptions">Subscriptions &amp; billing</a></li>
-    <li><a href="#sales">Property sales &amp; commission</a></li>
-    <li><a href="#rentals">Rentals</a></li>
-    <li><a href="#content">User content &amp; media</a></li>
-    <li><a href="#conduct">Acceptable use</a></li>
-    <li><a href="#noguarantee">No guarantee &amp; verification</a></li>
-    <li><a href="#thirdparty">Third-party services</a></li>
-    <li><a href="#ip">Intellectual property</a></li>
-    <li><a href="#privacy">Privacy</a></li>
-    <li><a href="#disclaimer">Disclaimers</a></li>
-    <li><a href="#liability">Limitation of liability</a></li>
-    <li><a href="#indemnity">Indemnification</a></li>
-    <li><a href="#termination">Suspension &amp; termination</a></li>
-    <li><a href="#changes">Changes to these Terms</a></li>
-    <li><a href="#law">Governing law &amp; disputes</a></li>
-    <li><a href="#contact">Contact us</a></li>
-  </ol>
-</div>
+    <p class="legal-updated">Last updated: 2026 · Applies to nestkey.co.ke and the NestKey web app</p>
 
-<div class="card">
+    <p>Welcome to NestKey. These Terms of Service (the “Terms”) govern your access to and use of the NestKey website, our installable web app (PWA) and all related services (together, the “Platform”). By accessing, registering for or using the Platform — as a visitor, house hunter, landlord, agent, agency, buyer or seller — you agree to these Terms and to our <a href="/privacy.html">Privacy Policy</a>. If you do not agree, please do not use the Platform. This document is a starting template — please have it reviewed by a qualified advocate before you rely on it.</p>
 
-<section class="clause" id="acceptance">
-  <h2>1. Acceptance of these Terms</h2>
-  <p>Welcome to NestKey. These Terms of Service (the “Terms”) govern your access to and use of the NestKey website at nestkey.co.ke, our installable web application (PWA), and all related services (together, the “Platform”).</p>
-  <p>By accessing, browsing, registering for, or using the Platform — whether as a visitor, house hunter, landlord, agent, agency, buyer, or seller — you agree to be bound by these Terms and by our Privacy Policy. If you do not agree, please do not use the Platform.</p>
-</section>
+    <h2>1. About NestKey</h2>
+    <p>NestKey is a standalone property listings marketplace operating in Kenya. The Platform lets users find and post houses and rooms for rent or for sale, grouped by county, town and area, with search, filters, photo and video showcases, and payments through M‑Pesa (Safaricom Daraja) and Pesapal. NestKey is a technology platform and marketplace only — we are <strong>not</strong> a real estate agent, broker, landlord, property manager or escrow service, and we are not a party to any rental or sale agreement between users unless we state otherwise in writing.</p>
 
-<section class="clause" id="about">
-  <h2>2. About NestKey</h2>
-  <p>NestKey is a standalone property listings marketplace operating in Kenya. The Platform lets users find and post houses and rooms for rent or for sale, grouped by county, town, and area, with search, filters, photos and video showcases, and payments handled through M-Pesa (Safaricom Daraja) and Pesapal.</p>
-  <p>NestKey is a technology platform and marketplace only. We are <strong>not</strong> a real estate agent, broker, landlord, property manager, escrow service, or party to any rental or sale agreement between users, unless we expressly state otherwise in writing.</p>
-</section>
+    <h2>2. Eligibility &amp; accounts</h2>
+    <p>You must be at least 18 years old and able to enter into binding contracts to use the Platform. Some features (posting listings, the dashboard, subscriptions) require an account. You agree to provide accurate, current and complete information and to keep it up to date. You are responsible for safeguarding your login details and for all activity under your account, and must notify us immediately of any unauthorised use. Passwords are stored only as a secure one‑way hash.</p>
 
-<section class="clause" id="definitions">
-  <h2>3. Definitions</h2>
-  <ul>
-    <li><strong>“User”</strong> — any person who accesses or uses the Platform.</li>
-    <li><strong>“Hunter”</strong> — a User searching for a property to rent or buy.</li>
-    <li><strong>“Poster”</strong> — a landlord, individual, agent, or agency who creates a listing.</li>
-    <li><strong>“Listing”</strong> — a property advertisement posted on the Platform, including photos, videos, descriptions, price, location, and contact details.</li>
-    <li><strong>“Subscription”</strong> — a paid plan that allows Posters to publish listings within a quota, or Hunters to access premium features.</li>
-    <li><strong>“Content”</strong> — any text, image, video, or other material submitted to the Platform.</li>
-  </ul>
-</section>
+    <h2>3. Posting listings</h2>
+    <p>Posters may create two types of listing: <strong>Standard</strong> (photos and a description) and <strong>Video Showcase</strong> (a room‑by‑room page with multiple photos and videos that the Platform arranges into a natural walk‑through). By posting a listing you represent and warrant that:</p>
+    <ul>
+      <li>You own the property or are duly authorised to advertise and transact on it.</li>
+      <li>All information — price, location, number of rooms, availability, photos and videos — is accurate, current and not misleading.</li>
+      <li>The media you upload is genuine and relates to the actual property advertised. Only real, uploaded media may be used; stock, borrowed or placeholder images are not permitted.</li>
+      <li>Your listing complies with all applicable Kenyan laws, including land, tenancy, consumer‑protection and anti‑discrimination laws.</li>
+    </ul>
+    <p>We may review, edit, re‑categorise, decline, delay, suspend or remove any listing at our discretion — for example where it appears fraudulent, duplicated, incomplete, unlawful or in breach of these Terms. We are under no obligation to publish any listing.</p>
 
-<section class="clause" id="eligibility">
-  <h2>4. Eligibility &amp; accounts</h2>
-  <p>You must be at least 18 years old and legally capable of entering into binding contracts to use the Platform. By using NestKey you confirm that you meet these requirements.</p>
-  <h3>4.1 Registration</h3>
-  <p>Certain features (such as posting listings, managing a portfolio dashboard, or subscribing) require an account. You agree to provide accurate, current, and complete information and to keep it up to date.</p>
-  <h3>4.2 Account security</h3>
-  <p>You are responsible for safeguarding your login credentials and for all activity under your account. Notify us immediately of any unauthorised use. We are not liable for losses arising from your failure to protect your account.</p>
-</section>
+    <h2>4. Fees &amp; payments</h2>
+    <p>Some features are paid. Fees are shown before you confirm a payment and are quoted in Kenya Shillings (KES / KSh). Current charges include:</p>
+    <table class="legal-table">
+      <thead><tr><th>Charge</th><th>Applies to</th><th>Indicative amount</th></tr></thead>
+      <tbody>
+        <tr><td>Standard listing fee</td><td>Per listing, scaled per room</td><td>KSh 100 per room (default)</td></tr>
+        <tr><td>Video Showcase upgrade</td><td>Per showcase listing</td><td>KSh 500 (waived for eligible subscribers)</td></tr>
+        <tr><td>Subscriptions</td><td>Hunters, landlords, agents, agencies</td><td>See section 5</td></tr>
+        <tr><td>Sale commission</td><td>Completed property sales</td><td>8% of the sale price (see section 6)</td></tr>
+      </tbody>
+    </table>
+    <p>Payments can be made by <strong>M‑Pesa (STK Push)</strong> or by <strong>card / Pesapal</strong> (which also supports Airtel Money and other options); card payments are processed within the Platform through Pesapal, so you never leave NestKey. A paid feature is enabled only once payment is confirmed by the relevant provider. We are not responsible for delays, failures, reversals or charges arising from M‑Pesa, Pesapal, your bank or your mobile‑money provider. Indicative amounts reflect the Platform's default configuration and may change; the price shown at the time of payment is the price that applies. Except where required by law, fees are non‑refundable once a feature has been activated.</p>
 
-<section class="clause" id="listings">
-  <h2>5. Posting listings</h2>
-  <p>Posters may create two types of listings:</p>
-  <ul>
-    <li><strong>Standard</strong> — photos and a description.</li>
-    <li><strong>Video Showcase</strong> — a room-by-room page with multiple photos and videos that the Platform arranges into a natural walk-through.</li>
-  </ul>
-  <h3>5.1 Your responsibilities as a Poster</h3>
-  <p>By posting a Listing you represent and warrant that:</p>
-  <ul>
-    <li>You are the owner of the property or are duly authorised to advertise and transact on it (for example, as the landlord, appointed agent, or seller).</li>
-    <li>All information — price, location, number of rooms, availability, photos, and videos — is accurate, current, and not misleading.</li>
-    <li>The media you upload is genuine and relates to the actual property advertised. Only real, uploaded media may be used; stock, borrowed, or placeholder images are not permitted.</li>
-    <li>The property, and your advertisement of it, complies with all applicable Kenyan laws, including land, tenancy, consumer-protection, and anti-discrimination laws.</li>
-  </ul>
-  <h3>5.2 Our rights over listings</h3>
-  <p>We may review, edit, re-categorise, decline, delay, suspend, or remove any Listing at our discretion — for example, where it appears fraudulent, duplicated, incomplete, unlawful, or in breach of these Terms. We are under no obligation to publish any Listing.</p>
-</section>
+    <h2>5. Subscriptions &amp; billing</h2>
+    <p>NestKey offers subscription plans paid by M‑Pesa or Pesapal; plans, quotas and prices are shown on the <a href="/services.html">Services</a> page and may change. Because M‑Pesa STK Push prompts for one payment at a time, subscriptions do <strong>not</strong> auto‑renew by default — each renewal is a manual re‑subscription by you, and a plan lapses at the end of the period paid for unless renewed. Publishing plans let you publish listings up to the plan's limit; attempting to publish beyond your quota, or without an active plan, will prompt an upgrade. We may add, change or discontinue plans and prices; changes do not affect a period already paid for but apply on your next renewal.</p>
 
-<section class="clause" id="fees">
-  <h2>6. Fees &amp; payments</h2>
-  <p>Some features on the Platform are paid. Fees are displayed before you confirm a payment and are quoted in Kenya Shillings (KES / KSh). Current fees include:</p>
-  <table>
-    <thead><tr><th>Charge</th><th>Applies to</th><th>Indicative amount</th></tr></thead>
-    <tbody>
-      <tr><td>Standard listing fee</td><td>Per listing, scaled per room</td><td>KSh 100 per room (default)</td></tr>
-      <tr><td>Video Showcase upgrade</td><td>Per showcase listing</td><td>KSh 500 (waived for eligible subscribers)</td></tr>
-      <tr><td>Subscriptions</td><td>Hunters, landlords, agents, agencies</td><td>See Section 7</td></tr>
-      <tr><td>Sale commission</td><td>Completed property sales</td><td>8% of the sale price (see Section 8)</td></tr>
-    </tbody>
-  </table>
-  <div class="note">Indicative amounts reflect the Platform's default configuration and may change. The price shown at the time of payment is the price that applies. Please confirm current fees on the relevant page before paying.</div>
-  <h3>6.1 Payment methods</h3>
-  <p>Payments can be made by <strong>M-Pesa (STK Push)</strong> or by <strong>card / Pesapal</strong> (which also supports Airtel Money and other options). Card payments are processed within the Platform through Pesapal; you remain on NestKey throughout.</p>
-  <h3>6.2 Payment confirmation</h3>
-  <p>A paid feature (such as publishing a Listing or activating a Video Showcase) is enabled only once payment is confirmed by the relevant provider. We are not responsible for delays, failures, reversals, or charges arising from M-Pesa, Pesapal, your bank, or your mobile-money provider.</p>
-  <h3>6.3 Refunds</h3>
-  <p>Except where required by law, fees are generally non-refundable once a feature has been activated. If you believe you were charged in error, contact us at the details in Section 22 and we will review the matter in good faith.</p>
-</section>
+    <h2>6. Property sales &amp; commission</h2>
+    <p>For properties listed <strong>for sale</strong> (including land), NestKey operates a hybrid model: the seller needs an active plan to list, <strong>and</strong> NestKey earns a commission of <strong>8%</strong> (or the then‑current rate) of the sale price when the property is paid for. <strong>NestKey never holds funds.</strong> When a buyer chooses to pay, they see the seller's own payment details and pay the seller <strong>directly</strong>; the buyer then confirms payment on the Platform (“I’ve paid”), the sale is recorded, and the seller is invoiced the applicable commission, shown as commission owed in their dashboard and settled via M‑Pesa or Pesapal. Any sale, transfer, deposit or payment for a property is a transaction solely between buyer and seller; NestKey is not a party to it and does not guarantee it. Carry out independent due diligence, use a qualified advocate, and verify title and ownership before paying any money.</p>
 
-<section class="clause" id="subscriptions">
-  <h2>7. Subscriptions &amp; billing</h2>
-  <p>NestKey offers subscription plans paid by M-Pesa or Pesapal. Plans and prices are shown on the services/pricing page and may be updated from time to time. Examples of plan types include Hunter features for house hunters and publishing plans for landlords, agents, and agencies with listing quotas.</p>
-  <h3>7.1 Manual renewal</h3>
-  <p>Because M-Pesa STK Push prompts for one payment at a time, subscriptions do <strong>not</strong> auto-renew by default. Each renewal is a manual re-subscription by you. A subscription remains active for the period paid for and then lapses unless renewed.</p>
-  <h3>7.2 Quotas and features</h3>
-  <p>Publishing plans allow you to publish listings up to the plan's limit. Attempting to publish beyond your quota, or without an active plan, will prompt an upgrade. Downgrading or lapsing may make some of your listings unpublishable until you are back within quota.</p>
-  <h3>7.3 Changes to plans</h3>
-  <p>We may add, change, or discontinue plans, features, and prices. Changes do not affect a subscription period already paid for, but will apply on your next renewal.</p>
-</section>
+    <h2>7. Rentals</h2>
+    <p>For properties listed <strong>for rent</strong>, NestKey is subscription‑only: landlords pay a monthly plan to publish within their quota and NestKey charges no commission on rent. Renting is arranged <strong>directly</strong> between the hunter and the landlord through enquiry or WhatsApp. NestKey does not collect rent, deposits or holding fees and is not a party to any tenancy agreement. Never send money, deposits or “reservation fees” before you have physically verified the property and the identity and authority of the person you are dealing with.</p>
 
-<section class="clause" id="sales">
-  <h2>8. Property sales &amp; commission</h2>
-  <p>For properties listed <strong>for sale</strong> (including land), NestKey operates a hybrid model: the seller needs an active plan to list, <strong>and</strong> NestKey earns a commission of <strong>8%</strong> (or the then-current rate) of the sale price when the property is paid for.</p>
-  <h3>8.1 NestKey never holds funds</h3>
-  <p>NestKey does not operate an escrow or hold buyer funds. When a buyer chooses to pay for a property, they see the seller's own payment details and pay the seller <strong>directly</strong>. The buyer then confirms payment on the Platform (“I’ve paid”), the sale is recorded, and the seller is invoiced the applicable commission, shown as commission owed in their dashboard and settled via M-Pesa or Pesapal.</p>
-  <h3>8.2 Transactions are between users</h3>
-  <p>Any sale, transfer, deposit, or payment for a property is a transaction solely between the buyer and the seller. NestKey is not a party to it, does not guarantee it, and is not responsible for the conduct, solvency, title, or performance of either party. You are strongly advised to carry out independent due diligence, use a qualified advocate, and verify title and ownership before paying any money.</p>
-</section>
+    <h2>8. User content &amp; media</h2>
+    <p>You retain ownership of the content (photos, videos, descriptions and other material) you upload. By submitting content you grant NestKey a non‑exclusive, worldwide, royalty‑free licence to host, store, reproduce, resize, adapt and display that content for the purpose of operating, promoting and improving the Platform. You represent that you own or have the rights to all content you upload and that it does not infringe any third party's intellectual‑property, privacy or other rights. Media files are subject to the size and format limits set by the Platform. You must not upload content that is unlawful, misleading, defamatory, obscene, discriminatory, infringing, or that depicts a property you are not authorised to advertise.</p>
 
-<section class="clause" id="rentals">
-  <h2>9. Rentals</h2>
-  <p>For properties listed <strong>for rent</strong>, NestKey operates on a subscription-only basis: landlords pay a plan to publish within their quota, and NestKey charges no commission on rent. Renting is arranged <strong>directly</strong> between the hunter and the landlord through enquiry or WhatsApp contact. NestKey does not collect rent, deposits, or holding fees and is not a party to any tenancy agreement.</p>
-  <div class="note">Never send money, deposits, or “reservation fees” for a rental or sale before you have physically verified the property and the identity and authority of the person you are dealing with. NestKey will never ask you to pay a landlord or seller through NestKey itself.</div>
-</section>
+    <h2>9. Acceptable use</h2>
+    <p>You agree not to: post false, fraudulent, duplicate or misleading listings, prices or availability; advertise property you do not own or are not authorised to transact on; impersonate any person or misrepresent your affiliation; harvest or scrape other users' data; circumvent fees, commissions, quotas or payment flows; upload viruses or malicious code or attempt to breach or disrupt the Platform's security; use the Platform for money laundering, fraud or any unlawful purpose; or harass, threaten or discriminate against other users.</p>
 
-<section class="clause" id="content">
-  <h2>10. User content &amp; media</h2>
-  <p>You retain ownership of the Content (photos, videos, descriptions, and other material) you upload. By submitting Content, you grant NestKey a non-exclusive, worldwide, royalty-free licence to host, store, reproduce, resize, adapt, and display that Content for the purpose of operating, promoting, and improving the Platform.</p>
-  <p>You represent that you own or have the necessary rights to all Content you upload, and that it does not infringe any third party's intellectual-property, privacy, or other rights. Media files are subject to size and format limits set by the Platform (for example, uploads up to a maximum size per file).</p>
-  <p>You must not upload Content that is unlawful, misleading, defamatory, obscene, discriminatory, infringing, or that depicts a property you are not authorised to advertise.</p>
-</section>
+    <h2>10. No guarantee &amp; verification</h2>
+    <p>NestKey does not independently verify every listing, user, price, title or representation. Any “verified” badge, rating, review or similar signal is a convenience only and is not a guarantee, endorsement or warranty by NestKey. Listings are created by users, and NestKey makes no warranty as to the existence, condition, legality, ownership, value or availability of any property. You use the Platform and transact with other users at your own risk.</p>
 
-<section class="clause" id="conduct">
-  <h2>11. Acceptable use</h2>
-  <p>You agree not to:</p>
-  <ul>
-    <li>Post false, fraudulent, duplicate, or misleading listings, prices, or availability.</li>
-    <li>Advertise property you do not own or are not authorised to transact on.</li>
-    <li>Impersonate any person or entity, or misrepresent your affiliation.</li>
-    <li>Harvest, scrape, or collect other users' data without consent.</li>
-    <li>Circumvent fees, commissions, quotas, or payment flows.</li>
-    <li>Upload viruses or malicious code, or attempt to breach, probe, or disrupt the Platform's security or infrastructure.</li>
-    <li>Use the Platform for money laundering, fraud, or any unlawful purpose.</li>
-    <li>Harass, threaten, or discriminate against other users.</li>
-  </ul>
-</section>
+    <h2>11. Third‑party services</h2>
+    <p>The Platform relies on third‑party services including Safaricom M‑Pesa (Daraja), Pesapal, mapping providers (such as OpenStreetMap / Leaflet) and messaging tools (such as WhatsApp click‑to‑chat). Your use of those services is subject to their own terms and privacy policies, and NestKey is not responsible for their availability, accuracy, security or conduct.</p>
 
-<section class="clause" id="noguarantee">
-  <h2>12. No guarantee &amp; verification</h2>
-  <p>NestKey does not independently verify every listing, user, price, title, or representation on the Platform. Any “verified” badge, rating, review, or similar signal is provided as a convenience only and does not constitute a guarantee, endorsement, or warranty by NestKey.</p>
-  <p>You acknowledge that listings are created by users and that NestKey makes no warranty as to the existence, condition, legality, ownership, value, or availability of any property. You use the Platform and transact with other users at your own risk.</p>
-</section>
+    <h2>12. Intellectual property</h2>
+    <p>The NestKey name, logo (the house‑with‑magnifier mark), branding, design, text, graphics and software are owned by or licensed to NestKey and protected by intellectual‑property laws. Except for content you own, you may not copy, modify, distribute or create derivative works from the Platform without our prior written permission.</p>
 
-<section class="clause" id="thirdparty">
-  <h2>13. Third-party services</h2>
-  <p>The Platform relies on third-party services, including Safaricom M-Pesa (Daraja), Pesapal, mapping providers (such as OpenStreetMap / Leaflet), and messaging tools (such as WhatsApp click-to-chat). Your use of those services is subject to their own terms and privacy policies. NestKey is not responsible for the availability, accuracy, security, or conduct of any third-party service.</p>
-</section>
+    <h2>13. Privacy</h2>
+    <p>Our handling of personal data — including account details, phone numbers, uploaded media, enquiry/lead information and payment references — is described in our <a href="/privacy.html">Privacy Policy</a> and <a href="/cookies.html">Cookie Policy</a>, which form part of these Terms. We handle personal data in line with Kenya's Data Protection Act, 2019.</p>
 
-<section class="clause" id="ip">
-  <h2>14. Intellectual property</h2>
-  <p>The NestKey name, logo (the house-with-magnifier mark), branding, design, text, graphics, and software are owned by or licensed to NestKey and are protected by intellectual-property laws. Except for Content you own, you may not copy, modify, distribute, or create derivative works from the Platform without our prior written permission.</p>
-</section>
+    <h2>14. Disclaimers</h2>
+    <p>The Platform is provided on an “as is” and “as available” basis, without warranties of any kind, express or implied, including fitness for a particular purpose, accuracy or non‑infringement. We do not warrant that the Platform will be uninterrupted, error‑free or secure. Any material obtained through the Platform is accessed at your own discretion and risk.</p>
 
-<section class="clause" id="privacy">
-  <h2>15. Privacy</h2>
-  <p>Our handling of personal data — including account details, phone numbers, uploaded media, enquiry/lead information, and payment references — is described in our Privacy Policy, which forms part of these Terms. By using the Platform you consent to that processing. We handle personal data in line with the Kenya Data Protection Act, 2019.</p>
-  <p><span class="placeholder">[Link to your Privacy Policy here: https://nestkey.co.ke/privacy]</span></p>
-</section>
+    <h2>15. Limitation of liability</h2>
+    <p>To the maximum extent permitted by law, NestKey and its owners, directors, employees and partners shall not be liable for any indirect, incidental, special, consequential or punitive damages, or for any loss of profits, revenue, data, goodwill, deposits or funds, arising from or related to your use of (or inability to use) the Platform; any transaction, dealing, payment or communication between you and another user; any listing, content or representation made by a user; any fraud, misrepresentation or default by a landlord, seller, buyer, agent or hunter; or any third‑party service. Where liability cannot be excluded by law, our total aggregate liability to you is limited to the total fees you paid to NestKey in the three (3) months immediately before the event giving rise to the claim.</p>
 
-<section class="clause" id="disclaimer">
-  <h2>16. Disclaimers</h2>
-  <p>The Platform is provided on an “as is” and “as available” basis, without warranties of any kind, whether express or implied, including fitness for a particular purpose, accuracy, or non-infringement. We do not warrant that the Platform will be uninterrupted, error-free, secure, or free of harmful components. Any material downloaded or obtained through the Platform is accessed at your own discretion and risk.</p>
-</section>
+    <h2>16. Indemnification</h2>
+    <p>You agree to indemnify and hold harmless NestKey and its owners, directors, employees and partners from any claims, damages, losses, liabilities and expenses (including reasonable legal fees) arising from your use of the Platform, your content or listings, your transactions with other users, or your breach of these Terms or of any law.</p>
 
-<section class="clause" id="liability">
-  <h2>17. Limitation of liability</h2>
-  <p>To the maximum extent permitted by law, NestKey and its owners, directors, employees, and partners shall not be liable for any indirect, incidental, special, consequential, or punitive damages, or for any loss of profits, revenue, data, goodwill, deposits, or funds, arising from or related to:</p>
-  <ul>
-    <li>your use of, or inability to use, the Platform;</li>
-    <li>any transaction, dealing, payment, or communication between you and another user;</li>
-    <li>any listing, Content, or representation made by a user;</li>
-    <li>any fraud, misrepresentation, or default by a landlord, seller, buyer, agent, or hunter; or</li>
-    <li>any third-party service, including payment providers.</li>
-  </ul>
-  <p>Where liability cannot be excluded by law, our total aggregate liability to you is limited to the total fees you paid to NestKey in the three (3) months immediately before the event giving rise to the claim.</p>
-</section>
+    <h2>17. Suspension &amp; termination</h2>
+    <p>We may suspend or terminate your access, remove your listings or close your account at any time, with or without notice, if you breach these Terms, if we suspect fraud or unlawful activity, or if required by law. You may stop using the Platform and request account closure at any time. Fees already paid are not refundable on termination except as required by law. Provisions that by their nature should survive termination (including intellectual property, disclaimers, liability, indemnity and governing law) will continue to apply.</p>
 
-<section class="clause" id="indemnity">
-  <h2>18. Indemnification</h2>
-  <p>You agree to indemnify and hold harmless NestKey and its owners, directors, employees, and partners from any claims, damages, losses, liabilities, and expenses (including reasonable legal fees) arising from your use of the Platform, your Content or listings, your transactions with other users, or your breach of these Terms or of any law.</p>
-</section>
+    <h2>18. Changes to these Terms</h2>
+    <p>We may update these Terms from time to time. The “last updated” date above shows when they last changed. Material changes will be notified through the Platform or by other reasonable means. Your continued use of the Platform after changes take effect constitutes acceptance of the revised Terms.</p>
 
-<section class="clause" id="termination">
-  <h2>19. Suspension &amp; termination</h2>
-  <p>We may suspend or terminate your access to the Platform, remove your listings, or close your account at any time, with or without notice, if you breach these Terms, if we suspect fraud or unlawful activity, or if required by law. You may stop using the Platform and request account closure at any time. Fees already paid are not refundable on termination except as required by law. Sections that by their nature should survive termination (including intellectual property, disclaimers, liability, indemnity, and governing law) will continue to apply.</p>
-</section>
+    <h2>19. Governing law &amp; disputes</h2>
+    <p>These Terms are governed by the laws of the Republic of Kenya, and the courts of Kenya have exclusive jurisdiction over any dispute arising out of or in connection with these Terms or the Platform. Before commencing legal action, you agree to first contact us and attempt to resolve the matter in good faith.</p>
 
-<section class="clause" id="changes">
-  <h2>20. Changes to these Terms</h2>
-  <p>We may update these Terms from time to time. The “Last updated” date at the top shows when they were last revised. Material changes will be notified through the Platform or by other reasonable means. Your continued use of the Platform after changes take effect constitutes acceptance of the revised Terms.</p>
-</section>
+    <h2>20. Contact us</h2>
+    <p>Questions about these Terms, a listing, a payment or a complaint? Contact us at <a href="/contact.html">nestkey.co.ke/contact</a> or email <a href="mailto:support@nestkey.co.ke">support@nestkey.co.ke</a>.</p>
+  </div></section>
 
-<section class="clause" id="law">
-  <h2>21. Governing law &amp; disputes</h2>
-  <p>These Terms are governed by and construed in accordance with the laws of the Republic of Kenya. The courts of Kenya shall have exclusive jurisdiction over any dispute arising out of or in connection with these Terms or the Platform. Before commencing legal action, you agree to first contact us and attempt to resolve the matter in good faith.</p>
-</section>
-
-<section class="clause" id="contact">
-  <h2>22. Contact us</h2>
-  <p>If you have questions about these Terms, a listing, a payment, or a complaint, please contact us:</p>
-  <ul>
-    <li><strong>NestKey</strong></li>
-    <li>Email: <span class="placeholder">support@nestkey.co.ke</span></li>
-    <li>Phone / WhatsApp: <span class="placeholder">+254 79572 1845</span></li>
-    <li>Website: nestkey.co.ke</li>
-    <li>Postal / physical address: <span class="placeholder"></span></li>
-  </ul>
-  <p class="backtop"><a href="#acceptance">↑ Back to top</a></p>
-</section>
-
-</div>
-</div>
-</main>
-<footer class="site">
-  <div class="wrap">
-    <p>&copy; <span class="placeholder">2026</span> NestKey. All rights reserved. NestKey is a property listings marketplace operating in Kenya.</p>
-    <p>These Terms are provided for general use and do not constitute legal advice. Have them reviewed by a qualified advocate before publishing.</p>
-  </div>
-</footer>
+  <footer class="foot"><div class="wrap">NestKey · find a home anywhere in Kenya · <a href="/terms.html">Terms</a> · <a href="/privacy.html">Privacy</a> · <a href="/cookies.html">Cookies</a></div></footer>
 </body>
 </html>
