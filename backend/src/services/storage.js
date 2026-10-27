@@ -16,6 +16,21 @@ const config = require('../config');
 const S = config.storage;
 const useS3 = S.driver === 's3' || S.driver === 'r2';
 
+// --- SECURITY (Finding 3): server-controlled type allowlist. ---
+// The stored file extension and the served Content-Type are derived ONLY from
+// this map, keyed on the uploaded MIME type — never from the attacker-supplied
+// originalname. Note: image/svg+xml is deliberately NOT allowed (SVG can carry
+// executable script → stored XSS when served from our own origin).
+const EXT_BY_MIME = {
+  'image/jpeg': '.jpg',
+  'image/png': '.png',
+  'image/webp': '.webp',
+  'image/gif': '.gif',
+  'video/mp4': '.mp4',
+  'video/webm': '.webm',
+  'video/quicktime': '.mov',
+};
+
 let s3 = null;
 let PutObjectCommand = null;
 if (useS3) {
@@ -34,19 +49,12 @@ if (useS3) {
 const localDir = path.join(__dirname, '..', '..', config.uploadDir);
 if (!useS3) fs.mkdirSync(localDir, { recursive: true });
 
-function guessExt(m) {
-  m = m || '';
-  if (/mp4/.test(m)) return '.mp4';
-  if (/webm/.test(m)) return '.webm';
-  if (/quicktime/.test(m)) return '.mov';
-  if (/png/.test(m)) return '.png';
-  if (/webp/.test(m)) return '.webp';
-  return '.jpg';
-}
-
-function keyFor(originalname, mimetype) {
-  const ext = (path.extname(originalname || '') || '').toLowerCase() || guessExt(mimetype);
-  return Date.now() + '-' + crypto.randomBytes(4).toString('hex') + ext;
+// Build a safe storage key. Extension comes from the MIME allowlist above;
+// if the MIME type isn't allowed we refuse the file.
+function keyFor(mimetype) {
+  const ext = EXT_BY_MIME[String(mimetype || '').toLowerCase()];
+  if (!ext) throw new Error('Unsupported file type');
+  return Date.now() + '-' + crypto.randomBytes(8).toString('hex') + ext;
 }
 
 function publicUrlForKey(key) {
@@ -61,15 +69,20 @@ function publicUrlForKey(key) {
 
 // Save one uploaded file (multer memoryStorage buffer) -> { url, type, key }.
 async function save(file) {
-  const key = keyFor(file.originalname, file.mimetype);
-  const type = /^video\//.test(file.mimetype) ? 'video' : 'image';
+  const mime = String(file.mimetype || '').toLowerCase();
+  if (!EXT_BY_MIME[mime]) throw new Error('Unsupported file type');
+  const key = keyFor(mime);
+  const type = /^video\//.test(mime) ? 'video' : 'image';
   if (useS3) {
     await s3.send(new PutObjectCommand({
       Bucket: S.bucket,
       Key: key,
       Body: file.buffer,
-      ContentType: file.mimetype,
+      ContentType: mime,
+      // Block content-type sniffing on the object itself (R2/S3 forward this header).
+      ContentDisposition: 'inline',
       CacheControl: 'public, max-age=31536000, immutable',
+      Metadata: { 'x-content-type-options': 'nosniff' },
     }));
   } else {
     fs.writeFileSync(path.join(localDir, key), file.buffer);
@@ -77,4 +90,4 @@ async function save(file) {
   return { url: publicUrlForKey(key), type, key };
 }
 
-module.exports = { save, useS3 };
+module.exports = { save, useS3, EXT_BY_MIME };
