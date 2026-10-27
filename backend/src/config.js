@@ -1,5 +1,16 @@
 require('dotenv').config();
 
+// --- SECURITY: JWT secret must be strong in production (Finding 2) ---
+// Never fall back to a hardcoded, publicly-known secret in prod — that lets
+// anyone forge a token (including an admin token). Fail closed instead.
+const JWT_SECRET = process.env.JWT_SECRET;
+if ((!JWT_SECRET || JWT_SECRET.length < 32) && process.env.NODE_ENV === 'production') {
+  throw new Error('JWT_SECRET must be set to a strong (32+ char) value in production');
+}
+if (!JWT_SECRET && process.env.NODE_ENV !== 'production') {
+  console.warn('[WARN] JWT_SECRET not set — using an ephemeral dev-only secret. DO NOT deploy like this.');
+}
+
 module.exports = {
   port: parseInt(process.env.PORT || '4000', 10),
   publicUrl: process.env.PUBLIC_URL || 'http://localhost:4000',
@@ -15,9 +26,15 @@ module.exports = {
     max: parseInt(process.env.LAND_MAX || '3000', 10),
   },
   currency: process.env.CURRENCY || 'KES',
-  jwtSecret: process.env.JWT_SECRET || 'dev-secret-change-me-in-production',
+  // Strong secret in prod (guaranteed by the check above); random ephemeral one in dev.
+  jwtSecret: JWT_SECRET || ('dev-only-insecure-' + require('crypto').randomBytes(16).toString('hex')),
   adminEmails: (process.env.ADMIN_EMAILS || '').split(',').map(function (s) { return s.trim().toLowerCase(); }).filter(Boolean),
   commissionRate: parseFloat(process.env.COMMISSION_RATE || '0.08'),
+  // Allowed browser origins for CORS (Finding 6). Comma-separated env override,
+  // else sensible NestKey defaults.
+  corsOrigins: (process.env.CORS_ORIGINS ||
+    'https://nestkey.co.ke,https://www.nestkey.co.ke')
+    .split(',').map(function (s) { return s.trim(); }).filter(Boolean),
   storage: {
     // 's3' or 'r2' => object storage (both use the S3 API). Anything else => local disk.
     driver: (process.env.STORAGE_DRIVER || (process.env.S3_BUCKET ? 's3' : 'local')).toLowerCase(),
