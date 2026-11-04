@@ -3,8 +3,23 @@ const db = require('../db');
 const { sortRooms, labelFor } = require('../rooms');
 const { countyForTown } = require('../locations');
 const { parsePrice } = require('../price');
+const { cleanMedia } = require('../media');
+const { rateLimit } = require('../ratelimit');
+const { optionalAuth } = require('../auth');
+
+const enquireLimit = rateLimit({ windowMs: 10 * 60 * 1000, max: 8, message: 'You have sent several enquiries. Please wait a few minutes.' });
+const createLimit = rateLimit({ windowMs: 60 * 60 * 1000, max: 20 });
 
 const router = express.Router();
+
+// Strip private / payment fields before sending a listing to the public.
+// (The public API used to expose the lister's email, M-Pesa checkout id and receipt.)
+function publicListing(l) {
+  if (!l) return l;
+  const { checkoutId, receipt, amount, payError, ...rest } = l;
+  rest.submitter = { name: (l.submitter && l.submitter.name) || '', phone: (l.submitter && l.submitter.phone) || '' };
+  return rest;
+}
 
 // GET /api/listings  — public search with filters
 router.get('/', async (req, res) => {
@@ -19,9 +34,10 @@ router.get('/', async (req, res) => {
       minPrice: q.minPrice ? parseFloat(q.minPrice) : 0,
       maxPrice: q.maxPrice ? parseFloat(q.maxPrice) : 0,
       sort: q.sort,
-      page: q.page ? parseInt(q.page, 10) : 1,
-      limit: q.limit ? parseInt(q.limit, 10) : 24,
+      limit: Math.min(Math.max(parseInt(q.limit, 10) || 24, 1), 60),
+      page: Math.max(parseInt(q.page, 10) || 1, 1),
     });
+    if (result && Array.isArray(result.items)) result.items = result.items.map(publicListing);
     res.json(result);
   } catch (e) {
     console.error(e);
@@ -42,20 +58,21 @@ router.get('/regions', async (_req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const l = await db.getById(req.params.id);
-    if (!l || !l.paid) return res.status(404).json({ error: 'Not found' });
+    if (!l || !l.paid || l.status !== 'published') return res.status(404).json({ error: 'Not found' });
     db.incrementViews(req.params.id).catch(function () {});
-    res.json(l);
+    res.json(publicListing(l));
   } catch (e) {
     res.status(500).json({ error: 'Could not load listing' });
   }
 });
 
 // POST /api/listings/:id/enquire  { name, phone, message } → lead for the owner
-router.post('/:id/enquire', async (req, res) => {
+router.post('/:id/enquire', enquireLimit, async (req, res) => {
   try {
     const l = await db.getById(req.params.id);
-    if (!l) return res.status(404).json({ error: 'Not found' });
+    if (!l || !l.paid || l.status !== 'published') return res.status(404).json({ error: 'Not found' });
     const b = req.body || {};
+    if (String(b.phone || '').replace(/\D/g, '').length < 9) return res.status(400).json({ error: 'Add a phone number so the owner can reach you.' });
     await db.createLead({
       listingId: l.id, ownerId: l.ownerId,
       name: b.name ? String(b.name).slice(0, 120) : '',
@@ -73,11 +90,15 @@ router.post('/:id/enquire', async (req, res) => {
 });
 
 // POST /api/listings — create a pending (unpaid) listing
-router.post('/', async (req, res) => {
+router.post('/', createLimit, optionalAuth, async (req, res) => {
   try {
     const b = req.body || {};
     if (!b.title || String(b.title).trim().length < 4) {
       return res.status(400).json({ error: 'Please provide a clear listing title.' });
+    }
+    // Hunters are promised they can call / WhatsApp the lister, so a phone is required.
+    if (String(b.phone || '').replace(/\D/g, '').length < 9) {
+      return res.status(400).json({ error: 'Please add a phone / WhatsApp number so hunters can reach you.' });
     }
     // Sanitize + auto-order rooms into a canonical walk-through.
     var rooms = [];
@@ -87,15 +108,15 @@ router.post('/', async (req, res) => {
           type: String(r.type || 'other'),
           label: labelFor(String(r.type || 'other')),
           description: r.description ? String(r.description).slice(0, 1000) : '',
-          photos: Array.isArray(r.photos) ? r.photos.slice(0, 12) : [],
-          videos: Array.isArray(r.videos) ? r.videos.slice(0, 4) : [],
+          photos: cleanMedia(r.photos, 12),
+          videos: cleanMedia(r.videos, 4),
         };
       }));
     }
     var tier = b.tier === 'showcase' ? 'showcase' : 'standard';
 
     // Cover photos = general photos, else the first photo found in rooms.
-    var photos = Array.isArray(b.photos) ? b.photos.slice(0, 12) : [];
+    var photos = cleanMedia(b.photos, 12);
     if (!photos.length) {
       rooms.some(function (r) { if (r.photos.length) { photos = [r.photos[0]]; return true; } return false; });
     }
@@ -117,10 +138,16 @@ router.post('/', async (req, res) => {
       location: b.location ? String(b.location).slice(0, 160) : (b.region || ''),
       description: b.description ? String(b.description).slice(0, 4000) : '',
       photos: photos,
-      videos: Array.isArray(b.videos) ? b.videos.slice(0, 6) : [],
+      videos: cleanMedia(b.videos, 6),
       rooms: rooms,
       tier: tier,
-      submitter: { name: b.name, phone: b.phone, email: b.email },
+      // Link the listing to the signed-in account so it shows in their dashboard.
+      ownerId: req.user ? req.user.id : null,
+      submitter: {
+        name: b.name ? String(b.name).slice(0, 120) : '',
+        phone: String(b.phone).slice(0, 20),
+        email: b.email ? String(b.email).slice(0, 160) : '',
+      },
     });
     res.status(201).json({ id: listing.id, tier: listing.tier });
   } catch (e) {
