@@ -8,6 +8,9 @@
 - **Any signed-in user could replace photos on any listing** (`POST /api/uploads/:listingId`). Now owner/admin only.
 
 ## Security hardening
+- Upgraded `multer` and `qs` (2 high + 1 moderate known vulnerabilities; `npm audit` now reports 0).
+- Uploads: the file's real contents are checked (a web page renamed to .png is rejected), max 30MB per file (was 60MB × 12 in memory, enough to crash a small server), and max 40 uploads per account per 15 minutes.
+- Passwords: minimum 8 characters, common passwords refused (existing accounts unaffected).
 - **Admin takeover:** admin rights come from `ADMIN_EMAILS`, and sign-up never checks email ownership, so anyone could register an admin address first and open the admin panel. Admin emails can no longer be registered with a password (use Google sign-in).
 - Stored XSS in the homepage "areas" chips (area names weren't escaped).
 - CORS limited to `CORS_ORIGINS` (was open to every site; the setting existed but wasn't used).

@@ -11,6 +11,36 @@ const router = express.Router();
 // extension. Now every route below is behind auth.
 router.use(requireAuth);
 
+// Max 40 upload requests per user per 15 minutes (stops one account flooding storage/RAM).
+const uploadHits = new Map();
+router.use(function (req, res, next) {
+  const k = String(req.user.id), now = Date.now();
+  let h = uploadHits.get(k);
+  if (!h || h.reset <= now) { h = { n: 0, reset: now + 15 * 60 * 1000 }; uploadHits.set(k, h); }
+  if (++h.n > 40) return res.status(429).json({ error: 'Too many uploads. Please wait a few minutes.' });
+  next();
+});
+
+// The browser's "type" label can be faked, so also check the file's real
+// signature (magic bytes) before saving it.
+function looksLike(mime, buf) {
+  if (!buf || buf.length < 12) return false;
+  const hex = buf.subarray(0, 12).toString('hex');
+  const ascii = buf.subarray(0, 12).toString('latin1');
+  switch (mime) {
+    case 'image/jpeg': return hex.startsWith('ffd8ff');
+    case 'image/png': return hex.startsWith('89504e470d0a1a0a');
+    case 'image/gif': return ascii.startsWith('GIF87a') || ascii.startsWith('GIF89a');
+    case 'image/webp': return ascii.startsWith('RIFF') && ascii.slice(8, 12) === 'WEBP';
+    case 'video/mp4': case 'video/quicktime': return ascii.slice(4, 8) === 'ftyp' || ascii.slice(4, 8) === 'moov' || ascii.slice(4, 8) === 'mdat' || ascii.slice(4, 8) === 'wide';
+    case 'video/webm': return hex.startsWith('1a45dfa3');
+    default: return false;
+  }
+}
+function realFiles(files) {
+  return (files || []).filter((f) => looksLike(String(f.mimetype || '').toLowerCase(), f.buffer));
+}
+
 // Explicit MIME allowlist (mirrors services/storage.js EXT_BY_MIME).
 // image/svg+xml is intentionally excluded (SVG can carry script → stored XSS).
 const ALLOWED_MIME = new Set(Object.keys(storage.EXT_BY_MIME));
@@ -19,7 +49,9 @@ const ALLOWED_MIME = new Set(Object.keys(storage.EXT_BY_MIME));
 // Local-disk fallback also writes from the same in-memory buffer.
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 60 * 1024 * 1024, files: 12 }, // up to 60MB (covers short videos)
+  // Files are held in memory, so keep the total per request well under the
+  // server's RAM (12 x 60MB could exhaust a small Render instance).
+  limits: { fileSize: 30 * 1024 * 1024, files: 12 }, // up to 30MB each (short phone videos)
   fileFilter: (_req, file, cb) => {
     if (ALLOWED_MIME.has(String(file.mimetype || '').toLowerCase())) return cb(null, true);
     return cb(null, false); // silently drop disallowed types (e.g. svg, html)
@@ -29,10 +61,11 @@ const upload = multer({
 // POST /api/uploads  (field: files[]) -> { files: [{ url, type }] }
 router.post('/', upload.array('files', 12), async (req, res) => {
   try {
-    if (!req.files || !req.files.length) {
+    const files = realFiles(req.files);
+    if (!files.length) {
       return res.status(400).json({ error: 'No valid image/video files uploaded' });
     }
-    const saved = await Promise.all(req.files.map((f) => storage.save(f)));
+    const saved = await Promise.all(files.map((f) => storage.save(f)));
     res.json({ ok: true, files: saved.map((s) => ({ url: s.url, type: s.type })) });
   } catch (e) {
     console.error('upload failed', e);
@@ -49,10 +82,11 @@ router.post('/:listingId', upload.array('photos', 12), async (req, res) => {
     if (!isAdmin(req.user) && String(listing.ownerId || '') !== String(req.user.id)) {
       return res.status(403).json({ error: 'You can only change photos on your own listings.' });
     }
-    if (!req.files || !req.files.length) {
+    const files = realFiles(req.files);
+    if (!files.length) {
       return res.status(400).json({ error: 'No valid image/video files uploaded' });
     }
-    const saved = await Promise.all(req.files.map((f) => storage.save(f)));
+    const saved = await Promise.all(files.map((f) => storage.save(f)));
     const urls = saved.map((s) => s.url);
     if (urls.length) await db.addPhotos(listing.id, urls);
     res.json({ ok: true, photos: urls });
