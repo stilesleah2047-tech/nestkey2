@@ -35,7 +35,8 @@ function advertiseListing(data) {
     county: data.county || '',
     description: data.description || '',
     photo: data.photo || '',
-    url: `https://nestkey.co.ke/property.html?id=${encodeURIComponent(String(id))}`,
+    // Clean, shareable listing URL (with photo/price preview on WhatsApp & socials).
+    url: require('./seo').listingUrl({ id, title: data.title }),
   };
 
   // Fire-and-forget; log but never throw into the publish path.

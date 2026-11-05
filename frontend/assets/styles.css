@@ -340,7 +340,7 @@ footer.foot { background: var(--navy); color: #9fb4cc; padding: 24px 0; text-ali
 /* Mobile hamburger nav */
 .nav-toggle { display: none; background: none; border: none; color: var(--navy); cursor: pointer; padding: 6px; margin-left: auto; }
 .nav-toggle svg { width: 28px; height: 28px; display: block; }
-@media (max-width: 760px) {
+@media (max-width: 1080px) {
   .nav-toggle { display: inline-flex; }
   .top nav { position: absolute; top: 100%; left: 0; right: 0; margin-left: 0; flex: none; background: #fff; border-bottom: 1px solid var(--line); box-shadow: 0 12px 24px rgba(11,27,43,.1); flex-direction: column; align-items: stretch; display: none; padding: 6px 0; }
   .top nav.open { display: flex; }
@@ -416,3 +416,8 @@ ol.desc-list { list-style: decimal; }
 .detail-page .thumbs img { width: 92px; height: 70px; object-fit: cover; border-radius: 8px; cursor: pointer; }
 .detail-back { max-width: 900px; margin: 18px auto 0; }
 .detail-back a { color: var(--cerulean-dk); font-weight: 600; }
+
+/* Listing card titles are real links (crawlable, open in new tab, shareable) */
+.card h3 a.card-link { color: inherit; text-decoration: none; }
+.card h3 a.card-link:hover { text-decoration: underline; }
+.btn.sm { padding: 6px 12px; font-size: .85rem; }

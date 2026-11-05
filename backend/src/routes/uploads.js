@@ -2,7 +2,7 @@ const express = require('express');
 const multer = require('multer');
 const db = require('../db');
 const storage = require('../services/storage');
-const { requireAuth } = require('../auth');
+const { requireAuth, isAdmin } = require('../auth');
 
 const router = express.Router();
 
@@ -45,6 +45,10 @@ router.post('/:listingId', upload.array('photos', 12), async (req, res) => {
   try {
     const listing = await db.getById(req.params.listingId);
     if (!listing) return res.status(404).json({ error: 'Listing not found' });
+    // Only the listing's owner (or an admin) may replace its photos.
+    if (!isAdmin(req.user) && String(listing.ownerId || '') !== String(req.user.id)) {
+      return res.status(403).json({ error: 'You can only change photos on your own listings.' });
+    }
     if (!req.files || !req.files.length) {
       return res.status(400).json({ error: 'No valid image/video files uploaded' });
     }

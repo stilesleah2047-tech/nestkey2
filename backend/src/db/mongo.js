@@ -299,7 +299,7 @@ Object.assign(module.exports, {
       listingId: d.listingId, listingTitle: d.listingTitle, ownerId: d.ownerId,
       tenantName: d.tenantName, tenantPhone: d.tenantPhone, tenantEmail: d.tenantEmail,
       gross: d.gross || 0, commission: d.commission || 0, net: d.net || 0, method: d.method,
-      type: 'sale', status: 'recorded', invoiceStatus: 'pending',
+      type: 'sale', status: 'recorded', invoiceStatus: 'unconfirmed',
     }));
   },
   async listTransactionsByOwner(ownerId) {
@@ -308,11 +308,22 @@ Object.assign(module.exports, {
   async ownerCommissionSummary(ownerId) {
     const rows = await Escrow.find({ ownerId, type: 'sale' });
     let collected = 0, owed = 0, paid = 0;
-    rows.forEach((r) => { collected += r.gross || 0; if (r.invoiceStatus === 'paid') paid += r.commission || 0; else owed += r.commission || 0; });
-    return { collected, owed, paid, count: rows.length };
+    let count = 0;
+    rows.forEach((r) => {
+      if (r.invoiceStatus !== 'pending' && r.invoiceStatus !== 'paid') return; // unconfirmed / rejected
+      count++; collected += r.gross || 0;
+      if (r.invoiceStatus === 'paid') paid += r.commission || 0; else owed += r.commission || 0;
+    });
+    return { collected, owed, paid, count };
   },
   async markInvoicesPaidByOwner(ownerId) {
-    await Escrow.updateMany({ ownerId, type: 'sale', invoiceStatus: { $ne: 'paid' } }, { invoiceStatus: 'paid', invoicedAt: new Date() });
+    await Escrow.updateMany({ ownerId, type: 'sale', invoiceStatus: 'pending' }, { invoiceStatus: 'paid', invoicedAt: new Date() });
+  },
+  async setTransactionInvoiceStatus(id, ownerId, from, to) {
+    try {
+      const r = await Escrow.updateOne({ _id: id, ownerId, type: 'sale', invoiceStatus: from }, { invoiceStatus: to });
+      return r.modifiedCount > 0;
+    } catch (e) { return false; }
   },
   async createCommission(d) {
     return escrowOut(await Escrow.create({ ownerId: d.ownerId, gross: d.amount || 0, commission: 0, type: 'commission', status: 'pending' }));

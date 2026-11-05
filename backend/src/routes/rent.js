@@ -1,6 +1,9 @@
 const express = require('express');
 const db = require('../db');
 const config = require('../config');
+const { rateLimit } = require('../ratelimit');
+
+const recordLimit = rateLimit({ windowMs: 60 * 60 * 1000, max: 5 });
 
 const router = express.Router();
 
@@ -37,7 +40,7 @@ router.get('/:listingId/payinfo', async (req, res) => {
 });
 
 // POST /api/rent/:listingId — record a payment the buyer made directly to the seller
-router.post('/:listingId', async (req, res) => {
+router.post('/:listingId', recordLimit, async (req, res) => {
   try {
     const listing = await db.getById(req.params.listingId);
     if (!listing || !listing.paid) return res.status(404).json({ error: 'Listing not found' });
@@ -58,9 +61,10 @@ router.post('/:listingId', async (req, res) => {
       gross, commission, net, method: b.method ? String(b.method).slice(0, 40) : 'mpesa',
     });
 
-    // Notify the landlord in real time.
-    try { require('../events').emit('payment.recorded', { listingId: listing.id, title: listing.title, gross }, listing.ownerId); } catch (e) {}
-    try { require('../events').emitAdmin('activity', { kind: 'payment', at: new Date(), text: 'Sale recorded: ' + listing.title + ' — KSh ' + Math.round(gross) + ' (8% = KSh ' + commission + ')' }); } catch (e) {}
+    // Notify the landlord in real time. The record stays "unconfirmed" (no
+    // commission is owed) until the seller confirms it in their dashboard.
+    try { require('../events').emit('payment.recorded', { listingId: listing.id, title: listing.title, gross, needsConfirmation: true }, listing.ownerId); } catch (e) {}
+    try { require('../events').emitAdmin('activity', { kind: 'payment', at: new Date(), text: 'Sale reported (awaiting seller confirmation): ' + listing.title + ' — KSh ' + Math.round(gross) }); } catch (e) {}
 
     res.status(201).json({ id: txn.id, gross, commission, net, commissionRate: config.commissionRate });
   } catch (e) {

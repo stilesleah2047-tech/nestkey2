@@ -385,19 +385,27 @@
     ov.classList.add('open');
     document.body.style.overflow = 'hidden';
 
-    var timer = null;
-    function stop() { if (timer) { clearInterval(timer); timer = null; } ov.classList.remove('open'); document.body.style.overflow = ''; frame.src = 'about:blank'; }
-    ov.querySelector('.pp-close').onclick = function () { stop(); };
+    var timer = null, finished = false;
+    function stop() { if (timer) { clearInterval(timer); timer = null; } window.removeEventListener('message', onMsg); ov.classList.remove('open'); document.body.style.overflow = ''; frame.src = 'about:blank'; }
+    function finish(st) { if (finished) return; finished = true; stop(); onDone(st); }
+    // The Pesapal return page (inside the iframe) tells us the result right away.
+    function onMsg(ev) {
+      if (ev.origin !== location.origin || !ev.data || ev.data.type !== 'nestkey-payment') return;
+      if (ev.data.status === 'yes') finish('yes');
+      else if (ev.data.status === 'failed') statusEl.textContent = 'Payment not completed \u2014 you can try again in the window above.';
+    }
+    window.addEventListener('message', onMsg);
+    ov.querySelector('.pp-close').onclick = function () { finish('closed'); };
 
     var n = 0;
     timer = setInterval(function () {
       n++;
-      if (n > 60) { stop(); onDone('timeout'); return; } // ~5 min
+      if (n > 60) { finish('timeout'); return; } // ~5 min
       fetch(API + '/api/payments/pesapal/status/' + encodeURIComponent(orderTrackingId))
         .then(function (r) { return r.json(); })
         .then(function (s) {
           if (!s) return;
-          if (s.status === 'yes') { stop(); onDone('yes'); }
+          if (s.status === 'yes') finish('yes');
           else if (s.status === 'failed') { statusEl.textContent = 'Payment failed — you can try another method.'; }
         }).catch(function () {});
     }, 5000);
@@ -447,8 +455,8 @@
         var c = $('chips');
         c.innerHTML = '<button class="chip active" data-r="">All areas</button>' +
           (rows || []).map(function (r) {
-            return '<button class="chip" data-r="' + r.region.toLowerCase() + '">' +
-              r.region + ' <b>' + r.count + '</b></button>';
+            return '<button class="chip" data-r="' + escapeHtml(String(r.region).toLowerCase()) + '">' +
+              escapeHtml(r.region) + ' <b>' + escapeHtml(r.count) + '</b></button>';
           }).join('');
         Array.prototype.forEach.call(c.querySelectorAll('.chip'), function (chip) {
           chip.addEventListener('click', function () {
@@ -472,9 +480,9 @@
         '<svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none"><path d="M12 21s-7-4.5-9.5-9A5 5 0 0112 5a5 5 0 019.5 7c-2.5 4.5-9.5 9-9.5 9z"/></svg></button>';
       return '<article class="card" data-id="' + l.id + '">' +
         '<div class="media"><span class="deal">' + deal + '</span>' + feat + showcase + photos + heart +
-        '<img loading="lazy" src="' + img + '" alt=""></div>' +
+        '<img loading="lazy" src="' + escapeHtml(img) + '" alt="' + escapeHtml(l.title) + '"></div>' +
         '<div class="body"><div class="price">' + money(l.price) + '</div>' +
-        '<h3>' + escapeHtml(l.title) + '</h3>' + (verified ? '<div class="vrow">' + verified + '</div>' : '') +
+        '<h3><a href="/property/' + encodeURIComponent(l.id) + '" class="card-link">' + escapeHtml(l.title) + '</a></h3>' + (verified ? '<div class="vrow">' + verified + '</div>' : '') +
         '<div class="loc">' + icon('pin') + ' ' + escapeHtml(l.location || l.region || '') + '</div>' +
         '<div class="meta">' + (l.beds ? '<span>' + icon('bed') + ' ' + l.beds + ' bed</span>' : '') +
         (l.baths ? '<span>' + icon('bath') + ' ' + l.baths + ' bath</span>' : '') +
@@ -498,7 +506,7 @@
         });
       });
       Array.prototype.forEach.call(res.querySelectorAll('.card'), function (c) {
-        c.addEventListener('click', function () { location.href = 'property.html?id=' + encodeURIComponent(c.getAttribute('data-id')); });
+        c.addEventListener('click', function () { location.href = '/property/' + encodeURIComponent(c.getAttribute('data-id')); });
       });
     }
 
@@ -545,7 +553,7 @@
         var c = coordsFor(l, i);
         pts.push(c);
         var photo = (l.photos && l.photos[0]) || NOPHOTO;
-        var html = '<div class="map-pop"><img src="' + photo + '" alt="">' +
+        var html = '<div class="map-pop"><img src="' + escapeHtml(photo) + '" alt="">' +
           '<div class="mp-price">' + money(l.price) + '</div>' +
           '<div class="mp-title">' + escapeHtml(l.title) + '</div>' +
           '<div class="mp-loc">' + escapeHtml(l.location || l.region || '') + '</div>' +
@@ -553,7 +561,7 @@
         var m = L.marker(c).addTo(markersLayer).bindPopup(html);
         m.on('popupopen', function () {
           var btn = document.querySelector('.map-pop .mp-view[data-id="' + l.id + '"]');
-          if (btn) btn.onclick = function () { location.href = 'property.html?id=' + encodeURIComponent(l.id); };
+          if (btn) btn.onclick = function () { location.href = '/property/' + encodeURIComponent(l.id); };
         });
       });
       if (pts.length) map.fitBounds(pts, { padding: [40, 40], maxZoom: 14 });
@@ -572,8 +580,8 @@
     }
 
     function mediaGrid(photos, videos) {
-      var v = (videos || []).map(function (u) { return '<video controls preload="metadata" src="' + u + '"></video>'; }).join('');
-      var p = (photos || []).map(function (u) { return '<img src="' + u + '" data-full="' + u + '" alt="">'; }).join('');
+      var v = (videos || []).map(function (u) { return '<video controls preload="metadata" src="' + escapeHtml(u) + '"></video>'; }).join('');
+      var p = (photos || []).map(function (u) { return '<img src="' + escapeHtml(u) + '" data-full="' + escapeHtml(u) + '" alt="">'; }).join('');
       return '<div class="room-media">' + v + p + '</div>';
     }
 
@@ -614,7 +622,7 @@
 
         // Fallback flat gallery when there are no rooms
         var flat = (!l.rooms || !l.rooms.length)
-          ? '<div class="thumbs">' + (l.photos || []).map(function (u) { return '<img src="' + u + '" data-full="' + u + '">'; }).join('') + '</div>'
+          ? '<div class="thumbs">' + (l.photos || []).map(function (u) { return '<img src="' + escapeHtml(u) + '" data-full="' + escapeHtml(u) + '">'; }).join('') + '</div>'
           : '';
 
         var hasGeo = (l.lat != null && l.lng != null);
@@ -626,7 +634,7 @@
           '</div></div>') : '';
 
         $('modalPanel').innerHTML =
-          '<img class="hero-img" id="mMain" src="' + main + '" alt="">' +
+          '<img class="hero-img" id="mMain" src="' + escapeHtml(main) + '" alt="">' +
           '<div class="pad"><div class="price" style="font-size:1.5rem;font-weight:800">' + money(l.price) + '</div>' +
           '<h2>' + escapeHtml(l.title) + badge + '</h2>' +
           '<p class="loc">' + icon('pin') + ' ' + escapeHtml(l.location || l.region || '') + ' · ' + deal + '</p>' +
@@ -784,7 +792,7 @@
 
   if ($('post-form')) {
     if (currentUser() && currentUser().isAdmin) { location.href = '/admin.html'; }
-    var form = $('post-form'), btn = $('submitBtn'), statusEl = $('status'), pollTimer = null;
+    var form = $('post-form'), btn = $('submitBtn'), statusEl = $("status");
     if ($('beds')) $('beds').addEventListener('input', updateFee);
 
     fetch(API + '/api/config').then(function (r) { return r.json(); }).then(function (c) {
@@ -891,18 +899,28 @@
       if (!files.length) return Promise.resolve([]);
       var fd = new FormData();
       files.slice(0, 12).forEach(function (f) { fd.append('files', f); });
-      return fetch(API + '/api/uploads', { method: 'POST', body: fd })
-        .then(function (r) { return r.json(); })
-        .then(function (res) { return (res && res.files) ? res.files : []; });
+      // Uploads require a signed-in account, so send the token.
+      return fetch(API + '/api/uploads', { method: 'POST', body: fd, headers: authHeaders() })
+        .then(function (r) {
+          if (r.status === 401) throw new Error('SIGNIN');
+          return r.json().then(function (res) {
+            if (!r.ok || !res || res.error) throw new Error((res && res.error) || 'Upload failed. Please try again.');
+            return res.files || [];
+          });
+        });
     }
     function imgs(arr) { return arr.filter(function (f) { return f.type === 'image'; }).map(function (f) { return f.url; }); }
     function vids(arr) { return arr.filter(function (f) { return f.type === 'video'; }).map(function (f) { return f.url; }); }
 
     form.addEventListener('submit', function (e) {
       e.preventDefault();
-      if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
-      var title = form.title.value.trim(), phone = form.phone.value.trim();
+            var title = form.title.value.trim(), phone = form.phone.value.trim();
       if (title.length < 4) { show('err', 'Please add a clear listing title.'); return; }
+      if (phone.replace(/\D/g, '').length < 9) { show('err', 'Please add a phone / WhatsApp number so house hunters can reach you.'); return; }
+      if (!getToken()) {
+        show('err', 'Please <a href="/account.html" target="_blank" rel="noopener">sign in or create a free account</a> (opens in a new tab) so you can upload photos. Your details here will stay as they are \u2014 come back and press the button again.');
+        return;
+      }
       btn.disabled = true; show('info', 'Uploading media\u2026 (videos can take a moment)');
 
       uploadFiles($('photos') ? $('photos').files : []).then(function (cover) {
@@ -941,7 +959,7 @@
             name: form.name.value, email: form.email.value, phone: phone,
             tier: tier, photos: coverUrls, rooms: rooms,
           };
-          return api('/api/listings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+          return api('/api/listings', { method: 'POST', headers: authHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify(body) });
         });
       }).then(function (res) {
         if (!res || res.error) throw new Error(res && res.error ? res.error : 'Could not save');
@@ -964,30 +982,15 @@
           });
         });
       }).catch(function (err) {
-        show('err', err.message || 'Something went wrong. Please try again.');
+        if (err && err.message === 'SIGNIN') {
+          show('err', 'Your sign-in has expired. Please <a href="/account.html" target="_blank" rel="noopener">sign in again</a>, then press the button again.');
+        } else {
+          show('err', escapeHtml((err && err.message) || 'Something went wrong. Please try again.'));
+        }
         btn.disabled = false;
       });
     });
 
-    function poll(id) {
-      var n = 0;
-      pollTimer = setInterval(function () {
-        n++;
-        if (n > 25) { clearInterval(pollTimer); pollTimer = null; show('info', "Still waiting for payment. If you completed it, your listing will publish shortly."); btn.disabled = false; return; }
-        api('/api/payments/status/' + id).then(function (s) {
-          if (!s) return;
-          if (s.status === 'yes') {
-            clearInterval(pollTimer); pollTimer = null;
-            show('ok', '<strong>Payment received</strong><br>Your listing is now live. <a href="/">Browse listings \u2192</a>');
-            form.reset(); if ($('rooms-builder')) $('rooms-builder').innerHTML = ''; tier = 'standard'; updateFee(); btn.textContent = 'Submitted \u2713';
-          } else if (s.status === 'failed') {
-            clearInterval(pollTimer); pollTimer = null;
-            show('err', 'The payment was not completed. No fee was charged. Please try again.');
-            btn.disabled = false;
-          }
-        });
-      }, 4000);
-    }
   }
 
   /* ---------------- Services / subscriptions ---------------- */
@@ -1309,7 +1312,12 @@
       var files = Array.prototype.slice.call(fileList || []);
       if (!files.length) return Promise.resolve([]);
       var fd = new FormData(); files.slice(0, 12).forEach(function (f) { fd.append('files', f); });
-      return fetch(API + '/api/uploads', { method: 'POST', body: fd }).then(function (r) { return r.json(); }).then(function (res) { return (res && res.files) ? res.files : []; });
+      return fetch(API + '/api/uploads', { method: 'POST', body: fd, headers: authHeaders() }).then(function (r) {
+        return r.json().then(function (res) {
+          if (!r.ok || !res || res.error) throw new Error((res && res.error) || 'Upload failed. Please try again.');
+          return res.files || [];
+        });
+      });
     }
     // Switch the form between "create" and "edit" presentation.
     function resetFormMode() {
@@ -1478,8 +1486,21 @@
           '<table class="dash-table"><thead><tr><th>Property</th><th>Buyer</th><th>Amount</th><th>Our 8%</th><th>Invoice</th></tr></thead><tbody>' +
           items.map(function (t) {
             return '<tr><td>' + escapeHtml(t.listingTitle || '') + '</td><td>' + escapeHtml((t.tenant && t.tenant.name) || '') + '<br><span class="dc-sub">' + escapeHtml((t.tenant && t.tenant.phone) || '') + '</span></td>' +
-              '<td>' + money(t.gross) + '</td><td>' + money(t.commission) + '</td><td>' + statusPill(t.invoiceStatus === 'paid' ? 'paid' : 'due') + '</td></tr>';
+              '<td>' + money(t.gross) + '</td><td>' + money(t.commission) + '</td><td>' +
+              (t.invoiceStatus === 'unconfirmed'
+                ? '<button class="btn sm" data-txn-confirm="' + escapeHtml(t.id) + '">Confirm sale</button> <button class="btn ghost sm" data-txn-reject="' + escapeHtml(t.id) + '">Not mine</button>'
+                : statusPill(t.invoiceStatus === 'paid' ? 'paid' : (t.invoiceStatus === 'rejected' ? 'rejected' : 'due'))) +
+              '</td></tr>';
           }).join('') + '</tbody></table>';
+        Array.prototype.forEach.call($('transactions').querySelectorAll('[data-txn-confirm],[data-txn-reject]'), function (b) {
+          b.addEventListener('click', function () {
+            var id = b.getAttribute('data-txn-confirm') || b.getAttribute('data-txn-reject');
+            var action = b.hasAttribute('data-txn-confirm') ? 'confirm' : 'reject';
+            b.disabled = true;
+            fetch(API + '/api/agent/transactions/' + encodeURIComponent(id) + '/' + action, { method: 'POST', headers: authHeaders() })
+              .then(guard).then(function () { loadTransactions(); });
+          });
+        });
       });
     }
 

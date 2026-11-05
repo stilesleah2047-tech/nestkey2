@@ -1,6 +1,6 @@
 # NestKey
 
-A standalone listings marketplace — find and post houses/rooms for rent or sale, grouped by area, with M-Pesa (Daraja) listing payments. Built to run on **PostgreSQL _or_ MongoDB** (your choice), with an installable web app (PWA).
+A standalone listings marketplace — find and post houses/rooms for rent or sale, grouped by area, with Pesapal payments (M-Pesa, Airtel Money, card and bank on one secure screen). Built to run on **PostgreSQL _or_ MongoDB** (your choice), with an installable web app (PWA).
 
 ## Quickstart (Docker — one command)
 With Docker Desktop, from the `househunt-app` folder:
@@ -8,7 +8,7 @@ With Docker Desktop, from the `househunt-app` folder:
 docker compose up --build
 ```
 Open **http://localhost:4000**. This boots PostgreSQL + the app together and creates tables
-automatically. Add M-Pesa/Pesapal keys to the `app` service in `docker-compose.yml` when
+automatically. Add your Pesapal keys to the `app` service in `docker-compose.yml` when
 you're ready to test payments. No Docker? Use **Manual setup** below.
 
 ```
@@ -20,7 +20,7 @@ househunt-app/
 ## What works today
 - Browse listings by **area/region** with search, price, beds, deal-type filters and sorting.
 - **Post a house** with photo uploads and a fee that scales per room (KSh 100/room by default).
-- **M-Pesa STK Push** payment; listing auto-publishes once paid.
+- **Pesapal** payment (M-Pesa, Airtel Money, card, bank) in an on-site window; listing auto-publishes once Pesapal confirms.
 - One data layer, **two databases** — switch with a single env var.
 - Web app is a **PWA**: installable on Android/iOS home screens; native app can wrap the same API later.
 
@@ -48,11 +48,13 @@ npm start
 ```
 Open http://localhost:4000 to browse, and http://localhost:4000/post.html to post a house.
 
-## 4. M-Pesa (Daraja)
-1. Create an app at the Safaricom Developer Portal and get Consumer Key, Secret, Passkey, Shortcode.
-2. Put them in `.env` (`MPESA_*`). Start with `MPESA_ENV=sandbox`.
-3. Set `MPESA_CALLBACK_URL` to a **public HTTPS** URL that reaches `POST /api/payments/callback` (use a tunnel like ngrok in development).
-4. Test a payment end-to-end in sandbox before going live.
+## 4. Payments (Pesapal)
+1. Get your Consumer Key and Secret from Pesapal (start with the sandbox).
+2. Put them in `.env` as `PESAPAL_KEY` / `PESAPAL_SECRET`, with `PESAPAL_ENV=sandbox`.
+3. Set `PESAPAL_IPN_URL=https://<your-domain>/api/payments/ipn` and `PESAPAL_CALLBACK_URL=https://<your-domain>/api/payments/pesapal-return` (public HTTPS — use a tunnel like ngrok in development).
+4. Test a payment end-to-end in sandbox, then switch to `PESAPAL_ENV=live` with live keys.
+
+Every payment is confirmed with Pesapal's GetTransactionStatus before anything is published or activated.
 
 ## API
 | Method | Path | Purpose |
@@ -62,9 +64,11 @@ Open http://localhost:4000 to browse, and http://localhost:4000/post.html to pos
 | GET | `/api/listings/:id` | One listing |
 | POST | `/api/listings` | Create a pending listing |
 | POST | `/api/uploads/:id` | Upload photos (`multipart/form-data`, field `photos`) |
-| POST | `/api/payments/stk` | Start M-Pesa STK push |
-| POST | `/api/payments/callback` | Safaricom result callback |
-| GET | `/api/payments/status/:id` | Poll payment status |
+| POST | `/api/payments/pesapal` | Start a Pesapal payment for a listing → iframe URL |
+| GET | `/api/payments/pesapal/status/:otid` | Check / settle a Pesapal order |
+| GET/POST | `/api/payments/ipn` | Pesapal IPN (instant payment notification) |
+| GET | `/api/payments/pesapal-return` | Page shown in the payment window after paying |
+| GET | `/api/payments/status/:id` | Has this listing been paid? |
 
 ## Swapping the database
 `src/db/index.js` picks `mongo.js` or `postgres.js` by `DB_DRIVER`. Both expose the same repository

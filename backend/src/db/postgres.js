@@ -340,7 +340,7 @@ Object.assign(module.exports, {
     const { rows } = await pool.query(
       `INSERT INTO escrows (listing_id, listing_title, owner_id, tenant_name, tenant_phone, tenant_email,
         gross, commission, net, method, type, status, invoice_status)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,'sale','recorded','pending') RETURNING *`,
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,'sale','recorded','unconfirmed') RETURNING *`,
       [d.listingId || null, d.listingTitle || null, d.ownerId || null, d.tenantName || null,
        d.tenantPhone || null, d.tenantEmail || null, d.gross || 0, d.commission || 0, d.net || 0, d.method || null]
     );
@@ -353,17 +353,26 @@ Object.assign(module.exports, {
   async ownerCommissionSummary(ownerId) {
     const { rows } = await pool.query(
       `SELECT
-         COALESCE(SUM(gross) FILTER (WHERE type='sale'),0)::numeric AS collected,
-         COALESCE(SUM(commission) FILTER (WHERE type='sale' AND invoice_status <> 'paid'),0)::numeric AS owed,
+         COALESCE(SUM(gross) FILTER (WHERE type='sale' AND invoice_status IN ('pending','paid')),0)::numeric AS collected,
+         COALESCE(SUM(commission) FILTER (WHERE type='sale' AND invoice_status = 'pending'),0)::numeric AS owed,
          COALESCE(SUM(commission) FILTER (WHERE type='sale' AND invoice_status = 'paid'),0)::numeric AS paid,
-         COUNT(*) FILTER (WHERE type='sale')::int AS count
+         COUNT(*) FILTER (WHERE type='sale' AND invoice_status IN ('pending','paid'))::int AS count
        FROM escrows WHERE owner_id=$1`, [ownerId]
     );
     const r = rows[0];
     return { collected: Number(r.collected) || 0, owed: Number(r.owed) || 0, paid: Number(r.paid) || 0, count: r.count };
   },
   async markInvoicesPaidByOwner(ownerId) {
-    await pool.query("UPDATE escrows SET invoice_status='paid', invoiced_at=now() WHERE owner_id=$1 AND type='sale' AND invoice_status<>'paid'", [ownerId]);
+    await pool.query("UPDATE escrows SET invoice_status='paid', invoiced_at=now() WHERE owner_id=$1 AND type='sale' AND invoice_status='pending'", [ownerId]);
+  },
+  // Seller confirms / rejects a buyer-reported sale. Returns true if a row changed.
+  async setTransactionInvoiceStatus(id, ownerId, from, to) {
+    if (!/^\d+$/.test(String(id))) return false;
+    const r = await pool.query(
+      "UPDATE escrows SET invoice_status=$1 WHERE id=$2 AND owner_id=$3 AND type='sale' AND invoice_status=$4",
+      [to, id, ownerId, from]
+    );
+    return r.rowCount > 0;
   },
 
   // Commission settlement (landlord pays us the owed 8%) via the payment gateway.

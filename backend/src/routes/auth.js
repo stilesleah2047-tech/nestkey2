@@ -16,6 +16,12 @@ router.post('/register', async (req, res) => {
     const email = String(b.email || '').trim().toLowerCase();
     if (!email || !/.+@.+\..+/.test(email)) return res.status(400).json({ error: 'Enter a valid email.' });
     if (!b.password || String(b.password).length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters.' });
+    // Admin emails can't be claimed with a password: there is no email check, so
+    // anyone could register "admin@…" first and get the admin panel. Admins sign
+    // in with Google (Google proves they own the address).
+    if (require('../config').adminEmails.includes(email)) {
+      return res.status(403).json({ error: 'This email is reserved. Please use \u201cContinue with Google\u201d to sign in.' });
+    }
     const existing = await db.findUserByEmail(email);
     if (existing) return res.status(409).json({ error: 'An account with that email already exists.' });
 

@@ -45,7 +45,20 @@ async function ipnId() {
  * Create an order. Returns { orderTrackingId, redirectUrl } — redirectUrl is
  * loaded in an IFRAME on our own site (no full-page redirect).
  */
-async function submitOrder({ merchantRef, amount, description, email, phone }) {
+// Pesapal needs a UNIQUE merchant reference for every order. Re-using
+// "HOUSE12" when someone closes the window and presses Pay again makes
+// Pesapal reject the second order, so we add a short unique suffix.
+function uniqueRef(prefix, id) {
+  return (String(prefix) + id + '-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5)).slice(0, 50);
+}
+
+// "HOUSE12-lx3abc" -> { kind: 'HOUSE', id: '12' }
+function parseRef(ref) {
+  const m = /^(HOUSE|SUB|COMM)([^-]+)/.exec(String(ref || ''));
+  return m ? { kind: m[1], id: m[2] } : null;
+}
+
+async function submitOrder({ merchantRef, amount, description, email, phone, name }) {
   if (!config.pesapal.key || !config.pesapal.secret) return { ok: false, error: 'Card payments are not set up: add PESAPAL_KEY and PESAPAL_SECRET in .env.' };
   if (!config.pesapal.callbackUrl || /localhost|127\.0\.0\.1/.test(config.pesapal.callbackUrl) || !/^https:/.test(config.pesapal.callbackUrl)) {
     return { ok: false, error: 'Card payments need a public HTTPS callback. Set PESAPAL_CALLBACK_URL and PESAPAL_IPN_URL to your public URL (e.g. a dev tunnel or ngrok), not localhost.' };
@@ -60,11 +73,11 @@ async function submitOrder({ merchantRef, amount, description, email, phone }) {
     callback_url: config.pesapal.callbackUrl,
     notification_id: idn,
     billing_address: {
-      email_address: email || 'customer@nestkey.app',
+      email_address: email || 'customer@nestkey.co.ke',
       phone_number: phone || '',
       country_code: 'KE',
-      first_name: 'NestKey',
-      last_name: 'Customer',
+      first_name: (String(name || '').trim().split(/\s+/)[0] || 'NestKey').slice(0, 40),
+      last_name: (String(name || '').trim().split(/\s+/).slice(1).join(' ') || 'Customer').slice(0, 40),
     },
   };
   let data;
@@ -85,17 +98,34 @@ async function submitOrder({ merchantRef, amount, description, email, phone }) {
   return { ok: false, error: String(msg) };
 }
 
-/** Returns 'yes' | 'failed' | 'pending' */
-async function status(orderTrackingId) {
+/**
+ * Full transaction status from Pesapal (the only source we trust for "paid").
+ * Returns { state: 'yes'|'failed'|'pending', amount, currency, receipt, method, merchantRef }.
+ * Pesapal status_code: 0 invalid, 1 completed, 2 failed, 3 reversed.
+ */
+async function statusDetails(orderTrackingId) {
   const res = await fetch(
     `${BASE()}/api/Transactions/GetTransactionStatus?orderTrackingId=${encodeURIComponent(orderTrackingId)}`,
     { headers: { Accept: 'application/json', Authorization: `Bearer ${await token()}` } }
   );
   const data = await res.json();
   const code = String(data.status_code);
-  if (code === '1') return 'yes';       // Completed
-  if (code === '2' || code === '3') return 'failed'; // Failed / Reversed
-  return 'pending';
+  const state = code === '1' ? 'yes' : (code === '2' || code === '3') ? 'failed' : 'pending';
+  return {
+    state,
+    reversed: code === '3',
+    amount: Number(data.amount) || 0,
+    currency: data.currency || '',
+    receipt: data.confirmation_code || '',
+    method: data.payment_method || '',
+    merchantRef: data.merchant_reference || '',
+    description: data.description || data.payment_status_description || '',
+  };
 }
 
-module.exports = { configured, submitOrder, status };
+/** Returns 'yes' | 'failed' | 'pending' */
+async function status(orderTrackingId) {
+  return (await statusDetails(orderTrackingId)).state;
+}
+
+module.exports = { configured, submitOrder, status, statusDetails, uniqueRef, parseRef };
