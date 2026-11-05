@@ -467,3 +467,10 @@ h1.detail-title { font-size: 1.5rem; line-height: 1.25; margin: 6px 0 8px; }
 .foot-social.contact-social a { width: 40px; height: 40px; border-radius: 50%; display: inline-grid; place-items: center; background: var(--navy); color: #fff; transition: background .2s, transform .2s; }
 .foot-social.contact-social a[hidden], .foot-social.contact-social[hidden] { display: none; }
 .foot-social.contact-social a:hover { background: #0B6B5E; transform: translateY(-2px); }
+
+/* Social icons are always visible; "Coming soon" note until a link is added. */
+.foot .foot-social a { position: relative; cursor: pointer; }
+.foot .foot-social a.is-soon { opacity: .85; }
+.soon-tip { position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); white-space: nowrap; background: #fff; color: #0B1B2B; font-size: .78rem; font-weight: 600; padding: 5px 10px; border-radius: 8px; box-shadow: 0 6px 18px rgba(0,0,0,.25); opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 5; }
+.foot-social a.show-tip .soon-tip { opacity: 1; }
+.contact-social .soon-tip { background: var(--navy); color: #fff; }
