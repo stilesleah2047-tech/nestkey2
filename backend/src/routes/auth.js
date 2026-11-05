@@ -15,7 +15,8 @@ router.post('/register', async (req, res) => {
     const b = req.body || {};
     const email = String(b.email || '').trim().toLowerCase();
     if (!email || !/.+@.+\..+/.test(email)) return res.status(400).json({ error: 'Enter a valid email.' });
-    if (!b.password || String(b.password).length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters.' });
+    if (!b.password || String(b.password).length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters.' });
+    if (/^(password|12345678|123456789|qwerty123|nestkey123)$/i.test(String(b.password))) return res.status(400).json({ error: 'That password is too easy to guess. Please choose another.' });
     // Admin emails can't be claimed with a password: there is no email check, so
     // anyone could register "admin@…" first and get the admin panel. Admins sign
     // in with Google (Google proves they own the address).
