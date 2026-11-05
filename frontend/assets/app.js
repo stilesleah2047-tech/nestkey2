@@ -388,11 +388,22 @@
     var timer = null, finished = false;
     function stop() { if (timer) { clearInterval(timer); timer = null; } window.removeEventListener('message', onMsg); ov.classList.remove('open'); document.body.style.overflow = ''; frame.src = 'about:blank'; }
     function finish(st) { if (finished) return; finished = true; stop(); onDone(st); }
-    // The Pesapal return page (inside the iframe) tells us the result right away.
+    // The Pesapal return page (inside the iframe) signals that the customer is
+    // done. It may be served from another domain (e.g. *.onrender.com), so we
+    // accept it only from our own payment iframe and never trust it: we ask the
+    // server for the real status straight away.
+    function checkNow() {
+      return fetch(API + '/api/payments/pesapal/status/' + encodeURIComponent(orderTrackingId))
+        .then(function (r) { return r.json(); })
+        .then(function (s) {
+          if (!s) return;
+          if (s.status === 'yes') finish('yes');
+          else if (s.status === 'failed') statusEl.textContent = 'Payment not completed \u2014 you can try again in the window above.';
+        }).catch(function () {});
+    }
     function onMsg(ev) {
-      if (ev.origin !== location.origin || !ev.data || ev.data.type !== 'nestkey-payment') return;
-      if (ev.data.status === 'yes') finish('yes');
-      else if (ev.data.status === 'failed') statusEl.textContent = 'Payment not completed \u2014 you can try again in the window above.';
+      if (ev.source !== frame.contentWindow || !ev.data || ev.data.type !== 'nestkey-payment') return;
+      checkNow();
     }
     window.addEventListener('message', onMsg);
     ov.querySelector('.pp-close').onclick = function () { finish('closed'); };
