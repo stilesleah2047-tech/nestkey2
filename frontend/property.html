@@ -13,7 +13,7 @@
 <body>
   <header class="top"><div class="wrap">
     <a class="brand" href="/"><img class="brand-mark" src="/assets/logo.png" alt="NestKey"><span class="brand-word">Nest<b>Key</b></span></a>
-    <nav><a href="/">Home</a><a href="/browse.html">Browse</a><a href="/services.html">Services</a><a href="/post.html" class="nav-post">Post a house</a><span id="navauth"></span></nav>
+    <nav><a href="/">Home</a><a href="/browse.html">Browse</a><a href="/services.html">Services</a><a href="/verify.html">Verify a deed</a><a href="/blog.html">Blog</a><a href="/about.html">About</a><a href="/contact.html">Contact</a><a href="/post.html" class="nav-post">Post a house</a><span id="navauth"></span></nav>
   </div></header>
 
   <section class="section">
@@ -33,13 +33,14 @@
   <script>
   (function () {
     var API = (window.NESTKEY_API ? String(window.NESTKEY_API).replace(/\/$/, '') : '');
-    var id = new URLSearchParams(location.search).get('id');
+    var m = location.pathname.match(/^\/property\/(\d+|[a-f0-9]{24})/i);
+    var id = window.NESTKEY_LISTING_ID || (m && m[1]) || new URLSearchParams(location.search).get('id');
     var panel = document.getElementById('property-panel');
     function esc(s){ return String(s||'').replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
     function money(n){ return 'KSh ' + Number(n||0).toLocaleString('en-KE'); }
     function mediaGrid(photos, videos){
-      var v=(videos||[]).map(function(u){return '<video controls preload="metadata" src="'+u+'"></video>';}).join('');
-      var p=(photos||[]).map(function(u){return '<img src="'+u+'" data-full="'+u+'" alt="">';}).join('');
+      var v=(videos||[]).map(function(u){return '<video controls preload="metadata" src="'+esc(u)+'"></video>';}).join('');
+      var p=(photos||[]).map(function(u){return '<img src="'+esc(u)+'" data-full="'+esc(u)+'" alt="">';}).join('');
       return '<div class="room-media">'+v+p+'</div>';
     }
     if (!id) { panel.innerHTML = '<p class="dc-sub" style="padding:50px;text-align:center">No property specified.</p>'; return; }
@@ -65,7 +66,7 @@
           return '<div class="showcase-section"><h3>'+esc(r.label||'Room')+'</h3>'+(r.description?'<p class="rdesc">'+esc(r.description)+'</p>':'')+mediaGrid(r.photos,r.videos)+'</div>';
         }).join('');
       }
-      var flat = (!l.rooms || !l.rooms.length) ? '<div class="thumbs">'+(l.photos||[]).map(function(u){return '<img src="'+u+'" data-full="'+u+'">';}).join('')+'</div>' : '';
+      var flat = (!l.rooms || !l.rooms.length) ? '<div class="thumbs">'+(l.photos||[]).map(function(u){return '<img src="'+esc(u)+'" data-full="'+esc(u)+'">';}).join('')+'</div>' : '';
 
       var hasGeo = (l.lat!=null && l.lng!=null);
       var locBlock = hasGeo ? ('<div class="showcase-section"><h3>Location</h3><div id="detail-map" class="detail-map"></div>'+
@@ -78,7 +79,7 @@
         '<div class="status" id="enq-status"></div><button class="btn" id="enq-send">Send enquiry</button></div>';
 
       panel.innerHTML =
-        (main ? '<img class="hero-img" id="mMain" src="'+main+'" alt="">' : '') +
+        (main ? '<img class="hero-img" id="mMain" src="'+esc(main)+'" alt="'+esc(l.title)+'">' : '') +
         '<div class="pad"><div class="price" style="font-size:1.5rem;font-weight:800">'+money(l.price)+'</div>'+
         '<h2>'+esc(l.title)+' '+badge+'</h2>'+
         '<p class="loc">'+esc(l.location||l.region||'')+' · '+deal+'</p>'+

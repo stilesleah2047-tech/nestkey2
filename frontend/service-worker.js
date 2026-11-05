@@ -1,5 +1,5 @@
 /* NestKey — simple app-shell cache. Network-first for API, cache-first for shell. */
-var CACHE = 'nestkey-v35';
+var CACHE = 'nestkey-v36';
 var SHELL = ["/", "/index.html", "/browse.html", "/post.html", "/services.html", "/account.html", "/dashboard.html", "/admin.html", "/privacy.html", "/cookies.html", "/about.html", "/contact.html", "/blog.html",  "/assets/styles.css", "/assets/app.js", "/assets/config.js", "/assets/logo.png", "/assets/hero-bg.svg", "/manifest.webmanifest","/property.html"];
 
 self.addEventListener('install', function (e) {
@@ -19,6 +19,17 @@ self.addEventListener('fetch', function (e) {
     e.respondWith(fetch(e.request).catch(function () { return caches.match(e.request); }));
     return;
   }
-  // Cache-first for the app shell / static assets.
+  // Pages (HTML navigations): network-first, so visitors always get the latest
+  // version and server-rendered listing pages; fall back to cache when offline.
+  if (e.request.mode === 'navigate') {
+    e.respondWith(fetch(e.request).then(function (res) {
+      if (res && res.ok && url.origin === location.origin && url.pathname.indexOf('/property/') !== 0) {
+        var copy = res.clone(); caches.open(CACHE).then(function (c) { c.put(e.request, copy); });
+      }
+      return res;
+    }).catch(function () { return caches.match(e.request).then(function (hit) { return hit || caches.match('/index.html'); }); }));
+    return;
+  }
+  // Cache-first for static assets (CSS, JS, images).
   e.respondWith(caches.match(e.request).then(function (hit) { return hit || fetch(e.request); }));
 });

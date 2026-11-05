@@ -5,9 +5,9 @@ const { getPlan } = require('../plans');
 const { sortRooms, labelFor } = require('../rooms');
 const { countyForTown } = require('../locations');
 const { parsePrice } = require('../price');
-const mpesa = require('../services/mpesa');
 const pesapal = require('../services/pesapal');
 const events = require('../events');
+const { cleanMedia } = require('../media');
 
 const router = express.Router();
 router.use(requireAuth);
@@ -47,11 +47,11 @@ router.post('/listings', async (req, res) => {
       rooms = sortRooms(b.rooms.slice(0, 20).map((r) => ({
         type: String(r.type || 'other'), label: labelFor(String(r.type || 'other')),
         description: r.description ? String(r.description).slice(0, 1000) : '',
-        photos: Array.isArray(r.photos) ? r.photos.slice(0, 12) : [],
-        videos: Array.isArray(r.videos) ? r.videos.slice(0, 4) : [],
+        photos: cleanMedia(r.photos, 12),
+        videos: cleanMedia(r.videos, 4),
       })));
     }
-    let photos = Array.isArray(b.photos) ? b.photos.slice(0, 12) : [];
+    let photos = cleanMedia(b.photos, 12);
     if (!photos.length) rooms.some((r) => { if (r.photos.length) { photos = [r.photos[0]]; return true; } return false; });
 
     const listing = await db.create({
@@ -70,7 +70,7 @@ router.post('/listings', async (req, res) => {
       lng: b.lng != null && b.lng !== '' ? parseFloat(b.lng) : null,
       location: b.location ? String(b.location).slice(0, 160) : (b.region || ''),
       description: b.description ? String(b.description).slice(0, 4000) : '',
-      photos, videos: Array.isArray(b.videos) ? b.videos.slice(0, 6) : [], rooms,
+      photos, videos: cleanMedia(b.videos, 6), rooms,
       tier: b.tier === 'showcase' ? 'showcase' : 'standard',
       submitter: { name: req.user.name, phone: b.phone, email: req.user.email },
       ownerId: req.user.id, status: 'draft', paid: true,
@@ -104,8 +104,8 @@ router.put('/listings/:id', async (req, res) => {
   if (b.areaAcres != null && b.areaAcres !== '') f.areaAcres = parseFloat(b.areaAcres);
   if (b.lat != null && b.lat !== '') f.lat = parseFloat(b.lat);
   if (b.lng != null && b.lng !== '') f.lng = parseFloat(b.lng);
-  if (Array.isArray(b.photos) && b.photos.length) f.photos = b.photos.slice(0, 12);
-  if (Array.isArray(b.videos) && b.videos.length) f.videos = b.videos.slice(0, 6);
+  if (Array.isArray(b.photos) && cleanMedia(b.photos, 12).length) f.photos = cleanMedia(b.photos, 12);
+  if (Array.isArray(b.videos) && cleanMedia(b.videos, 6).length) f.videos = cleanMedia(b.videos, 6);
   if (b.tier === 'standard' || b.tier === 'showcase') f.tier = b.tier;
   await db.updateOwned(req.params.id, req.user.id, f);
   res.json({ ok: true });
@@ -199,24 +199,35 @@ router.get('/transactions', async (req, res) => {
   res.json({ items, summary });
 });
 
-// POST /api/agent/commission/pay { provider, phone } — settle the 8% we invoiced
+// POST /api/agent/transactions/:id/confirm — seller confirms a sale a buyer recorded.
+// Only confirmed sales create a commission invoice (stops fake/spam records
+// from putting a landlord into debt).
+router.post('/transactions/:id/confirm', async (req, res) => {
+  const ok = await db.setTransactionInvoiceStatus(req.params.id, req.user.id, 'unconfirmed', 'pending');
+  if (!ok) return res.status(404).json({ error: 'Not found' });
+  res.json({ ok: true });
+});
+
+// POST /api/agent/transactions/:id/reject — seller says this sale never happened.
+router.post('/transactions/:id/reject', async (req, res) => {
+  const ok = await db.setTransactionInvoiceStatus(req.params.id, req.user.id, 'unconfirmed', 'rejected');
+  if (!ok) return res.status(404).json({ error: 'Not found' });
+  res.json({ ok: true });
+});
+
+// POST /api/agent/commission/pay — settle the 8% we invoiced (via Pesapal)
 router.post('/commission/pay', async (req, res) => {
   try {
     const summary = await db.ownerCommissionSummary(req.user.id);
     if (!summary.owed || summary.owed <= 0) return res.status(400).json({ error: 'No commission due.' });
-    const provider = req.body && req.body.provider === 'pesapal' ? 'pesapal' : 'mpesa';
     const comm = await db.createCommission({ ownerId: req.user.id, amount: summary.owed });
-
-    if (provider === 'pesapal') {
-      const order = await pesapal.submitOrder({ merchantRef: 'COMM' + comm.id, amount: summary.owed, description: 'NestKey commission', email: req.user.email });
-      if (!order.ok) return res.status(400).json({ error: order.error });
-      await db.setEscrowCheckout(comm.id, { checkoutId: order.orderTrackingId, provider });
-      return res.json({ ok: true, provider, orderTrackingId: order.orderTrackingId, iframeUrl: order.redirectUrl, amount: summary.owed });
-    }
-    const stk = await mpesa.stkPush({ phone: req.body.phone, amount: summary.owed, accountRef: 'COMM' + comm.id, desc: 'NestKey commission' });
-    if (!stk.ok) return res.status(400).json({ error: stk.error });
-    await db.setEscrowCheckout(comm.id, { checkoutId: stk.checkout, provider });
-    res.json({ ok: true, provider, checkout: stk.checkout, amount: summary.owed });
+    const order = await pesapal.submitOrder({
+      merchantRef: pesapal.uniqueRef('COMM', comm.id), amount: summary.owed,
+      description: 'NestKey commission', email: req.user.email, name: req.user.name,
+    });
+    if (!order.ok) return res.status(400).json({ error: order.error });
+    await db.setEscrowCheckout(comm.id, { checkoutId: order.orderTrackingId, provider: 'pesapal' });
+    res.json({ ok: true, provider: 'pesapal', orderTrackingId: order.orderTrackingId, iframeUrl: order.redirectUrl, amount: summary.owed });
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: 'Could not start commission payment' });

@@ -55,13 +55,4 @@ module.exports = {
     ipnUrl: process.env.PESAPAL_IPN_URL || '',
     callbackUrl: process.env.PESAPAL_CALLBACK_URL || '',
   },
-  mpesa: {
-    env: (process.env.MPESA_ENV || 'sandbox').toLowerCase(),
-    key: process.env.MPESA_KEY || '',
-    secret: process.env.MPESA_SECRET || '',
-    shortcode: process.env.MPESA_SHORTCODE || '',
-    passkey: process.env.MPESA_PASSKEY || '',
-    type: (process.env.MPESA_TYPE || 'paybill').toLowerCase(),
-    callbackUrl: process.env.MPESA_CALLBACK_URL || '',
-  },
 };
