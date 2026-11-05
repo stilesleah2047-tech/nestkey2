@@ -79,7 +79,7 @@ router.get('/pesapal-return', async (req, res) => {
 .c{padding:32px}.i{width:72px;height:72px;border-radius:50%;margin:0 auto 16px;display:grid;place-items:center;font-size:34px;color:#fff;background:${status === 'yes' ? '#0B6B5E' : status === 'failed' ? '#c0392b' : '#5c6b7e'}}
 h1{font-size:1.3rem;margin:0 0 8px}p{margin:0;color:#5c6b7e}</style></head>
 <body><div class="c"><div class="i">${msg.icon}</div><h1>${msg.title}</h1><p>${msg.text}</p></div>
-<script>try{window.parent.postMessage({type:'nestkey-payment',status:${JSON.stringify(status)}},location.origin);}catch(e){}</script></body></html>`);
+<script>/* Works even when this page is on another domain (e.g. *.onrender.com) than the site. The page only uses this as a hint and re-checks with the server. */try{window.parent.postMessage({type:'nestkey-payment',status:${JSON.stringify(status)}},'*');}catch(e){}</script></body></html>`);
 });
 
 // GET /api/payments/status/:listingId — has this listing's fee been paid?
