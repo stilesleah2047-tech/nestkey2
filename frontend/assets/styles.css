@@ -446,3 +446,24 @@ footer.foot { text-align: left; padding: 44px 0 0; }
 /* Cookie banner: the "Essential only" button was navy text on the navy bar (invisible). */
 .cookie-bar .btn.ghost { color: #fff; border-color: rgba(255,255,255,.55); background: transparent; }
 .cookie-bar .btn.ghost:hover { background: rgba(255,255,255,.1); }
+
+/* Phones: form fields must be allowed to shrink (long placeholders made the
+   Post-a-house form 417px wide on a 390px phone). */
+.form .row > * { min-width: 0; }
+.form input, .form select, .form textarea { width: 100%; min-width: 0; box-sizing: border-box; }
+
+/* Listing page title is now the page's main heading (h1) for SEO; keep the old size. */
+h1.detail-title { font-size: 1.5rem; line-height: 1.25; margin: 6px 0 8px; }
+/* Hide the rating pill until there are ratings to show (it showed as an empty grey blob). */
+.rating-proof:empty { display: none; }
+/* Map tools: on phones put the paste box on its own full-width line. */
+.loc-tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.form .loc-tools #p-loc-paste { flex: 1 1 200px; width: auto; }
+@media (max-width: 560px) { .form .loc-tools #p-loc-paste { flex-basis: 100%; order: 3; } }
+
+/* "Follow us" on the Contact page (light card) */
+.contact-social { margin: 14px 0 6px; }
+.contact-social span { color: var(--navy) !important; }
+.foot-social.contact-social a { width: 40px; height: 40px; border-radius: 50%; display: inline-grid; place-items: center; background: var(--navy); color: #fff; transition: background .2s, transform .2s; }
+.foot-social.contact-social a[hidden], .foot-social.contact-social[hidden] { display: none; }
+.foot-social.contact-social a:hover { background: #0B6B5E; transform: translateY(-2px); }

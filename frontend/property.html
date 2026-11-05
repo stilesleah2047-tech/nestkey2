@@ -12,7 +12,7 @@
 </head>
 <body>
   <header class="top"><div class="wrap">
-    <a class="brand" href="/"><img class="brand-mark" src="/assets/logo.png" alt="NestKey"><span class="brand-word">Nest<b>Key</b></span></a>
+    <a class="brand" href="/"><img class="brand-mark" src="/assets/logo-96.png" alt="NestKey"><span class="brand-word">Nest<b>Key</b></span></a>
     <nav><a href="/">Home</a><a href="/browse.html">Browse</a><a href="/services.html">Services</a><a href="/verify.html">Verify a deed</a><a href="/blog.html">Blog</a><a href="/about.html">About</a><a href="/contact.html">Contact</a><a href="/post.html" class="nav-post">Post a house</a><span id="navauth"></span></nav>
   </div></header>
 
@@ -30,7 +30,7 @@
   <footer class="foot">
   <div class="wrap foot-grid">
     <div class="foot-brand">
-      <a href="/" class="foot-logo"><img src="/assets/logo.png" alt="" width="36" height="36"><span>Nest<b>Key</b></span></a>
+      <a href="/" class="foot-logo"><img src="/assets/logo-96.png" alt="" width="36" height="36"><span>Nest<b>Key</b></span></a>
       <p>Find houses, rooms and land for rent or sale anywhere in Kenya — real photos, videos and exact map locations.</p>
       <div class="foot-social" hidden>
         <span>Follow us</span>
@@ -75,7 +75,7 @@
     function money(n){ return 'KSh ' + Number(n||0).toLocaleString('en-KE'); }
     function mediaGrid(photos, videos){
       var v=(videos||[]).map(function(u){return '<video controls preload="metadata" src="'+esc(u)+'"></video>';}).join('');
-      var p=(photos||[]).map(function(u){return '<img src="'+esc(u)+'" data-full="'+esc(u)+'" alt="">';}).join('');
+      var p=(photos||[]).map(function(u){return '<img src="'+esc(u)+'" data-full="'+esc(u)+'" alt="Room photo">';}).join('');
       return '<div class="room-media">'+v+p+'</div>';
     }
     if (!id) { panel.innerHTML = '<p class="dc-sub" style="padding:50px;text-align:center">No property specified.</p>'; return; }
@@ -101,7 +101,7 @@
           return '<div class="showcase-section"><h3>'+esc(r.label||'Room')+'</h3>'+(r.description?'<p class="rdesc">'+esc(r.description)+'</p>':'')+mediaGrid(r.photos,r.videos)+'</div>';
         }).join('');
       }
-      var flat = (!l.rooms || !l.rooms.length) ? '<div class="thumbs">'+(l.photos||[]).map(function(u){return '<img src="'+esc(u)+'" data-full="'+esc(u)+'">';}).join('')+'</div>' : '';
+      var flat = (!l.rooms || !l.rooms.length) ? '<div class="thumbs">'+(l.photos||[]).map(function(u){return '<img src="'+esc(u)+'" data-full="'+esc(u)+'" alt="'+esc(l.title)+' — photo">';}).join('')+'</div>' : '';
 
       var hasGeo = (l.lat!=null && l.lng!=null);
       var locBlock = hasGeo ? ('<div class="showcase-section"><h3>Location</h3><div id="detail-map" class="detail-map"></div>'+
@@ -116,7 +116,7 @@
       panel.innerHTML =
         (main ? '<img class="hero-img" id="mMain" src="'+esc(main)+'" alt="'+esc(l.title)+'">' : '') +
         '<div class="pad"><div class="price" style="font-size:1.5rem;font-weight:800">'+money(l.price)+'</div>'+
-        '<h2>'+esc(l.title)+' '+badge+'</h2>'+
+        '<h1 class="detail-title">'+esc(l.title)+' '+badge+'</h1>'+
         '<p class="loc">'+esc(l.location||l.region||'')+' · '+deal+'</p>'+
         '<div class="meta" style="display:flex;gap:16px;color:#5c6b7e;margin:10px 0">'+
         (l.beds?'<span>'+l.beds+' bed</span>':'')+

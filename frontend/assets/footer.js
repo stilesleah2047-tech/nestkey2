@@ -22,6 +22,17 @@ var NESTKEY_SOCIALS = {
       Array.prototype.forEach.call(links, function (a) { a.href = url; a.hidden = false; any = true; });
     });
     if (any) Array.prototype.forEach.call(document.querySelectorAll('.foot-social'), function (el) { el.hidden = false; });
+    // Tell Google these profiles belong to NestKey (Organization "sameAs").
+    if (any) {
+      var urls = Object.keys(NESTKEY_SOCIALS).map(function (k) { return String(NESTKEY_SOCIALS[k] || '').trim(); }).filter(function (u) { return /^https:\/\//.test(u); });
+      Array.prototype.forEach.call(document.querySelectorAll('script[type="application/ld+json"]'), function (sc) {
+        try {
+          var data = JSON.parse(sc.textContent), changed = false;
+          (data['@graph'] || [data]).forEach(function (n) { if (n && n['@type'] === 'Organization') { n.sameAs = urls; changed = true; } });
+          if (changed) sc.textContent = JSON.stringify(data);
+        } catch (e) {}
+      });
+    }
     var y = document.querySelectorAll('.foot-year');
     Array.prototype.forEach.call(y, function (el) { el.textContent = new Date().getFullYear(); });
   }
