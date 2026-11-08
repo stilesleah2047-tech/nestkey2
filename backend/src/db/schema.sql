@@ -117,7 +117,7 @@ CREATE TABLE IF NOT EXISTS escrows (
 CREATE INDEX IF NOT EXISTS idx_escrows_owner ON escrows (owner_id, status);
 CREATE INDEX IF NOT EXISTS idx_escrows_checkout ON escrows (checkout_id);
 
--- Transaction record columns (rent paid direct to landlord; we record + invoice 8%)
+-- Transaction record columns (rent paid direct to landlord; we record + invoice the sales commission)
 ALTER TABLE escrows ADD COLUMN IF NOT EXISTS type TEXT NOT NULL DEFAULT 'rent';
 ALTER TABLE escrows ADD COLUMN IF NOT EXISTS method TEXT;
 ALTER TABLE escrows ADD COLUMN IF NOT EXISTS invoice_status TEXT NOT NULL DEFAULT 'pending';

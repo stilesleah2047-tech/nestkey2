@@ -2,14 +2,16 @@
 // can have (null = unlimited). Every feature listed here is delivered by the app.
 const PLANS = [
   {
-    id: 'hunter', name: 'Hunter Plus', audience: 'For house hunters',
-    monthly: 299, annual: 2990, maxListings: 0,
+    // Free for house hunters — no fee to search, view or contact anyone.
+    id: 'hunter', name: 'House Hunter', audience: 'For house hunters',
+    monthly: 0, annual: 0, maxListings: 0, free: true,
     features: [
-      'Save unlimited favourite listings',
-      'Contact owners directly by phone & WhatsApp',
-      'See exact map locations & get directions',
-      'Watch room-by-room video showcases',
-      'Priority email support',
+      'Browse every listing — no finder\u2019s fee',
+      'Call or WhatsApp owners directly',
+      'Exact map locations & directions',
+      'Room-by-room video showcases',
+      'Save favourite listings',
+      'Verify a title deed',
     ],
   },
   {
