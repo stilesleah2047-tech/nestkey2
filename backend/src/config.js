@@ -29,7 +29,9 @@ module.exports = {
   // Strong secret in prod (guaranteed by the check above); random ephemeral one in dev.
   jwtSecret: JWT_SECRET || ('dev-only-insecure-' + require('crypto').randomBytes(16).toString('hex')),
   adminEmails: (process.env.ADMIN_EMAILS || '').split(',').map(function (s) { return s.trim().toLowerCase(); }).filter(Boolean),
-  commissionRate: parseFloat(process.env.COMMISSION_RATE || '0.08'),
+  // Sales commission (fraction of the sale price). Kenyan agents typically charge
+  // 1-3%; NestKey is a listing platform, so it stays at the low end.
+  commissionRate: parseFloat(process.env.COMMISSION_RATE || '0.025'),
   // Allowed browser origins for CORS (Finding 6). Comma-separated env override,
   // else sensible NestKey defaults.
   corsOrigins: (process.env.CORS_ORIGINS ||

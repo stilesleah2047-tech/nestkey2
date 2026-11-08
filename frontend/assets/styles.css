@@ -474,3 +474,11 @@ h1.detail-title { font-size: 1.5rem; line-height: 1.25; margin: 6px 0 8px; }
 .soon-tip { position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); white-space: nowrap; background: #fff; color: #0B1B2B; font-size: .78rem; font-weight: 600; padding: 5px 10px; border-radius: 8px; box-shadow: 0 6px 18px rgba(0,0,0,.25); opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 5; }
 .foot-social a.show-tip .soon-tip { opacity: 1; }
 .contact-social .soon-tip { background: var(--navy); color: #fff; }
+
+/* Free plan for house hunters + "Coming soon" badges */
+.plan.plan-free { border: 2px solid #2EC4A6; }
+.plan .ribbon.ribbon-free { background: #2EC4A6; color: #0B1B2B; }
+.plan.plan-free .price { color: #0B6B5E; }
+.plan.plan-free .price small { font-size: .9rem; }
+.plan a.btn { display: block; text-align: center; text-decoration: none; }
+.soon-badge { display: inline-block; margin-left: 6px; padding: 2px 8px; border-radius: 999px; background: #FFF4D6; color: #8A5A00; font-size: .72rem; font-weight: 700; vertical-align: middle; letter-spacing: .02em; }

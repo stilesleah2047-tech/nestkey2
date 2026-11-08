@@ -101,7 +101,7 @@ async function settleOrder(otid) {
     return 'failed';
   }
 
-  // ---- Commission (landlord paying the 8% we invoiced) ----
+  // ---- Commission (landlord paying the sales commission we invoiced) ----
   const esc = await db.findEscrowByCheckout(otid);
   if (esc && esc.type === 'commission') {
     if (d.state === 'yes') {

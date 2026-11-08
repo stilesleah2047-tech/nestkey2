@@ -711,7 +711,7 @@
           '<label>Your name</label><input id="pf-name" placeholder="Your name">' +
           '<label>Your phone</label><input id="pf-phone" placeholder="07xx xxx xxx">' +
           '<label>M-Pesa / reference code (optional)</label><input id="pf-code" placeholder="e.g. QeteXXXX">' +
-          '<p class="dc-sub">Pay the seller using the details above, then tap "I\u2019ve paid" so we record it. NestKey charges the seller ' + Math.round((info.commissionRate || 0.08) * 100) + '% commission separately.</p>' +
+          '<p class="dc-sub">Pay the seller using the details above, then tap "I\u2019ve paid" so we record it. NestKey charges the seller ' + (Math.round((info.commissionRate || COMMISSION_RATE) * 1000) / 10) + '% commission separately.</p>' +
           '<div class="status" id="pf-status"></div>' +
           '<div class="sub-actions"><button class="btn ghost" id="pf-cancel">Cancel</button><button class="btn block" id="pf-done">I\u2019ve paid</button></div></div>';
         document.body.appendChild(ov);
@@ -758,11 +758,17 @@
     } catch (e) {}
   }
 
+  /* Commission % shown to people always comes from the server (/api/config). */
+  function pctText() { var p = Math.round(COMMISSION_RATE * 1000) / 10; return p + '%'; }
+  fetch(API + '/api/config').then(function (r) { return r.json(); }).then(function (c) {
+    if (c && typeof c.commissionRate === 'number') COMMISSION_RATE = c.commissionRate;
+  }).catch(function () {});
+
   /* ---------------- Post + pay ---------------- */
   var SHOWCASE_FEE = 500;
   var ROOM_TYPES = [];
   var tier = 'standard';
-  var COMMISSION_RATE = 0.08;
+  var COMMISSION_RATE = 0.025; // replaced by the server's value from /api/config
   var LAND_RATE = 1500, LAND_MIN = 300, LAND_MAX = 3000;
 
   function acresOf(v, unit) {
@@ -807,7 +813,7 @@
     if ($('beds')) $('beds').addEventListener('input', updateFee);
 
     fetch(API + '/api/config').then(function (r) { return r.json(); }).then(function (c) {
-      if (c) { SHOWCASE_FEE = c.showcaseFee || 500; ROOM_TYPES = c.roomTypes || []; if (c.commissionRate) COMMISSION_RATE = c.commissionRate; if (c.land) { LAND_RATE = c.land.ratePerAcre; LAND_MIN = c.land.min; LAND_MAX = c.land.max; } }
+      if (c) { SHOWCASE_FEE = c.showcaseFee || 500; ROOM_TYPES = c.roomTypes || []; if (typeof c.commissionRate === 'number') COMMISSION_RATE = c.commissionRate; if (c.land) { LAND_RATE = c.land.ratePerAcre; LAND_MIN = c.land.min; LAND_MAX = c.land.max; } }
       updateFee(); updateDeal();
     }).catch(function () {});
 
@@ -841,7 +847,7 @@
       if (!isSale) { box.style.display = 'none'; return; }
       box.style.display = '';
       var price = parsePrice((($('h-price') || form.price) || {}).value);
-      var pct = Math.round(COMMISSION_RATE * 100);
+      var pct = Math.round(COMMISSION_RATE * 1000) / 10;
       if ($('cp-headline')) $('cp-headline').textContent = 'Commission on sale (' + pct + '%)';
       if ($('cp-detail')) {
         if (price > 0) {
@@ -1018,6 +1024,16 @@
       $('plans').innerHTML = plans.map(function (pl) {
         var price = billing === 'annual' ? pl.annual : pl.monthly;
         var per = billing === 'annual' ? '/year' : '/month';
+        if (pl.free) {
+          var signedIn = !!getToken();
+          return '<div class="plan plan-free">' +
+            '<div class="ribbon ribbon-free">Always free</div>' +
+            '<div class="audience">' + escapeHtml(pl.audience) + '</div>' +
+            '<h3>' + escapeHtml(pl.name) + '</h3>' +
+            '<div class="price">Free<small> \u00b7 no finder\u2019s fee</small></div>' +
+            '<ul>' + pl.features.map(function (f) { return '<li>' + escapeHtml(f) + '</li>'; }).join('') + '</ul>' +
+            '<a class="btn" href="' + (signedIn ? '/browse.html' : '/account.html') + '">' + (signedIn ? 'Start browsing' : 'Create free account') + '</a></div>';
+        }
         return '<div class="plan' + (pl.popular ? ' popular' : '') + '">' +
           (pl.popular ? '<div class="ribbon">Most popular</div>' : '') +
           '<div class="audience">' + escapeHtml(pl.audience) + '</div>' +
@@ -1210,7 +1226,7 @@
 
     // Load commission/land rates for previews.
     fetch(API + '/api/config').then(function (r) { return r.json(); }).then(function (c) {
-      if (c && c.commissionRate) COMMISSION_RATE = c.commissionRate;
+      if (c && typeof c.commissionRate === 'number') COMMISSION_RATE = c.commissionRate;
       agUpdateDeal();
     }).catch(function () {});
 
@@ -1232,7 +1248,7 @@
         else {
           box.style.display = '';
           var price = parsePrice(($('ag-price') || {}).value);
-          var pct = Math.round(COMMISSION_RATE * 100);
+          var pct = Math.round(COMMISSION_RATE * 1000) / 10;
           if ($('ag-cp-headline')) $('ag-cp-headline').textContent = 'Commission on sale (' + pct + '%)';
           if ($('ag-cp-detail')) $('ag-cp-detail').innerHTML = price > 0
             ? (' — when it sells at ' + money(price) + ', our ' + pct + '% is <strong>' + money(Math.round(price * COMMISSION_RATE)) + '</strong>. You receive ' + money(price - Math.round(price * COMMISSION_RATE)) + '.')
@@ -1487,14 +1503,14 @@
         $('commission-box').innerHTML =
           '<div class="cbox-grid">' +
           '<div><div class="dc-lbl">Sales recorded</div><div class="dc-num sm">' + money(sm.collected || 0) + '</div></div>' +
-          '<div><div class="dc-lbl">Commission owed (8%)</div><div class="dc-num sm">' + money(owed) + '</div></div>' +
+          '<div><div class="dc-lbl">Commission owed (' + pctText() + ')</div><div class="dc-num sm">' + money(owed) + '</div></div>' +
           '</div>' +
           (owed > 0 ? '<button class="btn" id="pay-commission">Pay commission (' + money(owed) + ')</button>' : '<div class="dc-sub">No commission due. Rentals are commission-free — you only pay your monthly plan.</div>');
         if (owed > 0) $('pay-commission').addEventListener('click', payCommission);
 
         var items = d.items || [];
         $('transactions').innerHTML = !items.length ? '<p class="dc-sub">No sale payments recorded yet. (Rentals don\u2019t incur commission.)</p>' :
-          '<table class="dash-table"><thead><tr><th>Property</th><th>Buyer</th><th>Amount</th><th>Our 8%</th><th>Invoice</th></tr></thead><tbody>' +
+          '<table class="dash-table"><thead><tr><th>Property</th><th>Buyer</th><th>Amount</th><th>Our ' + pctText() + '</th><th>Invoice</th></tr></thead><tbody>' +
           items.map(function (t) {
             return '<tr><td>' + escapeHtml(t.listingTitle || '') + '</td><td>' + escapeHtml((t.tenant && t.tenant.name) || '') + '<br><span class="dc-sub">' + escapeHtml((t.tenant && t.tenant.phone) || '') + '</span></td>' +
               '<td>' + money(t.gross) + '</td><td>' + money(t.commission) + '</td><td>' +

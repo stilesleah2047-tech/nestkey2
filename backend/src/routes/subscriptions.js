@@ -18,6 +18,7 @@ router.post('/pesapal', async (req, res) => {
     const b = req.body || {};
     const plan = getPlan(b.planId);
     if (!plan) return res.status(400).json({ error: 'Unknown plan' });
+    if (plan.free) return res.status(400).json({ error: 'The ' + plan.name + ' plan is free \u2014 just create an account.' });
     const billing = b.billing === 'annual' ? 'annual' : 'monthly';
     const amount = billing === 'annual' ? plan.annual : plan.monthly;
 

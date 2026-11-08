@@ -375,7 +375,7 @@ Object.assign(module.exports, {
     return r.rowCount > 0;
   },
 
-  // Commission settlement (landlord pays us the owed 8%) via the payment gateway.
+  // Commission settlement (landlord pays us the owed sales commission) via the payment gateway.
   async createCommission(d) {
     const { rows } = await pool.query(
       `INSERT INTO escrows (owner_id, gross, commission, type, status) VALUES ($1,$2,0,'commission','pending') RETURNING *`,

@@ -215,7 +215,7 @@ router.post('/transactions/:id/reject', async (req, res) => {
   res.json({ ok: true });
 });
 
-// POST /api/agent/commission/pay — settle the 8% we invoiced (via Pesapal)
+// POST /api/agent/commission/pay — settle the sales commission we invoiced (via Pesapal)
 router.post('/commission/pay', async (req, res) => {
   try {
     const summary = await db.ownerCommissionSummary(req.user.id);

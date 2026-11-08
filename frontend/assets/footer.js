@@ -57,4 +57,13 @@ var NESTKEY_SOCIALS = {
     Array.prototype.forEach.call(document.querySelectorAll('.foot-year'), function (el) { el.textContent = new Date().getFullYear(); });
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fill); else fill();
+
+  // Show the live sales-commission rate wherever the page mentions it.
+  if (document.querySelector('.js-commission')) {
+    fetch((window.NESTKEY_API || '') + '/api/config').then(function (r) { return r.json(); }).then(function (c) {
+      if (!c || typeof c.commissionRate !== 'number') return;
+      var pct = (Math.round(c.commissionRate * 1000) / 10) + '%';
+      Array.prototype.forEach.call(document.querySelectorAll('.js-commission'), function (el) { el.textContent = pct; });
+    }).catch(function () {});
+  }
 })();
