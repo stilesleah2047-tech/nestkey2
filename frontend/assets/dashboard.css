@@ -1,5 +1,5 @@
 /* NestKey dashboard. Original palette: navy #0B1B2B, teal #0FB5A6 / #0E9384, gold #F4B740. */
-.dash, .dash-foot {
+.dash {
   --d-navy: #0B1B2B; --d-teal: #0FB5A6; --d-teal-dk: #0E9384; --d-teal-dkr: #0B7A6E;
   --d-tint: #E7F6F4; --d-mist: #F6F8F9; --d-line: #E6ECEC; --d-ink: #0F2430; --d-muted: #5B6B73;
   --d-gold: #F4B740; --d-gold-tint: #FDF3DC;
@@ -182,12 +182,8 @@ body:has(.dash) { background: var(--d-mist, #F6F8F9); }
 .dash .dash-table td, .dash .dash-table th { white-space: nowrap; }
 .dash .dash-table td:first-child { white-space: normal; min-width: 150px; }
 
-/* Slim footer */
-.dash-foot { border-top: 1px solid var(--d-line); background: #fff; font-size: .85rem; color: var(--d-muted); }
-.dash-foot .wrap { max-width: 1200px; padding: 16px 20px calc(16px + env(safe-area-inset-bottom, 0px)); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
-.dash-foot a { color: var(--d-muted); text-decoration: none; margin-left: 16px; }
-.dash-foot a:first-child { margin-left: 0; }
-.dash-foot a:hover { color: var(--d-teal-dk); }
+/* Full site footer sits flush under the dashboard */
+body:has(.dash) footer.foot { margin-top: 0; }
 
 /* ---------- Responsive ---------- */
 @media (max-width: 1180px) {
@@ -226,5 +222,4 @@ body:has(.dash) { background: var(--d-mist, #F6F8F9); }
   .dp-cta { width: 100%; justify-content: center; }
   .save-actions { width: 100%; }
   .save-actions .btn { flex: 1; justify-content: center; }
-  .dash-foot a { margin: 0 14px 0 0; }
 }
