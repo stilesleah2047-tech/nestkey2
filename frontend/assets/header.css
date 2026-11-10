@@ -1,0 +1,96 @@
+/* NestKey site header (shared by every public page).
+   Original palette: navy #0B1B2B, teal #0FB5A6 / #0E9384, gold #F4B740. */
+header.nk-head {
+  --nk-navy: #0B1B2B;
+  --nk-teal: #0FB5A6;
+  --nk-teal-dk: #0E9384;   /* buttons: white text stays readable */
+  --nk-teal-dkr: #0B7A6E;  /* hover */
+  --nk-tint: #E7F6F4;
+  --nk-mist: #F6F8F9;
+  --nk-line: #E6ECEC;
+  --nk-ink: #0F2430;
+  --nk-muted: #5B6B73;
+  font-family: "Plus Jakarta Sans", -apple-system, "Segoe UI", Roboto, sans-serif;
+  padding: 0; border-bottom: 1px solid var(--nk-line);
+  background: #fff;
+  -webkit-font-smoothing: antialiased;
+}
+header.nk-head .wrap { height: 74px; gap: 20px; }
+header.nk-head a { text-decoration: none; }
+header.nk-head :focus-visible { outline: 3px solid var(--nk-teal); outline-offset: 2px; border-radius: 8px; }
+
+/* Brand */
+header.nk-head .brand { gap: 10px; flex: none; }
+header.nk-head .brand-mark { width: 46px; height: 46px; border-radius: 50%; }
+header.nk-head .brand-text { display: flex; flex-direction: column; line-height: 1; }
+header.nk-head .brand-word { font-size: 1.5rem; font-weight: 800; letter-spacing: -.02em; color: var(--nk-navy); }
+header.nk-head .brand-word b { color: var(--nk-teal); }
+header.nk-head .brand-tag { font-size: .72rem; font-weight: 600; color: var(--nk-muted); margin-top: 4px; letter-spacing: .02em; }
+
+/* Links */
+header.nk-head nav { flex: 1; gap: 4px; margin-left: 12px; }
+header.nk-head nav > a, header.nk-head .nav-dd-btn {
+  color: var(--nk-ink); font: inherit; font-size: .93rem; font-weight: 600; padding: 9px 14px; border-radius: 999px;
+  background: none; border: 0; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;
+}
+header.nk-head nav > a:hover, header.nk-head .nav-dd-btn:hover { color: var(--nk-teal-dk); background: var(--nk-mist); }
+header.nk-head nav > a.active, header.nk-head .nav-dd-btn.active { background: var(--nk-teal-dk); color: #fff; padding-left: 20px; padding-right: 20px; }
+header.nk-head nav > a.active:hover, header.nk-head .nav-dd-btn.active:hover { background: var(--nk-teal-dkr); color: #fff; }
+header.nk-head .chev { width: 16px; height: 16px; transition: transform .15s; }
+header.nk-head .nav-dd { position: relative; }
+header.nk-head .nav-dd.open .chev { transform: rotate(180deg); }
+header.nk-head .nav-dd-menu {
+  display: none; position: absolute; top: calc(100% + 8px); left: 0; min-width: 210px; background: #fff;
+  border: 1px solid var(--nk-line); border-radius: 14px; box-shadow: 0 18px 40px rgba(11,27,43,.12); padding: 6px; z-index: 60;
+}
+header.nk-head .nav-dd.open .nav-dd-menu { display: block; }
+header.nk-head .nav-dd-menu a { display: block; padding: 10px 14px; border-radius: 10px; font-weight: 600; font-size: .92rem; color: var(--nk-ink); }
+header.nk-head .nav-dd-menu a:hover { background: var(--nk-tint); color: var(--nk-teal-dk); }
+header.nk-head .nav-dd-menu a[aria-current="page"] { color: var(--nk-teal-dk); background: var(--nk-tint); }
+
+/* Right side: saved homes + account */
+header.nk-head .nav-right { margin-left: auto; display: flex; align-items: center; gap: 6px; }
+header.nk-head .nav-saved { position: relative; display: inline-grid; place-items: center; width: 42px; height: 42px; border-radius: 50%; color: var(--nk-teal-dk); }
+header.nk-head .nav-saved:hover { background: var(--nk-mist); }
+header.nk-head .nav-saved svg { width: 24px; height: 24px; }
+header.nk-head .nav-saved-count {
+  position: absolute; top: 3px; right: 1px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px;
+  background: #E5484D; color: #fff; font-size: .68rem; font-weight: 800; display: grid; place-items: center; border: 2px solid #fff;
+}
+header.nk-head .nav-saved-count[hidden] { display: none; }
+header.nk-head .nav-saved-label { display: none; }
+header.nk-head #navauth { display: inline-flex; align-items: center; gap: 6px; }
+header.nk-head #navauth a { font-weight: 700; font-size: .93rem; padding: 10px 14px; border-radius: 999px; display: inline-flex; align-items: center; gap: 7px; color: var(--nk-ink); white-space: nowrap; }
+header.nk-head #navauth a:hover { background: var(--nk-mist); }
+header.nk-head #navauth svg { width: 18px; height: 18px; }
+header.nk-head #navauth a.nav-signup { background: var(--nk-teal-dk); color: #fff; padding: 11px 24px; }
+header.nk-head #navauth a.nav-signup:hover { background: var(--nk-teal-dkr); }
+
+/* Short header (account + dashboard): links sit on the right */
+header.nk-head.nk-head--min nav { justify-content: flex-end; }
+
+@media (max-width: 1240px) {
+  header.nk-head nav > a, header.nk-head .nav-dd-btn { padding: 9px 10px; }
+  header.nk-head nav > a.active, header.nk-head .nav-dd-btn.active { padding-left: 16px; padding-right: 16px; }
+}
+/* Phones / tablets: the menu button is added by app.js */
+@media (max-width: 1080px) {
+  header.nk-head .wrap { height: 68px; }
+  header.nk-head .nav-toggle { color: var(--nk-ink); }
+  header.nk-head nav { margin-left: 0; gap: 0; padding: 8px 16px 16px; max-height: calc(100vh - 68px); overflow-y: auto; }
+  header.nk-head nav > a, header.nk-head .nav-dd-btn { width: 100%; justify-content: space-between; padding: 13px 12px; border-radius: 10px; }
+  header.nk-head nav > a.active, header.nk-head .nav-dd-btn.active { padding: 13px 12px; }
+  header.nk-head nav a { border-bottom: 0; margin: 0; }
+  header.nk-head .nav-dd-menu { position: static; box-shadow: none; border: 0; padding: 0 0 6px 12px; min-width: 0; }
+  header.nk-head .nav-right { margin: 8px 0 0; padding-top: 12px; border-top: 1px solid var(--nk-line); flex-wrap: wrap; }
+  header.nk-head .nav-saved { width: auto; height: auto; padding: 10px 12px; border-radius: 10px; display: inline-flex; gap: 8px; }
+  header.nk-head .nav-saved-label { display: inline; color: var(--nk-ink); font-weight: 700; font-size: .93rem; }
+  header.nk-head .nav-saved-count { position: static; border: 0; }
+  header.nk-head #navauth { display: inline-flex; margin-left: auto; }
+  header.nk-head.nk-head--min #navauth { margin-left: 0; width: 100%; }
+}
+@media (max-width: 560px) {
+  header.nk-head .brand-word { font-size: 1.32rem; }
+  header.nk-head .brand-mark { width: 40px; height: 40px; }
+}
+@media (prefers-reduced-motion: reduce) { header.nk-head .chev { transition: none; } }

@@ -7,7 +7,11 @@
   <meta name="theme-color" content="#0B1B2B">
   <link rel="icon" type="image/png" href="/assets/icon-192.png">
   <link rel="apple-touch-icon" href="/assets/icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap">
   <link rel="stylesheet" href="/assets/styles.css">
+  <link rel="stylesheet" href="/assets/header.css">
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
     /* ---------------- Split-screen auth page (NestKey theme) ---------------- */
@@ -81,9 +85,9 @@
   </style>
 </head>
 <body class="auth-page">
-  <header class="top"><div class="wrap">
-    <a class="brand" href="/"><img class="brand-mark" src="/assets/logo-96.png" alt="NestKey"><span class="brand-word">Nest<b>Key</b></span></a>
-    <nav><a href="/browse.html">Browse</a><a href="/services.html">Services</a><span id="navauth"></span></nav>
+  <header class="top nk-head nk-head--min"><div class="wrap">
+    <a class="brand" href="/" aria-label="NestKey home"><img class="brand-mark" src="/assets/logo-96.png" alt="" width="46" height="46"><span class="brand-text"><span class="brand-word">Nest<b>Key</b></span><span class="brand-tag">Find · Rent · Buy</span></span></a>
+    <nav aria-label="Main"><a href="/browse.html">Browse homes</a><a href="/services.html">Plans &amp; pricing</a><span id="navauth"></span></nav>
   </div></header>
 
   <div class="auth-split">
@@ -217,5 +221,6 @@
   </script>
   <script src="/assets/config.js"></script>
   <script src="/assets/app.js"></script>
+  <script src="/assets/header.js"></script>
 </body>
 </html>

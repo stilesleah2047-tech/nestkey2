@@ -10,7 +10,11 @@
   <meta property="og:type" content="article">
   <meta name="theme-color" content="#0B1B2B">
   <link rel="icon" type="image/png" href="/assets/icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap">
   <link rel="stylesheet" href="/assets/styles.css">
+  <link rel="stylesheet" href="/assets/header.css">
   <link rel="canonical" href="https://nestkey.co.ke/blog-avoid-rental-scams-kenya.html">
   <meta property="og:site_name" content="NestKey">
   <meta property="og:url" content="https://nestkey.co.ke/blog-avoid-rental-scams-kenya.html">
@@ -18,9 +22,36 @@
   <meta name="twitter:card" content="summary_large_image">
 </head>
 <body>
-  <header class="top"><div class="wrap">
-    <a class="brand" href="/"><img class="brand-mark" src="/assets/logo-96.png" alt="NestKey"><span class="brand-word">Nest<b>Key</b></span></a>
-    <nav><a href="/">Home</a><a href="/browse.html">Browse</a><a href="/services.html">Services</a><a href="/verify.html">Verify a deed</a><a href="/blog.html" class="active">Blog</a><a href="/about.html">About</a><a href="/contact.html">Contact</a><a href="/post.html" class="nav-post">Post a house</a><span id="navauth"></span></nav>
+  <header class="top nk-head"><div class="wrap">
+    <a class="brand" href="/" aria-label="NestKey home"><img class="brand-mark" src="/assets/logo-96.png" alt="" width="46" height="46"><span class="brand-text"><span class="brand-word">Nest<b>Key</b></span><span class="brand-tag">Find · Rent · Buy</span></span></a>
+    <nav aria-label="Main">
+      <a href="/">Home</a>
+      <div class="nav-dd">
+        <button type="button" class="nav-dd-btn" aria-expanded="false" aria-controls="dd-browse">Browse<svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <div class="nav-dd-menu" id="dd-browse">
+          <a href="/browse.html">All homes</a>
+          <a href="/browse.html?deal=rent">For rent</a>
+          <a href="/browse.html?deal=sale">For sale</a>
+          <a href="/browse.html?deal=land">Land</a>
+        </div>
+      </div>
+      <div class="nav-dd">
+        <button type="button" class="nav-dd-btn" aria-expanded="false" aria-controls="dd-services">Services<svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <div class="nav-dd-menu" id="dd-services">
+          <a href="/post.html" class="nav-post">Post a house</a>
+          <a href="/services.html">Plans &amp; pricing</a>
+          <a href="/verify.html">Verify a deed</a>
+        </div>
+      </div>
+      <a href="/verify.html">Verify a deed</a>
+      <a href="/blog.html" class="active" aria-current="page">Blog</a>
+      <a href="/about.html">About</a>
+      <a href="/contact.html">Contact</a>
+      <div class="nav-right">
+        <a class="nav-saved" href="/browse.html" aria-label="Saved homes"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7.5-4.6-9.5-9.3C1.1 8.3 3.3 4.5 7 4.5c2 0 3.5 1.1 5 3 1.5-1.9 3-3 5-3 3.7 0 5.9 3.8 4.5 7.2C19.5 16.4 12 21 12 21z" fill="currentColor"/></svg><span class="nav-saved-count" id="saved-count" hidden>0</span><span class="nav-saved-label">Saved homes</span></a>
+        <span id="navauth" class="navauth-split"></span>
+      </div>
+    </nav>
   </div></header>
   <section class="section"><div class="wrap legal article">
     <p class="dc-sub"><a href="/blog.html">← All articles</a></p>
@@ -84,5 +115,6 @@
 <script src="/assets/footer.js" defer></script>
   <script src="/assets/config.js"></script>
   <script src="/assets/app.js"></script>
+  <script src="/assets/header.js"></script>
 </body>
 </html>
