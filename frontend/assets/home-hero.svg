@@ -1,0 +1,204 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 640" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0A2F33"/>
+      <stop offset=".45" stop-color="#1A5653"/>
+      <stop offset=".78" stop-color="#5E8F7D"/>
+      <stop offset="1" stop-color="#C9B98A"/>
+    </linearGradient>
+    <radialGradient id="glow" cx=".72" cy=".78" r=".5">
+      <stop offset="0" stop-color="#F6C77A" stop-opacity=".55"/>
+      <stop offset="1" stop-color="#F6C77A" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="lawn" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2F7A45"/>
+      <stop offset="1" stop-color="#174A2C"/>
+    </linearGradient>
+    <linearGradient id="lit" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFE3A8"/>
+      <stop offset=".6" stop-color="#F6B85C"/>
+      <stop offset="1" stop-color="#D98B3A"/>
+    </linearGradient>
+    <linearGradient id="litDim" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F9D597"/>
+      <stop offset="1" stop-color="#C98642"/>
+    </linearGradient>
+    <linearGradient id="wall" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#E9ECE6"/>
+      <stop offset="1" stop-color="#C9D0CB"/>
+    </linearGradient>
+    <linearGradient id="wallShade" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#B8C1BC"/>
+      <stop offset="1" stop-color="#9DA8A3"/>
+    </linearGradient>
+    <radialGradient id="spill" cx=".5" cy="0" r=".9">
+      <stop offset="0" stop-color="#FFD48A" stop-opacity=".6"/>
+      <stop offset="1" stop-color="#FFD48A" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="win" width="14" height="20" patternUnits="userSpaceOnUse">
+      <rect x="4" y="6" width="5" height="7" fill="#F7D48A" opacity=".55"/>
+    </pattern>
+    <pattern id="win2" width="18" height="16" patternUnits="userSpaceOnUse">
+      <rect x="6" y="5" width="4" height="5" fill="#F7D48A" opacity=".4"/>
+    </pattern>
+    <pattern id="stone" width="40" height="28" patternUnits="userSpaceOnUse">
+      <rect width="40" height="28" fill="#857B6E"/>
+      <rect x="1" y="1" width="22" height="12" rx="2" fill="#A39785"/>
+      <rect x="25" y="1" width="14" height="12" rx="2" fill="#968A79"/>
+      <rect x="1" y="15" width="12" height="12" rx="2" fill="#9A8E7C"/>
+      <rect x="15" y="15" width="24" height="12" rx="2" fill="#AEA290"/>
+    </pattern>
+  </defs>
+
+  <!-- sky -->
+  <rect width="1600" height="640" fill="url(#sky)"/>
+  <rect width="1600" height="640" fill="url(#glow)"/>
+  <g fill="#fff" opacity=".5">
+    <circle cx="120" cy="60" r="1.2"/><circle cx="340" cy="38" r="1"/><circle cx="560" cy="90" r="1.3"/>
+    <circle cx="780" cy="44" r="1"/><circle cx="980" cy="70" r="1.2"/><circle cx="1240" cy="30" r="1"/>
+    <circle cx="1420" cy="84" r="1.1"/><circle cx="250" cy="130" r=".9"/><circle cx="690" cy="150" r=".9"/>
+  </g>
+
+  <!-- distant hills -->
+  <path d="M0 470 C 180 430 300 455 460 440 S 760 400 900 430 S 1200 390 1360 420 S 1520 410 1600 400 V640 H0Z" fill="#1E4A44" opacity=".75"/>
+
+  <!-- Nairobi-style skyline -->
+  <g fill="#123A3C">
+    <rect x="30" y="360" width="60" height="200"/>
+    <rect x="96" y="300" width="48" height="260"/>
+    <rect x="150" y="330" width="70" height="230"/>
+    <rect x="228" y="250" width="44" height="310"/>
+    <rect x="278" y="340" width="56" height="220"/>
+    <!-- KICC-style tower -->
+    <rect x="352" y="220" width="40" height="340"/>
+    <ellipse cx="372" cy="220" rx="34" ry="9"/>
+    <path d="M352 212 L372 172 L392 212Z"/>
+    <rect x="370" y="150" width="4" height="26"/>
+    <rect x="404" y="310" width="64" height="250"/>
+    <rect x="476" y="270" width="38" height="290"/>
+    <rect x="520" y="350" width="80" height="210"/>
+    <rect x="606" y="380" width="50" height="180"/>
+    <rect x="662" y="410" width="70" height="150"/>
+  </g>
+  <g>
+    <rect x="30" y="360" width="60" height="200" fill="url(#win2)"/>
+    <rect x="96" y="300" width="48" height="260" fill="url(#win)"/>
+    <rect x="150" y="330" width="70" height="230" fill="url(#win2)"/>
+    <rect x="228" y="250" width="44" height="310" fill="url(#win)"/>
+    <rect x="352" y="230" width="40" height="330" fill="url(#win)"/>
+    <rect x="404" y="310" width="64" height="250" fill="url(#win2)"/>
+    <rect x="476" y="270" width="38" height="290" fill="url(#win)"/>
+    <rect x="520" y="350" width="80" height="210" fill="url(#win2)"/>
+  </g>
+  <rect x="371" y="146" width="2" height="4" fill="#FF6B5A"/>
+
+  <!-- lawn -->
+  <path d="M0 575 C 400 560 1000 540 1300 545 S 1500 538 1600 535 V640 H0Z" fill="url(#lawn)"/>
+  <!-- near treeline -->
+  <path d="M0 540 Q 40 500 80 530 Q 120 490 170 528 Q 220 496 260 532 Q 320 500 360 534 Q 420 506 470 536 Q 540 500 600 538 Q 660 510 720 540 Q 780 520 830 560 Q 780 600 600 620 Q 300 640 0 640Z" fill="#0F3A2E"/>
+
+  <!-- acacia -->
+  <g fill="#0B2E24">
+    <path d="M868 560 C 872 520 864 490 852 470 L 858 468 C 870 486 878 506 880 528 C 884 500 900 480 920 468 L 924 474 C 904 488 890 512 884 560 Z"/>
+    <path d="M770 470 C 790 446 840 438 880 444 C 920 436 980 440 1000 458 C 980 470 940 474 900 472 C 860 478 800 482 770 470 Z"/>
+    <path d="M800 456 C 830 436 880 432 900 438 C 930 430 960 436 975 448 C 940 452 860 456 800 456Z" fill="#12392D"/>
+  </g>
+
+
+  <ellipse cx="1260" cy="572" rx="300" ry="40" fill="url(#spill)"/>
+
+  <!-- HOUSE -->
+  <!-- lower volume -->
+  <rect x="1000" y="408" width="510" height="152" fill="url(#wall)"/>
+  <rect x="1000" y="408" width="510" height="10" fill="#9AA5A0"/>
+  <!-- upper volume -->
+  <rect x="1050" y="282" width="400" height="126" fill="url(#wall)"/>
+  <rect x="1380" y="282" width="70" height="126" fill="url(#wallShade)"/>
+  <!-- roof slabs -->
+  <rect x="1030" y="268" width="440" height="16" rx="2" fill="#2B3532"/>
+  <rect x="984" y="400" width="80" height="12" rx="2" fill="#2B3532"/>
+  <rect x="1440" y="400" width="86" height="12" rx="2" fill="#2B3532"/>
+  <!-- stone feature -->
+  <rect x="1188" y="284" width="58" height="276" fill="url(#stone)"/>
+  <!-- wood cladding strip -->
+  <g fill="#7A4E2E">
+    <rect x="1450" y="418" width="56" height="142"/>
+  </g>
+  <g stroke="#5E3B22" stroke-width="2">
+    <line x1="1460" y1="418" x2="1460" y2="560"/><line x1="1472" y1="418" x2="1472" y2="560"/>
+    <line x1="1484" y1="418" x2="1484" y2="560"/><line x1="1496" y1="418" x2="1496" y2="560"/>
+  </g>
+
+  <!-- upper glass -->
+  <rect x="1066" y="298" width="112" height="96" fill="url(#lit)"/>
+  <rect x="1258" y="298" width="114" height="96" fill="url(#litDim)"/>
+  <g stroke="#2B3532" stroke-width="4">
+    <line x1="1103" y1="298" x2="1103" y2="394"/><line x1="1141" y1="298" x2="1141" y2="394"/>
+    <line x1="1296" y1="298" x2="1296" y2="394"/><line x1="1334" y1="298" x2="1334" y2="394"/>
+  </g>
+  <rect x="1066" y="298" width="112" height="96" fill="none" stroke="#2B3532" stroke-width="5"/>
+  <rect x="1258" y="298" width="114" height="96" fill="none" stroke="#2B3532" stroke-width="5"/>
+  <!-- pendant + figure hints upstairs -->
+  <rect x="1120" y="298" width="2" height="22" fill="#5A3F25"/><circle cx="1121" cy="324" r="6" fill="#FFF3D1"/>
+  <rect x="1300" y="350" width="40" height="22" rx="4" fill="#A3683A" opacity=".55"/>
+
+  <!-- balcony rail -->
+  <rect x="1250" y="372" width="214" height="28" fill="#CFE6EE" opacity=".35"/>
+  <line x1="1250" y1="372" x2="1464" y2="372" stroke="#2B3532" stroke-width="3"/>
+
+  <!-- lower glass -->
+  <rect x="1012" y="426" width="164" height="124" fill="url(#lit)"/>
+  <rect x="1258" y="426" width="182" height="124" fill="url(#lit)"/>
+  <g stroke="#2B3532" stroke-width="4">
+    <line x1="1053" y1="426" x2="1053" y2="550"/><line x1="1094" y1="426" x2="1094" y2="550"/><line x1="1135" y1="426" x2="1135" y2="550"/>
+    <line x1="1303" y1="426" x2="1303" y2="550"/><line x1="1349" y1="426" x2="1349" y2="550"/><line x1="1395" y1="426" x2="1395" y2="550"/>
+  </g>
+  <rect x="1012" y="426" width="164" height="124" fill="none" stroke="#2B3532" stroke-width="5"/>
+  <rect x="1258" y="426" width="182" height="124" fill="none" stroke="#2B3532" stroke-width="5"/>
+  <!-- interior hints -->
+  <rect x="1030" y="514" width="90" height="26" rx="6" fill="#8E5A33" opacity=".6"/>
+  <rect x="1026" y="506" width="18" height="34" rx="5" fill="#7A4A28" opacity=".6"/>
+  <rect x="1280" y="508" width="70" height="8" fill="#6B4528" opacity=".55"/>
+  <rect x="1286" y="516" width="4" height="28" fill="#6B4528" opacity=".55"/>
+  <rect x="1340" y="516" width="4" height="28" fill="#6B4528" opacity=".55"/>
+  <rect x="1360" y="440" width="2" height="30" fill="#5A3F25"/><circle cx="1361" cy="474" r="7" fill="#FFF3D1"/>
+  <!-- door -->
+  <rect x="1196" y="470" width="42" height="90" fill="#3A2A1E"/>
+  <circle cx="1230" cy="516" r="2.5" fill="#E8C27A"/>
+  <rect x="1213" y="456" width="8" height="5" rx="2" fill="#FFE9B8"/>
+
+  <!-- hedges -->
+  <g fill="#17492F">
+    <rect x="990" y="548" width="150" height="20" rx="10"/>
+    <rect x="1280" y="548" width="240" height="20" rx="10"/>
+  </g>
+  <g fill="#1F5E3A">
+    <circle cx="1004" cy="548" r="12"/><circle cx="1030" cy="545" r="13"/><circle cx="1060" cy="547" r="12"/>
+    <circle cx="1090" cy="545" r="13"/><circle cx="1122" cy="548" r="12"/>
+    <circle cx="1296" cy="547" r="12"/><circle cx="1330" cy="545" r="13"/><circle cx="1366" cy="548" r="12"/>
+    <circle cx="1400" cy="545" r="13"/><circle cx="1436" cy="547" r="12"/><circle cx="1472" cy="545" r="13"/><circle cx="1506" cy="548" r="12"/>
+  </g>
+  <!-- garden lights -->
+  <g fill="#FFE2A0">
+    <circle cx="1150" cy="566" r="3"/><circle cx="1270" cy="566" r="3"/><circle cx="1180" cy="600" r="3"/><circle cx="1258" cy="600" r="3"/>
+  </g>
+
+  <!-- stepping path -->
+  <g fill="#D9D3C4" opacity=".9">
+    <path d="M1196 568 h44 l4 12 h-52z"/>
+    <path d="M1188 590 h58 l5 14 h-68z"/>
+    <path d="M1178 616 h76 l6 18 h-88z"/>
+  </g>
+
+  <!-- palm -->
+  <g>
+    <path d="M1560 640 C 1556 560 1546 470 1530 380 L 1540 378 C 1558 470 1568 560 1574 640Z" fill="#3B2F22"/>
+    <g fill="#14402B">
+      <path d="M1534 382 C 1490 360 1450 372 1420 400 C 1460 380 1500 380 1534 390Z"/>
+      <path d="M1534 382 C 1500 330 1460 316 1424 320 C 1470 334 1504 356 1530 392Z"/>
+      <path d="M1536 380 C 1540 330 1564 300 1600 290 C 1574 316 1556 344 1542 388Z"/>
+      <path d="M1538 384 C 1580 370 1600 380 1620 400 L 1600 404 C 1580 392 1560 388 1540 390Z"/>
+      <path d="M1534 384 C 1510 400 1494 430 1490 466 C 1504 434 1520 410 1540 392Z"/>
+    </g>
+  </g>
+</svg>
