@@ -1261,6 +1261,19 @@
     priceEcho('ag-price', 'ag-price-echo');
 
     function guard(res) { if (res && res.status === 401) { clearAuth(); location.href = '/account.html'; } return res; }
+    // Tell the dashboard layout (dashboard.js) about new data or a section to open.
+    function dashEmit(name, detail) { try { document.dispatchEvent(new CustomEvent('nk:' + name, { detail: detail })); } catch (e) {} }
+    // WhatsApp needs the international form: 0712… -> 254712…
+    function waNumber(p) { var d = String(p || '').replace(/\D/g, ''); if (/^0\d{9}$/.test(d)) d = '254' + d.slice(1); else if (/^[71]\d{8}$/.test(d)) d = '254' + d; return d; }
+    function ago(t) {
+      var s = Math.floor((Date.now() - new Date(t).getTime()) / 1000);
+      if (!(s >= 0)) return '';
+      if (s < 60) return 'just now'; if (s < 3600) return Math.floor(s / 60) + 'm ago';
+      if (s < 86400) return Math.floor(s / 3600) + 'h ago'; if (s < 604800) return Math.floor(s / 86400) + 'd ago';
+      return new Date(t).toLocaleDateString();
+    }
+    function listingById(id) { for (var i = 0; i < myItems.length; i++) if (String(myItems[i].id) === String(id)) return myItems[i]; return null; }
+    var myLeads = null;
 
     function loadSummary() {
       fetch(API + '/api/agent/summary', { headers: authHeaders() }).then(guard).then(function (r) { return r.json(); }).then(function (s) {
@@ -1269,13 +1282,21 @@
         var pct = (q.max && q.max > 0) ? Math.min(100, Math.round((q.used / q.max) * 100)) : (q.max == null ? 0 : 0);
         var quotaLabel = q.max == null ? (q.used + ' published · unlimited') : (q.used + ' / ' + q.max + ' published');
         var planName = s.subscription ? s.subscription.plan : 'No plan yet';
+        var c = s.counts || {};
         $('summary').innerHTML =
-          '<div class="dash-card"><div class="dc-num">' + (s.counts ? s.counts.published : 0) + '</div><div class="dc-lbl">Published</div></div>' +
-          '<div class="dash-card"><div class="dc-num">' + (s.counts ? s.counts.draft : 0) + '</div><div class="dc-lbl">Drafts</div></div>' +
-          '<div class="dash-card"><div class="dc-num">' + (s.leads || 0) + '</div><div class="dc-lbl">Enquiries</div></div>' +
-          '<div class="dash-card wide"><div class="dc-lbl">Plan — ' + escapeHtml(planName) + '</div>' +
-          '<div class="quota-bar"><span style="width:' + pct + '%"></span></div>' +
-          '<div class="dc-sub">' + quotaLabel + ' · <a href="/services.html">Manage plan →</a></div></div>';
+          '<div class="stat"><span class="stat-num">' + (c.published || 0) + '</span><span class="stat-lbl">Published</span></div>' +
+          '<div class="stat"><span class="stat-num">' + (c.draft || 0) + '</span><span class="stat-lbl">Drafts</span></div>' +
+          '<div class="stat"><span class="stat-num">' + (s.leads || 0) + '</span><span class="stat-lbl">Enquiries</span></div>' +
+          '<div class="stat"><span class="stat-num" id="stat-views">–</span><span class="stat-lbl">Total views</span></div>';
+        if ($('plan-card')) {
+          $('plan-card').innerHTML = s.subscription
+            ? '<div class="ds-plan-top"><span>Your plan</span><strong>' + escapeHtml(planName) + '</strong></div>' +
+              '<div class="quota-bar"><span style="width:' + pct + '%"></span></div>' +
+              '<div class="ds-plan-sub">' + quotaLabel + '</div><a class="ds-plan-link" href="/services.html">Manage plan</a>'
+            : '<div class="ds-plan-top"><span>Your plan</span><strong>No plan yet</strong></div>' +
+              '<div class="ds-plan-sub">Choose a plan to publish your properties.</div><a class="btn btn--sm ds-plan-btn" href="/services.html">See plans</a>';
+        }
+        dashEmit('summary', s);
       });
     }
 
@@ -1288,17 +1309,29 @@
       fetch(API + '/api/agent/listings', { headers: authHeaders() }).then(guard).then(function (r) { return r.json(); }).then(function (d) {
         var items = (d && d.items) || [];
         myItems = items;
-        if (!items.length) { $('my-listings').innerHTML = '<p class="dc-sub">No properties yet — add your first one above.</p>'; return; }
-        $('my-listings').innerHTML = '<table class="dash-table"><thead><tr><th>Property</th><th>Status</th><th>Views</th><th>Actions</th></tr></thead><tbody>' +
+        var views = 0; items.forEach(function (l) { views += Number(l.views) || 0; });
+        if ($('stat-views')) $('stat-views').textContent = views.toLocaleString();
+        dashEmit('listings', items);
+        if (myLeads) renderLeads(myLeads);
+        if (!items.length) { $('my-listings').innerHTML = '<div class="empty-state"><strong>No properties yet</strong><span>Add your first property — it takes about five minutes.</span><button type="button" class="btn btn--sm" data-tab="add">Add a property</button></div>'; return; }
+        var dealLbl = { rent: 'For rent', sale: 'For sale', land: 'Land' };
+        $('my-listings').innerHTML = '<div class="prop-list">' +
           items.map(function (l) {
+            var ph = (l.photos && l.photos[0]) ? '<img src="' + escapeHtml(l.photos[0]) + '" alt="" loading="lazy">' : '<span class="pr-noimg" aria-hidden="true"></span>';
+            var price = money(l.price) + (l.deal === 'rent' ? '<small>/mo</small>' : '');
+            var where = [l.region, l.county].filter(Boolean).map(escapeHtml).join(', ');
             var act = '<button class="mini-btn" data-act="edit" data-id="' + l.id + '">Edit</button>';
             act += (l.status === 'published')
               ? '<button class="mini-btn" data-act="unpublish" data-id="' + l.id + '">Unpublish</button>'
               : '<button class="mini-btn primary" data-act="publish" data-id="' + l.id + '">Publish</button>';
-            act += '<button class="mini-btn danger" data-act="delete" data-id="' + l.id + '">Delete</button>';
-            return '<tr><td><strong>' + escapeHtml(l.title) + '</strong><br><span class="dc-sub">' + money(l.price) + ' · ' + escapeHtml(l.region || '') + '</span></td>' +
-              '<td>' + statusPill(l.status) + '</td><td>' + (l.views || 0) + '</td><td class="acts">' + act + '</td></tr>';
-          }).join('') + '</tbody></table>';
+            act += '<button class="mini-btn danger" data-act="delete" data-id="' + l.id + '" aria-label="Delete ' + escapeHtml(l.title) + '" title="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button>';
+            return '<div class="prop-row" data-status="' + escapeHtml(l.status) + '">' +
+              '<div class="pr-thumb">' + ph + '</div>' +
+              '<div class="pr-main"><strong>' + escapeHtml(l.title) + '</strong><span>' + price + (where ? ' · ' + where : '') + '</span></div>' +
+              '<div class="pr-meta">' + statusPill(l.status) + '<span class="pr-deal">' + (dealLbl[l.deal] || '') + '</span></div>' +
+              '<div class="pr-views"><strong>' + (l.views || 0) + '</strong><span>views</span></div>' +
+              '<div class="pr-acts">' + act + '</div></div>';
+          }).join('') + '</div>';
         Array.prototype.forEach.call($('my-listings').querySelectorAll('button[data-act]'), function (btn) {
           btn.addEventListener('click', function () { doAct(btn.getAttribute('data-act'), btn.getAttribute('data-id')); });
         });
@@ -1322,15 +1355,29 @@
       });
     }
 
+    function renderLeads(items) {
+      if (!items.length) { $('leads').innerHTML = '<div class="empty-state"><strong>No enquiries yet</strong><span>When someone asks about one of your properties, it shows up here and on your phone.</span></div>'; return; }
+      $('leads').innerHTML = items.map(function (l) {
+        var prop = l.listingId ? listingById(l.listingId) : null;
+        var who = l.name || 'Someone';
+        var wa = waNumber(l.phone);
+        var hello = 'Hi ' + who.split(' ')[0] + ', thanks for your enquiry' + (prop ? ' about "' + prop.title + '"' : '') + ' on NestKey.';
+        return '<div class="lead-row">' +
+          '<div class="lr-avatar" aria-hidden="true">' + escapeHtml(who.charAt(0).toUpperCase()) + '</div>' +
+          '<div class="lr-main"><div class="lr-top"><strong>' + escapeHtml(who) + '</strong><span>' + escapeHtml(ago(l.createdAt)) + '</span></div>' +
+          (prop ? '<div class="lr-prop">' + escapeHtml(prop.title) + '</div>' : '') +
+          (l.message ? '<p>' + escapeHtml(l.message) + '</p>' : '') + '</div>' +
+          '<div class="lr-acts">' +
+          (l.phone ? '<a class="mini-btn" href="tel:' + escapeHtml(String(l.phone).replace(/[^\d+]/g, '')) + '">Call</a>' : '') +
+          (wa ? '<a class="mini-btn wa" href="https://wa.me/' + wa + '?text=' + encodeURIComponent(hello) + '" target="_blank" rel="noopener">WhatsApp</a>' : '') +
+          '</div></div>';
+      }).join('');
+    }
     function loadLeads() {
       fetch(API + '/api/agent/leads', { headers: authHeaders() }).then(guard).then(function (r) { return r.json(); }).then(function (d) {
-        var items = (d && d.items) || [];
-        if (!items.length) { $('leads').innerHTML = '<p class="dc-sub">No enquiries yet.</p>'; return; }
-        $('leads').innerHTML = items.map(function (l) {
-          var wa = l.phone ? '<a href="https://wa.me/' + String(l.phone).replace(/\D/g, '') + '" target="_blank">WhatsApp →</a>' : '';
-          return '<div class="lead"><strong>' + escapeHtml(l.name || 'Someone') + '</strong> · ' + escapeHtml(l.phone || '') + ' ' + wa +
-            '<div class="dc-sub">' + escapeHtml(l.message || '') + '</div></div>';
-        }).join('');
+        myLeads = (d && d.items) || [];
+        renderLeads(myLeads);
+        dashEmit('leads', myLeads);
       });
     }
 
@@ -1387,6 +1434,7 @@
       if (agPicker && l.lat != null && l.lng != null && agPicker.place) {
         try { agPicker.place(Number(l.lat), Number(l.lng), 16); } catch (e) {}
       }
+      dashEmit('tab', 'add');
       if ($('agent-form-title')) $('agent-form-title').textContent = 'Edit property';
       if ($('agent-submit')) $('agent-submit').textContent = 'Save changes';
       if ($('agent-cancel')) $('agent-cancel').style.display = '';
@@ -1447,7 +1495,9 @@
         if (!res || res.error) throw new Error(res && res.error ? res.error : 'Could not save');
         s.className = 'status show ok';
         s.textContent = isEdit ? 'Changes saved.' : 'Saved as draft — hit Publish when ready.';
+        toast(isEdit ? 'Changes saved.' : 'Saved as draft — tap Publish when you’re ready.');
         f.reset(); resetFormMode(); agUpdateDeal(); loadListings(); loadSummary();
+        dashEmit('tab', 'properties');
       }).catch(function (err) { s.className = 'status show err'; s.textContent = err.message; });
     });
 
@@ -1480,6 +1530,7 @@
         if (f[k] != null && p[k] != null) f[k].value = p[k];
       });
       togglePm();
+      dashEmit('profile', p);
     });
     $('payout-form').addEventListener('submit', function (e) {
       e.preventDefault();
@@ -1490,7 +1541,8 @@
       fetch(API + '/api/agent/profile', { method: 'PUT', headers: authHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify(body) })
         .then(guard).then(function (r) { return r.json(); }).then(function (res) {
           if (res && res.error) { s.className = 'status show err'; s.textContent = res.error; return; }
-          s.className = 'status show ok'; s.textContent = 'Saved. Tenants can now pay you through the site.';
+          s.className = 'status show ok'; s.textContent = 'Saved. Buyers can now pay you through the site.';
+          dashEmit('profile', body);
         });
     });
 
@@ -1509,6 +1561,7 @@
         if (owed > 0) $('pay-commission').addEventListener('click', payCommission);
 
         var items = d.items || [];
+        dashEmit('transactions', items);
         $('transactions').innerHTML = !items.length ? '<p class="dc-sub">No sale payments recorded yet. (Rentals don\u2019t incur commission.)</p>' :
           '<table class="dash-table"><thead><tr><th>Property</th><th>Buyer</th><th>Amount</th><th>Our ' + pctText() + '</th><th>Invoice</th></tr></thead><tbody>' +
           items.map(function (t) {
