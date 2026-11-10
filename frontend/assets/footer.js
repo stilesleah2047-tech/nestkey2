@@ -7,9 +7,9 @@
  *   shows "Coming soon"; once added, it opens your profile.
  */
 var NESTKEY_SOCIALS = {
-  tiktok:    'https://www.tiktok.com/@nestkey.co.ke',
+  tiktok:    '',
   facebook:  '',
-  instagram: '',
+  instagram: 'https://www.instagram.com/nestkey.co.ke/',
 };
 
 (function () {
