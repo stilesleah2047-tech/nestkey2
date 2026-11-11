@@ -262,6 +262,7 @@
   }
 
   // Rating pop-up shown after a payment.
+  window.nkShowRating = function (ctx) { showRating(ctx); };
   function showRating(context) {
     if (document.getElementById('rate-modal')) return;
     var ov = document.createElement('div');
@@ -483,31 +484,51 @@
     function card(l) {
       var img = (l.photos && l.photos[0]) || NOPHOTO;
       var deal = l.deal === 'sale' ? 'For sale' : (l.deal === 'land' ? 'Land' : 'For rent');
-      var photos = (l.photos && l.photos.length > 1) ? '<span class="photos">' + l.photos.length + ' photos</span>' : '';
-      var showcase = l.tier === 'showcase' ? '<span class="tier-badge">Video</span>' : '';
-      var feat = l.featured ? '<span class="feat-badge">Featured</span>' : '';
-      var verified = l.verified ? '<span class="verified-badge" title="Verified">' + icon('star') + ' Verified</span>' : '';
-      var heart = '<button class="fav-btn' + (isFav(l.id) ? ' on' : '') + '" data-fav="' + l.id + '" aria-label="Save">' +
+      var href = '/property/' + encodeURIComponent(l.id);
+      var badges = '<span class="lc-badge deal">' + deal + '</span>' +
+        (l.tier === 'showcase' ? '<span class="lc-badge video">Video</span>' : '') +
+        (l.featured ? '<span class="lc-badge feat">Featured</span>' : '');
+      var count = (l.photos && l.photos.length > 1) ? '<span class="lc-count">' + l.photos.length + ' photos</span>' : '';
+      var heart = '<button class="fav-btn' + (isFav(l.id) ? ' on' : '') + '" data-fav="' + l.id + '" aria-label="Save ' + escapeHtml(l.title) + '">' +
         '<svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none"><path d="M12 21s-7-4.5-9.5-9A5 5 0 0112 5a5 5 0 019.5 7c-2.5 4.5-9.5 9-9.5 9z"/></svg></button>';
-      return '<article class="card" data-id="' + l.id + '">' +
-        '<div class="media"><span class="deal">' + deal + '</span>' + feat + showcase + photos + heart +
-        '<img loading="lazy" src="' + escapeHtml(img) + '" alt="' + escapeHtml(l.title) + '"></div>' +
-        '<div class="body"><div class="price">' + money(l.price) + '</div>' +
-        '<h3><a href="/property/' + encodeURIComponent(l.id) + '" class="card-link">' + escapeHtml(l.title) + '</a></h3>' + (verified ? '<div class="vrow">' + verified + '</div>' : '') +
-        '<div class="loc">' + icon('pin') + ' ' + escapeHtml(l.location || l.region || '') + '</div>' +
-        '<div class="meta">' + (l.beds ? '<span>' + icon('bed') + ' ' + l.beds + ' bed</span>' : '') +
-        (l.baths ? '<span>' + icon('bath') + ' ' + l.baths + ' bath</span>' : '') +
-        (l.roomCount ? '<span>' + icon('home') + ' ' + l.roomCount + ' rm</span>' : '') + '</div></div></article>';
+      var place = [l.location || l.region, l.county].filter(function (x, i, a) { return x && a.indexOf(x) === i; }).join(', ');
+      var facts = [];
+      if (l.deal === 'land') { if (l.size) facts.push('<span>' + escapeHtml(l.size) + '</span>'); if (l.type) facts.push('<span>' + escapeHtml(l.type) + '</span>'); }
+      else {
+        if (l.beds) facts.push('<span>' + icon('bed') + ' ' + l.beds + ' bed</span>');
+        else if (l.type) facts.push('<span>' + icon('home') + ' ' + escapeHtml(l.type) + '</span>');
+        if (l.baths) facts.push('<span>' + icon('bath') + ' ' + l.baths + ' bath</span>');
+        if (l.beds && l.type) facts.push('<span>' + escapeHtml(l.type) + '</span>');
+      }
+      if (l.verified) facts.push('<span class="lc-verified">' + icon('star') + ' Verified</span>');
+      return '<article class="lcard" data-id="' + l.id + '">' +
+        '<div class="lc-media"><img loading="lazy" src="' + escapeHtml(img) + '" alt="">' +
+        '<div class="lc-badges">' + badges + '</div>' + count + '</div>' + heart +
+        '<div class="lc-body"><div class="lc-price">' + money(l.price) + (l.deal === 'rent' ? '<small>/month</small>' : '') + '</div>' +
+        '<h3 class="lc-title"><a href="' + href + '" class="card-link">' + escapeHtml(l.title) + '</a></h3>' +
+        (place ? '<div class="lc-loc">' + icon('pin') + ' ' + escapeHtml(place) + '</div>' : '') +
+        (facts.length ? '<div class="lc-facts">' + facts.join('') + '</div>' : '') +
+        '</div></article>';
     }
 
     var savedOnly = false;
     function render(items) {
       var res = $('results');
       if (savedOnly) items = items.filter(function (l) { return isFav(l.id); });
-      if (!items.length) { res.innerHTML = '<div class="empty"><h3>' + (savedOnly ? 'No saved listings yet — tap the heart on a listing to save it.' : 'No listings match your search') + '</h3></div>'; return; }
+      if (!items.length) {
+        res.innerHTML = savedOnly
+          ? '<div class="empty"><h3>No saved homes yet</h3><p>Tap the heart on any listing to keep it here.</p></div>'
+          : '<div class="empty"><h3>No listings match your search</h3><p>Try a different area, a wider price range or fewer filters.</p><button type="button" class="btn" id="resetFilters">Clear filters</button></div>';
+        if ($('resetFilters')) $('resetFilters').addEventListener('click', function () {
+          $('q').value = ''; $('deal').value = ''; $('beds').value = ''; $('minPrice').value = ''; $('maxPrice').value = ''; $('sort').value = 'newest';
+          try { document.dispatchEvent(new CustomEvent('nk:filters-reset')); } catch (e) {}
+          load();
+        });
+        return;
+      }
       // One continuous grid — cards flow left-to-right and wrap to the next row
       // once the row is full, instead of one card per area block.
-      res.innerHTML = '<div class="grid">' + items.map(card).join('') + '</div>';
+      res.innerHTML = '<div class="lgrid">' + items.map(card).join('') + '</div>';
       Array.prototype.forEach.call(res.querySelectorAll('.fav-btn'), function (b) {
         b.addEventListener('click', function (e) {
           e.stopPropagation();
@@ -516,8 +537,8 @@
           if (savedOnly && !on) load();
         });
       });
-      Array.prototype.forEach.call(res.querySelectorAll('.card'), function (c) {
-        c.addEventListener('click', function () { location.href = '/property/' + encodeURIComponent(c.getAttribute('data-id')); });
+      Array.prototype.forEach.call(res.querySelectorAll('.lcard'), function (c) {
+        c.addEventListener('click', function (e) { if (e.target.closest('a, button')) return; location.href = '/property/' + encodeURIComponent(c.getAttribute('data-id')); });
       });
     }
 
