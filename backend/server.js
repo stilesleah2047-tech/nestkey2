@@ -45,9 +45,20 @@ app.use('/api/agent/commission/pay', rateLimit({ windowMs: 10 * 60 * 1000, max: 
 // /property/:id are generated from the database.
 app.use(require('./src/seo').router);
 
-// Serve uploaded images and the frontend app.
+// Clean page addresses: /browse.html -> /browse and /index(.html) -> / (permanent),
+// keeping any ?query. Old links, bookmarks and search results keep working.
+// (/property.html?id=… is handled by the SEO router above.)
+app.use((req, res, next) => {
+  if (req.method !== 'GET' && req.method !== 'HEAD') return next();
+  const m = req.path.match(/^\/([A-Za-z0-9_-]+)(\.html)?$/);
+  if (!m || (!m[2] && m[1] !== 'index')) return next();
+  const qs = req.originalUrl.slice(req.originalUrl.indexOf(req.path) + req.path.length);
+  res.redirect(301, (m[1] === 'index' ? '/' : '/' + m[1]) + qs);
+});
+
+// Serve uploaded images and the frontend app (/browse serves browse.html).
 app.use('/' + config.uploadDir, express.static(path.join(__dirname, config.uploadDir)));
-app.use('/', express.static(path.join(__dirname, '..', 'frontend'), { extensions: ['html'] }));
+app.use('/', express.static(path.join(__dirname, '..', 'frontend'), { extensions: ['html'], index: 'index.html' }));
 
 // API
 app.use('/api/listings', require('./src/routes/listings'));

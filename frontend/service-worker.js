@@ -1,6 +1,6 @@
 /* NestKey — simple app-shell cache. Network-first for API, cache-first for shell. */
-var CACHE = 'nestkey-v49';
-var SHELL = ["/", "/index.html", "/browse.html", "/post.html", "/services.html", "/account.html", "/dashboard.html", "/admin.html", "/privacy.html", "/cookies.html", "/about.html", "/contact.html", "/blog.html",  "/assets/styles.css", "/assets/app.js", "/assets/footer.js", "/assets/config.js", "/assets/logo-96.png", "/assets/hero-bg.svg", "/manifest.webmanifest","/property.html"];
+var CACHE = 'nestkey-v50';
+var SHELL = ["/", "/browse", "/post", "/services", "/account", "/dashboard", "/admin", "/privacy", "/cookies", "/about", "/contact", "/blog", "/assets/styles.css", "/assets/app.js", "/assets/footer.js", "/assets/config.js", "/assets/logo-96.png", "/assets/hero-bg.svg", "/manifest.webmanifest", "/property"];
 
 self.addEventListener('install', function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(SHELL); }).then(function () { return self.skipWaiting(); }));
@@ -27,7 +27,7 @@ self.addEventListener('fetch', function (e) {
         var copy = res.clone(); caches.open(CACHE).then(function (c) { c.put(e.request, copy); });
       }
       return res;
-    }).catch(function () { return caches.match(e.request).then(function (hit) { return hit || caches.match('/index.html'); }); }));
+    }).catch(function () { return caches.match(e.request).then(function (hit) { return hit || caches.match('/'); }); }));
     return;
   }
   // Cache-first for static assets (CSS, JS, images).

@@ -87,7 +87,7 @@
 <body class="auth-page">
   <header class="top nk-head nk-head--min"><div class="wrap">
     <a class="brand" href="/" aria-label="NestKey home"><img class="brand-mark" src="/assets/logo-96.png" alt="" width="46" height="46"><span class="brand-text"><span class="brand-word">Nest<b>Key</b></span><span class="brand-tag">Find · Rent · Buy</span></span></a>
-    <nav aria-label="Main"><a href="/browse.html">Browse homes</a><a href="/services.html">Plans &amp; pricing</a><span id="navauth"></span></nav>
+    <nav aria-label="Main"><a href="/browse">Browse homes</a><a href="/services">Plans &amp; pricing</a><span id="navauth"></span></nav>
   </div></header>
 
   <div class="auth-split">
@@ -158,7 +158,7 @@
           </div>
           <div class="login-row">
             <label><input type="checkbox" name="remember" checked> Remember me</label>
-            <a href="/contact.html">Forgot password?</a>
+            <a href="/contact">Forgot password?</a>
           </div>
           <div class="status" id="login-status"></div>
           <button class="btn block" type="submit">Sign in
@@ -202,7 +202,7 @@
           localStorage.setItem('hh_token', res.token);
           localStorage.setItem('hh_user', JSON.stringify(res.user));
         } catch (e) {}
-        location.href = (res.user && res.user.isAdmin) ? '/admin.html' : '/dashboard.html';
+        location.href = (res.user && res.user.isAdmin) ? '/admin' : '/dashboard';
       }).catch(function (err) {
         if (s) { s.className = 'status show err'; s.textContent = err.message; }
       });

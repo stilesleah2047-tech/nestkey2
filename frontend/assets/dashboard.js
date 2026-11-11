@@ -68,7 +68,7 @@
     if (unconfirmed) items.push({ tone: 'warn', text: unconfirmed + (unconfirmed === 1 ? ' sale is' : ' sales are') + ' waiting for you to confirm', go: 'payments', btn: 'Review' });
     if (drafts) items.push({ tone: 'info', text: drafts + (drafts === 1 ? ' property is' : ' properties are') + ' saved as a draft and not visible yet', go: 'properties', filter: 'draft', btn: 'Publish' });
     if (data.profile && !data.profile.payoutMethod && hasSales) items.push({ tone: 'info', text: 'Add where buyers should pay you for properties you’re selling', go: 'payments', btn: 'Add details' });
-    if (data.summary && !data.summary.subscription) items.push({ tone: 'info', text: 'Choose a plan so you can publish your properties', href: '/services.html', btn: 'See plans' });
+    if (data.summary && !data.summary.subscription) items.push({ tone: 'info', text: 'Choose a plan so you can publish your properties', href: '/services', btn: 'See plans' });
     setCount('cnt-pay', unconfirmed);
     if (!items.length) { box.hidden = true; box.innerHTML = ''; return; }
     box.hidden = false;

@@ -106,12 +106,12 @@ router.get('/property.html', (req, res, next) => (req.query.id ? renderProperty(
 
 // Live sitemap: every public page + every published listing.
 const STATIC_PAGES = [
-  ['/', 'daily', '1.0'], ['/browse.html', 'daily', '0.9'], ['/services.html', 'monthly', '0.7'],
-  ['/post.html', 'monthly', '0.7'], ['/verify.html', 'monthly', '0.6'], ['/about.html', 'monthly', '0.6'],
-  ['/contact.html', 'yearly', '0.5'], ['/blog.html', 'weekly', '0.7'],
-  ['/blog-renting-house-nairobi.html', 'monthly', '0.6'], ['/blog-buying-land-kenya.html', 'monthly', '0.6'],
-  ['/blog-avoid-rental-scams-kenya.html', 'monthly', '0.6'], ['/blog-best-nairobi-neighbourhoods.html', 'monthly', '0.6'],
-  ['/terms.html', 'yearly', '0.2'], ['/privacy.html', 'yearly', '0.2'], ['/cookies.html', 'yearly', '0.2'],
+  ['/', 'daily', '1.0'], ['/browse', 'daily', '0.9'], ['/services', 'monthly', '0.7'],
+  ['/post', 'monthly', '0.7'], ['/verify', 'monthly', '0.6'], ['/about', 'monthly', '0.6'],
+  ['/contact', 'yearly', '0.5'], ['/blog', 'weekly', '0.7'],
+  ['/blog-renting-house-nairobi', 'monthly', '0.6'], ['/blog-buying-land-kenya', 'monthly', '0.6'],
+  ['/blog-avoid-rental-scams-kenya', 'monthly', '0.6'], ['/blog-best-nairobi-neighbourhoods', 'monthly', '0.6'],
+  ['/terms', 'yearly', '0.2'], ['/privacy', 'yearly', '0.2'], ['/cookies', 'yearly', '0.2'],
 ];
 router.get('/sitemap.xml', async (_req, res) => {
   const urls = STATIC_PAGES.map(([p, f, pr]) => `<url><loc>${SITE}${p}</loc><changefreq>${f}</changefreq><priority>${pr}</priority></url>`);

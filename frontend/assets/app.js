@@ -146,11 +146,11 @@
     });
     var el = $('navauth'); if (!el) return;
     if (u && u.isAdmin) {
-      el.innerHTML = '<a href="/admin.html">Command Center</a>';
+      el.innerHTML = '<a href="/admin">Command Center</a>';
     } else if (u) {
-      el.innerHTML = '<a href="/dashboard.html">Dashboard</a>';
+      el.innerHTML = '<a href="/dashboard">Dashboard</a>';
     } else {
-      el.innerHTML = '<a href="/account.html">Sign in</a>';
+      el.innerHTML = '<a href="/account">Sign in</a>';
     }
   }
   updateNav();
@@ -219,7 +219,7 @@
     try { if (localStorage.getItem(KEY)) return; } catch (e) { return; }
     var bar = document.createElement('div');
     bar.className = 'cookie-bar';
-    bar.innerHTML = '<div class="cookie-text">We use cookies to keep you signed in and improve NestKey. See our <a href="/cookies.html">Cookie Policy</a> and <a href="/privacy.html">Privacy Policy</a>.</div>' +
+    bar.innerHTML = '<div class="cookie-text">We use cookies to keep you signed in and improve NestKey. See our <a href="/cookies">Cookie Policy</a> and <a href="/privacy">Privacy Policy</a>.</div>' +
       '<div class="cookie-btns"><button class="btn ghost btn--sm" id="ck-decline">Essential only</button><button class="btn btn--sm" id="ck-accept">Accept</button></div>';
     document.body.appendChild(bar);
     setTimeout(function () { bar.classList.add('show'); }, 100);
@@ -445,7 +445,7 @@
         var townLabel = p.get('town') || '';
         if ($('browse-title')) $('browse-title').textContent = 'Houses in ' + (townLabel || activeCounty);
         if ($('browse-sub')) $('browse-sub').textContent = townLabel && activeCounty ? (townLabel + ', ' + activeCounty + ' county') : (activeCounty ? (activeCounty + ' county') : '');
-        if ($('clearArea')) { $('clearArea').style.display = ''; $('clearArea').onclick = function () { location.href = '/browse.html'; }; }
+        if ($('clearArea')) { $('clearArea').style.display = ''; $('clearArea').onclick = function () { location.href = '/browse'; }; }
         if ($('chips')) $('chips').style.display = 'none'; // already scoped to an area
       }
     })();
@@ -829,7 +829,7 @@
   }
 
   if ($('post-form')) {
-    if (currentUser() && currentUser().isAdmin) { location.href = '/admin.html'; }
+    if (currentUser() && currentUser().isAdmin) { location.href = '/admin'; }
     var form = $('post-form'), btn = $('submitBtn'), statusEl = $("status");
     if ($('beds')) $('beds').addEventListener('input', updateFee);
 
@@ -956,7 +956,7 @@
       if (title.length < 4) { show('err', 'Please add a clear listing title.'); return; }
       if (phone.replace(/\D/g, '').length < 9) { show('err', 'Please add a phone / WhatsApp number so house hunters can reach you.'); return; }
       if (!getToken()) {
-        show('err', 'Please <a href="/account.html" target="_blank" rel="noopener">sign in or create a free account</a> (opens in a new tab) so you can upload photos. Your details here will stay as they are \u2014 come back and press the button again.');
+        show('err', 'Please <a href="/account" target="_blank" rel="noopener">sign in or create a free account</a> (opens in a new tab) so you can upload photos. Your details here will stay as they are \u2014 come back and press the button again.');
         return;
       }
       btn.disabled = true; show('info', 'Uploading media\u2026 (videos can take a moment)');
@@ -1021,7 +1021,7 @@
         });
       }).catch(function (err) {
         if (err && err.message === 'SIGNIN') {
-          show('err', 'Your sign-in has expired. Please <a href="/account.html" target="_blank" rel="noopener">sign in again</a>, then press the button again.');
+          show('err', 'Your sign-in has expired. Please <a href="/account" target="_blank" rel="noopener">sign in again</a>, then press the button again.');
         } else {
           show('err', escapeHtml((err && err.message) || 'Something went wrong. Please try again.'));
         }
@@ -1053,7 +1053,7 @@
             '<h3>' + escapeHtml(pl.name) + '</h3>' +
             '<div class="price">Free<small> \u00b7 no finder\u2019s fee</small></div>' +
             '<ul>' + pl.features.map(function (f) { return '<li>' + escapeHtml(f) + '</li>'; }).join('') + '</ul>' +
-            '<a class="btn" href="' + (signedIn ? '/browse.html' : '/account.html') + '">' + (signedIn ? 'Start browsing' : 'Create free account') + '</a></div>';
+            '<a class="btn" href="' + (signedIn ? '/browse' : '/account') + '">' + (signedIn ? 'Start browsing' : 'Create free account') + '</a></div>';
         }
         return '<div class="plan' + (pl.popular ? ' popular' : '') + '">' +
           (pl.popular ? '<div class="ribbon">Most popular</div>' : '') +
@@ -1157,7 +1157,7 @@
 
       // County cards (quick links)
       $('county-grid').innerHTML = cs.map(function (c) {
-        return '<a class="county-card" href="/browse.html?county=' + encodeURIComponent(c.county) + '">' +
+        return '<a class="county-card" href="/browse?county=' + encodeURIComponent(c.county) + '">' +
           '<span class="cc-name">' + c.county + '</span><span class="cc-sub">' + c.towns.length + ' areas</span></a>';
       }).join('');
     });
@@ -1167,7 +1167,7 @@
       if (countyEl.value.trim()) params.push('county=' + encodeURIComponent(countyEl.value.trim()));
       if (townEl.value.trim()) params.push('town=' + encodeURIComponent(townEl.value.trim()));
       if ($('f-deal').value) params.push('deal=' + encodeURIComponent($('f-deal').value));
-      location.href = '/browse.html' + (params.length ? '?' + params.join('&') : '');
+      location.href = '/browse' + (params.length ? '?' + params.join('&') : '');
     });
   }
 
@@ -1209,7 +1209,7 @@
       api('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: f.email.value, password: f.password.value }) })
         .then(function (res) {
           if (!res || res.error) throw new Error(res && res.error ? res.error : 'Could not sign in');
-          setAuth(res.token, res.user); location.href = (res.user && res.user.isAdmin) ? '/admin.html' : '/dashboard.html';
+          setAuth(res.token, res.user); location.href = (res.user && res.user.isAdmin) ? '/admin' : '/dashboard';
         }).catch(function (err) { authShow('login-status', 'err', err.message); });
     });
 
@@ -1221,14 +1221,14 @@
         body: JSON.stringify({ name: f.name.value, role: f.role.value, company: f.company.value, phone: f.phone.value, email: f.email.value, password: f.password.value }),
       }).then(function (res) {
         if (!res || res.error) throw new Error(res && res.error ? res.error : 'Could not create account');
-        setAuth(res.token, res.user); location.href = (res.user && res.user.isAdmin) ? '/admin.html' : '/dashboard.html';
+        setAuth(res.token, res.user); location.href = (res.user && res.user.isAdmin) ? '/admin' : '/dashboard';
       }).catch(function (err) { authShow('register-status', 'err', err.message); });
     });
   }
 
   /* ---------------- Agent dashboard ---------------- */
   if ($('dashboard')) {
-    if (!getToken()) { location.href = '/account.html'; }
+    if (!getToken()) { location.href = '/account'; }
     var user = currentUser();
     var editId = null;      // id of the listing currently being edited (null = create)
     var myItems = [];       // last-loaded listings, so Edit can prefill the form
@@ -1281,7 +1281,7 @@
     if ($('ag-price')) $('ag-price').addEventListener('input', agUpdateDeal);
     priceEcho('ag-price', 'ag-price-echo');
 
-    function guard(res) { if (res && res.status === 401) { clearAuth(); location.href = '/account.html'; } return res; }
+    function guard(res) { if (res && res.status === 401) { clearAuth(); location.href = '/account'; } return res; }
     // Tell the dashboard layout (dashboard.js) about new data or a section to open.
     function dashEmit(name, detail) { try { document.dispatchEvent(new CustomEvent('nk:' + name, { detail: detail })); } catch (e) {} }
     // WhatsApp needs the international form: 0712… -> 254712…
@@ -1313,9 +1313,9 @@
           $('plan-card').innerHTML = s.subscription
             ? '<div class="ds-plan-top"><span>Your plan</span><strong>' + escapeHtml(planName) + '</strong></div>' +
               '<div class="quota-bar"><span style="width:' + pct + '%"></span></div>' +
-              '<div class="ds-plan-sub">' + quotaLabel + '</div><a class="ds-plan-link" href="/services.html">Manage plan</a>'
+              '<div class="ds-plan-sub">' + quotaLabel + '</div><a class="ds-plan-link" href="/services">Manage plan</a>'
             : '<div class="ds-plan-top"><span>Your plan</span><strong>No plan yet</strong></div>' +
-              '<div class="ds-plan-sub">Choose a plan to publish your properties.</div><a class="btn btn--sm ds-plan-btn" href="/services.html">See plans</a>';
+              '<div class="ds-plan-sub">Choose a plan to publish your properties.</div><a class="btn btn--sm ds-plan-btn" href="/services">See plans</a>';
         }
         dashEmit('summary', s);
       });
@@ -1368,7 +1368,7 @@
       }
       fetch(API + '/api/agent/listings/' + id + '/' + act, { method: 'POST', headers: authHeaders() }).then(guard).then(function (r) { return r.json(); }).then(function (res) {
         if (res && res.error) {
-          if (res.needPlan || res.quota) { toast(res.error); location.href = '/services.html'; }
+          if (res.needPlan || res.quota) { toast(res.error); location.href = '/services'; }
           else toast(res.error);
           return;
         }
@@ -1622,7 +1622,7 @@
 
   /* ---------------- Admin Command Center ---------------- */
   if ($('admin')) {
-    if (!getToken()) { location.href = '/account.html'; }
+    if (!getToken()) { location.href = '/account'; }
     if ($('signout')) $('signout').addEventListener('click', function (e) { e.preventDefault(); clearAuth(); location.href = '/'; });
 
     var iconFor = { listing: icon('home'), user: icon('user'), subscription: icon('card'), payment: icon('cash'), lead: icon('mail'), rating: icon('star') };
@@ -1654,7 +1654,7 @@
     function loadOverview() {
       fetch(API + '/api/admin/overview', { headers: authHeaders() }).then(function (r) {
         if (r.status === 403) { document.getElementById('admin').innerHTML = '<div class="status show err">This area is for administrators only.</div>'; throw new Error('forbidden'); }
-        if (r.status === 401) { clearAuth(); location.href = '/account.html'; throw new Error('auth'); }
+        if (r.status === 401) { clearAuth(); location.href = '/account'; throw new Error('auth'); }
         return r.json();
       }).then(function (d) {
         var s = d.stats || {}, li = s.listings || {};
@@ -1776,7 +1776,7 @@ window.onGoogleCredential = function (resp) {
       localStorage.setItem('hh_token', res.token);
       localStorage.setItem('hh_user', JSON.stringify(res.user));
     } catch (e) {}
-    location.href = res.user && res.user.isAdmin ? '/admin.html' : '/dashboard.html';
+    location.href = res.user && res.user.isAdmin ? '/admin' : '/dashboard';
   }).catch(function (err) {
     if (s) { s.className = 'status show err'; s.textContent = err.message; }
   });

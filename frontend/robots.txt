@@ -4,9 +4,9 @@ User-agent: *
 Allow: /
 
 # Keep private / app-only areas out of the index.
-Disallow: /account.html
-Disallow: /dashboard.html
-Disallow: /admin.html
+Disallow: /account
+Disallow: /dashboard
+Disallow: /admin
 Disallow: /uploads/
 
 # Sitemap location (absolute URL, as required by Google).

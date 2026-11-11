@@ -58,11 +58,11 @@
   $('lbx').addEventListener('touchstart', function (e) { tx = e.touches[0].clientX; }, { passive: true });
   $('lbx').addEventListener('touchend', function (e) { if (tx == null) return; var dx = e.changedTouches[0].clientX - tx; if (Math.abs(dx) > 40) openLbx(gi + (dx < 0 ? 1 : -1)); tx = null; });
 
-  if (!id) { panel.innerHTML = '<p class="dc-sub" style="padding:50px;text-align:center">No property specified. <a href="/browse.html">Browse all listings</a></p>'; return; }
+  if (!id) { panel.innerHTML = '<p class="dc-sub" style="padding:50px;text-align:center">No property specified. <a href="/browse">Browse all listings</a></p>'; return; }
 
   Promise.all([fetch(API + '/api/listings/' + id).then(function (r) { return r.json(); }), loadFavs()]).then(function (res) {
     var l = res[0];
-    if (!l || l.error) { panel.innerHTML = '<div class="empty-box" style="padding:60px 20px;text-align:center"><h1 style="font-size:1.4rem">This property isn’t available</h1><p class="dc-sub">It may have been rented, sold or taken down.</p><p><a class="btn" href="/browse.html">Browse other homes</a></p></div>'; return; }
+    if (!l || l.error) { panel.innerHTML = '<div class="empty-box" style="padding:60px 20px;text-align:center"><h1 style="font-size:1.4rem">This property isn’t available</h1><p class="dc-sub">It may have been rented, sold or taken down.</p><p><a class="btn" href="/browse">Browse other homes</a></p></div>'; return; }
     render(l);
     loadSimilar(l);
   }).catch(function () {
@@ -78,9 +78,9 @@
     var per = isRent ? '<small>/month</small>' : '';
 
     // Breadcrumb
-    var cr = '<a href="/browse.html">Browse</a>';
-    if (county) cr += '<span aria-hidden="true">›</span><a href="/browse.html?county=' + encodeURIComponent(county) + '">' + esc(county) + '</a>';
-    if (town && town !== county) cr += '<span aria-hidden="true">›</span><a href="/browse.html?' + (county ? 'county=' + encodeURIComponent(county) + '&' : '') + 'town=' + encodeURIComponent(town) + '">' + esc(town) + '</a>';
+    var cr = '<a href="/browse">Browse</a>';
+    if (county) cr += '<span aria-hidden="true">›</span><a href="/browse?county=' + encodeURIComponent(county) + '">' + esc(county) + '</a>';
+    if (town && town !== county) cr += '<span aria-hidden="true">›</span><a href="/browse?' + (county ? 'county=' + encodeURIComponent(county) + '&' : '') + 'town=' + encodeURIComponent(town) + '">' + esc(town) + '</a>';
     $('pp-crumbs').innerHTML = cr;
 
     // Photos: main photos first, then room photos (no duplicates)
@@ -149,8 +149,8 @@
     if (phone) acts += '<a class="btn ghost" href="tel:' + esc(telNumber(phone)) + '">' + IC.phone + 'Call</a>';
     if (isSale) acts += '<button type="button" class="btn ghost wide" id="pay-house">' + IC.cash + 'Buy / pay for this property</button>';
     var safe = isSale
-      ? 'Before paying for land or a house, <a href="/verify.html">verify the title deed</a> and visit with your own lawyer.'
-      : 'Never send a deposit before you’ve viewed the house in person. <a href="/blog-avoid-rental-scams-kenya.html">How to avoid rental scams</a>';
+      ? 'Before paying for land or a house, <a href="/verify">verify the title deed</a> and visit with your own lawyer.'
+      : 'Never send a deposit before you’ve viewed the house in person. <a href="/blog-avoid-rental-scams-kenya">How to avoid rental scams</a>';
     var card = '<aside class="pp-side"><div class="pp-card" id="contact">' +
       '<div class="pp-price">' + money(l.price) + per + '</div><div class="pp-deal">' + deal + (l.type ? ' · ' + esc(l.type) : '') + '</div>' +
       '<div class="pp-owner"><div class="pp-avatar" aria-hidden="true">' + esc(String(owner).charAt(0).toUpperCase()) + '</div><div><strong>Listed by ' + esc(owner) + '</strong><span>Contact them directly. NestKey doesn’t charge you a viewing fee.</span></div></div>' +

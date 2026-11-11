@@ -9,8 +9,8 @@
     var u = null; try { u = JSON.parse(localStorage.getItem('hh_user') || 'null'); } catch (e) {}
     if (u) { var a = auth.querySelector('a'); if (a) a.className = 'nav-signup'; }
     else {
-      auth.innerHTML = '<a href="/account.html" class="nav-login"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4" fill="currentColor"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7" fill="currentColor"/></svg>Log in</a>' +
-        '<a href="/account.html" class="nav-signup">Sign up</a>';
+      auth.innerHTML = '<a href="/account" class="nav-login"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4" fill="currentColor"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7" fill="currentColor"/></svg>Log in</a>' +
+        '<a href="/account" class="nav-signup">Sign up</a>';
     }
   }
 
