@@ -223,6 +223,7 @@
     if (data.leads) $('cc-leads-mini').innerHTML = data.leads.length ? data.leads.slice(0, 5).map(function (x) { return leadRow(x); }).join('') : EMPTY(ICON.inbox, 'No enquiries yet', 'They appear here when someone contacts a lister.');
   }
 
+  function isFailed(it) { return it.kind === 'subscription' && /failed|cancel/i.test(it.text || ''); }
   function renderAttention() {
     var cards = [];
     var L = data.listings, U = data.users, E = data.leads;
@@ -237,6 +238,10 @@
     if (E) {
       var n = E.filter(function (x) { return within(x.createdAt, 24); }).length;
       if (n) cards.push(['#enquiries', 'teal', ICON.mail, n + ' new enquir' + (n > 1 ? 'ies' : 'y'), 'Received in the last 24 hours']);
+    }
+    if (data.activity) {
+      var f = data.activity.filter(function (it) { return isFailed(it) && within(it.at, 24 * 7); }).length;
+      if (f) cards.push(['#activity', 'red', ICON.card, f + ' failed payment' + (f > 1 ? 's' : '') + ' this week', 'Plan payments that didn’t go through']);
     }
     if (!L || !U || !E) { $('cc-attn').innerHTML = ''; return; }
     $('cc-attn').innerHTML = cards.length ? cards.map(function (c) {
@@ -376,6 +381,7 @@
   /* ---------------- Activity ---------------- */
   function feedRow(it, isNew) {
     var ic = FEED_ICON[it.kind] || ['', ICON.sparkle];
+    if (isFailed(it)) ic = ['bad', ic[1]];
     return '<div class="cc-feed-row' + (isNew ? ' new' : '') + '"><span class="ic ' + ic[0] + '">' + ic[1] + '</span><p>' + hl(it.text) + '</p><time datetime="' + esc(it.at) + '">' + ago(it.at) + '</time></div>';
   }
   function renderActivity() {
