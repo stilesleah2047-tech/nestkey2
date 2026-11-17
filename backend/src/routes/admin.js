@@ -2,6 +2,7 @@ const express = require('express');
 const db = require('../db');
 const { requireAuth, isAdmin } = require('../auth');
 const events = require('../events');
+const adminLeads = require('../db/adminLeads');
 
 const router = express.Router();
 
@@ -59,5 +60,11 @@ router.get('/users', async (_req, res) => {
 });
 router.post('/users/:id/verify', async (req, res) => { await db.setUserVerified(req.params.id, true); res.json({ ok: true }); });
 router.post('/users/:id/unverify', async (req, res) => { await db.setUserVerified(req.params.id, false); res.json({ ok: true }); });
+
+// Enquiries sent through property enquiry forms (all owners)
+router.get('/leads', async (_req, res) => {
+  try { res.json({ items: await adminLeads(100) }); }
+  catch (e) { res.status(500).json({ error: 'Could not load enquiries' }); }
+});
 
 module.exports = router;
