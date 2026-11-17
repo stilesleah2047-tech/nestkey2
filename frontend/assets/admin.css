@@ -27,8 +27,7 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
 .cc-side { position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column; gap: 6px;
   background: var(--navy); color: #b7c4cc; padding: 18px 14px 14px; overflow-y: auto; }
 .cc-brand { display: flex; align-items: center; gap: 11px; padding: 4px 8px 18px; color: #fff; }
-.cc-brand-logo { width: 42px; height: 42px; border-radius: 50%; background: #fff; display: grid; place-items: center; flex: none; }
-.cc-brand-logo img { width: 36px; height: 36px; }
+.cc-brand-logo { width: 42px; height: 42px; border-radius: 50%; object-fit: cover; background: #fff; flex: none; display: block; }
 .cc-brand-text b { display: block; font-size: 1.15rem; font-weight: 800; letter-spacing: .01em; color: #fff; }
 .cc-brand-text b i { font-style: normal; color: var(--gold); }
 .cc-brand-text small { display: block; font-size: .72rem; color: #7f93a0; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
@@ -172,6 +171,8 @@ a.cc-kpi:hover .n { color: var(--teal-dk); }
 .cc-feed-row .ic.user { background: var(--blue-bg); color: var(--blue); }
 .cc-feed-row .ic.money { background: var(--gold-bg); color: var(--gold-ink); }
 .cc-feed-row .ic.rating { background: #f2ecfb; color: #7a55c9; }
+.cc-feed-row .ic.bad { background: var(--red-bg); color: var(--red); }
+.cc-attn .ic.red { background: var(--red-bg); color: var(--red); }
 .cc-feed-row p { flex: 1; margin: 0; font-size: .89rem; min-width: 0; overflow-wrap: anywhere; }
 .cc-feed-row time { font-size: .76rem; color: var(--faint); white-space: nowrap; }
 .cc-feed-row.new { animation: ccnew 2.4s ease; }
