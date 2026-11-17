@@ -131,7 +131,7 @@
     overview: ['Overview', 'What needs you today on NestKey.'],
     listings: ['Listings', 'Review, publish and moderate what appears on the public site.'],
     users: ['Users & KYC', 'Check ID / KRA details and verify trusted landlords and agents.'],
-    enquiries: ['Enquiries', 'Messages tenants and buyers sent through listing enquiry forms.'],
+    enquiries: ['Enquiries', 'Messages from listing enquiry forms and the Contact page.'],
     activity: ['Activity', 'Everything happening on NestKey, as it happens.'],
   };
   var current = 'overview';
@@ -359,13 +359,18 @@
 
   /* ---------------- Enquiries ---------------- */
   function leadRow(x) {
-    var wa = waNumber(x.phone);
+    var c = String(x.phone || '').trim();
+    var isEmail = c.indexOf('@') !== -1;
+    var wa = isEmail ? '' : waNumber(c);
+    var about = x.listingId
+      ? '<div class="about">About: <a href="/property/' + encodeURIComponent(x.listingId) + '" target="_blank" rel="noopener">' + hl(x.listingTitle || 'View listing') + '</a></div>'
+      : '<div class="about">Via the contact form</div>';
     return '<div class="cc-lead"><div><div class="cc-lead-top"><b>' + hl(x.name || 'Someone') + '</b>' +
-      (x.phone ? '<span class="cc-sub">' + hl(x.phone) + '</span>' : '') + '<time datetime="' + esc(x.createdAt) + '">' + ago(x.createdAt) + '</time></div>' +
-      (x.message ? '<p>' + hl(x.message) + '</p>' : '<p class="cc-sub">No message</p>') +
-      (x.listingId ? '<div class="about">About: <a href="/property/' + encodeURIComponent(x.listingId) + '" target="_blank" rel="noopener">' + hl(x.listingTitle || 'View listing') + '</a></div>' : '') +
+      (c ? '<span class="cc-sub">' + hl(c) + '</span>' : '') + '<time datetime="' + esc(x.createdAt) + '">' + ago(x.createdAt) + '</time></div>' +
+      (x.message ? '<p>' + hl(x.message) + '</p>' : '<p class="cc-sub">No message</p>') + about +
       '</div><div class="cc-acts">' +
-      (x.phone ? '<a class="cc-mini" href="tel:' + esc(String(x.phone).replace(/\s/g, '')) + '">' + ICON.phone + 'Call</a>' : '') +
+      (isEmail ? '<a class="cc-mini" href="mailto:' + esc(c) + '?subject=' + encodeURIComponent('Re: your message to NestKey') + '">' + ICON.mail + 'Email</a>' : '') +
+      (c && !isEmail ? '<a class="cc-mini" href="tel:' + esc(c.replace(/\s/g, '')) + '">' + ICON.phone + 'Call</a>' : '') +
       (wa ? '<a class="cc-mini" href="https://wa.me/' + wa + '" target="_blank" rel="noopener">' + ICON.chat + 'WhatsApp</a>' : '') +
       '</div></div>';
   }
