@@ -4,100 +4,202 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Command Center — NestKey</title>
+  <meta name="robots" content="noindex, nofollow">
   <meta name="theme-color" content="#0B1B2B">
   <link rel="icon" type="image/png" href="/assets/icon-192.png">
-  <link rel="stylesheet" href="/assets/styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/assets/admin.css">
 </head>
-<body class="admin-body">
-  <div class="admin-shell" id="adminShell">
+<body class="cc">
+  <div class="cc-shell" id="ccShell">
 
-    <!-- ---------------- Sidebar ---------------- -->
-    <aside class="side">
-      <a class="side-brand" href="/"><img src="/assets/logo-96.png" alt="NestKey"><b>Nest<i>Key</i></b></a>
-      <nav>
-        <div class="nav-label">Overview</div>
-        <a href="#top" class="active"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg> Dashboard</a>
-        <a href="#sec-listings"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg> Listings</a>
-        <a href="#sec-users"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg> Users</a>
-        <a href="#sec-enquiries"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v14H4z"/><path d="M4 7l8 6 8-6"/></svg> Enquiries</a>
-        <a href="#sec-activity"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg> Activity</a>
-        <div class="nav-label">Site</div>
-        <a href="/browse"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg> Browse site</a>
-        <a href="/services"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg> Plans</a>
-        <div class="side-sep"></div>
-        <a href="#" id="signout"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/></svg> Sign out</a>
+    <!-- ================= Sidebar ================= -->
+    <aside class="cc-side" id="ccSide" aria-label="Command Center navigation">
+      <a class="cc-brand" href="/">
+        <span class="cc-brand-logo"><img src="/assets/logo-96.png" alt=""></span>
+        <span class="cc-brand-text"><b>Nest<i>Key</i></b><small>Command Center</small></span>
+      </a>
+
+      <nav class="cc-nav">
+        <a href="#overview" data-view="overview">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+          <span>Overview</span>
+        </a>
+        <a href="#listings" data-view="listings">
+          <svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
+          <span>Listings</span><em class="cc-badge" id="nb-listings" hidden></em>
+        </a>
+        <a href="#users" data-view="users">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+          <span>Users &amp; KYC</span><em class="cc-badge" id="nb-users" hidden></em>
+        </a>
+        <a href="#enquiries" data-view="enquiries">
+          <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
+          <span>Enquiries</span><em class="cc-badge" id="nb-enquiries" hidden></em>
+        </a>
+        <a href="#activity" data-view="activity">
+          <svg viewBox="0 0 24 24"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg>
+          <span>Activity</span>
+        </a>
+
+        <div class="cc-nav-label">Site</div>
+        <a href="/browse" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
+          <span>View public site</span>
+        </a>
+        <a href="/services" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+          <span>Plans &amp; pricing</span>
+        </a>
       </nav>
-      <div class="promo">
-        <div class="promo-ic"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg></div>
-        <h4>Better homes, faster</h4>
-        <p>Moderate listings, verify agents and keep NestKey trusted — all from one place.</p>
+
+      <div class="cc-side-foot">
+        <div class="cc-me">
+          <span class="cc-avatar" id="cc-initials">A</span>
+          <span class="cc-me-meta"><b id="cc-name">Admin</b><small>Administrator</small></span>
+        </div>
+        <button class="cc-icon-btn" id="cc-signout" type="button" title="Sign out" aria-label="Sign out">
+          <svg viewBox="0 0 24 24"><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/></svg>
+        </button>
       </div>
     </aside>
+    <div class="cc-backdrop" id="ccBackdrop"></div>
 
-    <!-- ---------------- Main ---------------- -->
-    <div class="main">
-      <header class="topbar">
-        <button class="dc-menu-btn" id="dcMenu" aria-label="Menu"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
-        <div class="search">
-          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
-          <input id="admin-search" type="search" placeholder="Search listings, users, or anything…" autocomplete="off">
+    <!-- ================= Main ================= -->
+    <div class="cc-main">
+      <header class="cc-top">
+        <button class="cc-icon-btn cc-menu" id="ccMenu" type="button" aria-label="Open menu">
+          <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+        <div class="cc-title">
+          <h1 id="cc-view-title">Overview</h1>
+          <p id="cc-view-sub">What needs you today on NestKey.</p>
         </div>
-        <div class="tb-actions">
-          <a class="bell" href="#sec-activity" title="Activity"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9a6 6 0 1112 0c0 5 2 6 2 6H4s2-1 2-6z"/><path d="M10 21h4"/></svg><span class="dot"></span></a>
-          <div class="who">
-            <span class="avatar" id="dc-initials">A</span>
-            <span class="who-meta"><span class="who-name" id="dc-user-name">Admin</span><br><span class="who-role">Administrator</span></span>
-          </div>
-        </div>
+        <label class="cc-search">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
+          <input id="cc-search" type="search" placeholder="Search listings, users, enquiries…" autocomplete="off">
+          <kbd>/</kbd>
+        </label>
+        <span class="cc-live" id="cc-live" title="Connecting to live updates"><i></i><span>Connecting</span></span>
+        <button class="cc-icon-btn" id="cc-refresh" type="button" title="Refresh" aria-label="Refresh data">
+          <svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 11-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>
+        </button>
       </header>
 
-      <main class="canvas" id="admin">
-        <a id="top"></a>
-        <section class="dc-banner">
-          <img class="banner-art" src="/assets/hero-bg.svg" alt="" aria-hidden="true">
-          <h1>Command Center</h1>
-          <p>Everything happening on NestKey — listings, users, payments and activity — in real time.</p>
-          <span class="live-dot" id="live-dot" title="Live">Live</span>
-        </section>
+      <main class="cc-canvas" id="cc">
 
-        <div class="kpi-grid" id="kpis"></div>
-
-        <div class="admin-grid">
-          <div class="admin-col" id="sec-activity">
-            <div class="col-head"><h2>Activity feed</h2><button class="mini-btn" id="feed-clear" type="button">Clear</button></div>
-            <div class="feed" id="feed"><p class="dc-sub">Loading…</p></div>
+        <!-- ---------- OVERVIEW ---------- -->
+        <section class="cc-view" data-view="overview">
+          <div class="cc-hello">
+            <div>
+              <p class="cc-date" id="cc-date"></p>
+              <h2 id="cc-greeting">Welcome back</h2>
+            </div>
+            <a class="cc-btn ghost" href="/post" target="_blank" rel="noopener">
+              <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg> Post a listing
+            </a>
           </div>
-          <div class="admin-col">
-            <h2>Listings by county</h2>
-            <div class="bars" id="by-county"></div>
-            <h2 style="margin-top:22px">By type</h2>
-            <div class="bars" id="by-deal"></div>
+
+          <div class="cc-attn" id="cc-attn" aria-live="polite"></div>
+
+          <div class="cc-kpi-groups" id="cc-kpis">
+            <div class="cc-skel" style="height:148px"></div>
+            <div class="cc-skel" style="height:148px"></div>
+            <div class="cc-skel" style="height:148px"></div>
           </div>
-        </div>
 
-        <section class="dc-section" id="sec-listings">
-          <h2>Recent listings</h2>
-          <p class="dc-sub">Moderate what appears on the public site.</p>
-          <div class="dc-table-wrap" id="admin-listings"></div>
+          <div class="cc-grid-2">
+            <div class="cc-card">
+              <div class="cc-card-head"><h3>Live listings by county</h3></div>
+              <div class="cc-bars" id="cc-by-county"><div class="cc-skel" style="height:180px"></div></div>
+            </div>
+            <div class="cc-card">
+              <div class="cc-card-head"><h3>Live listings by type</h3></div>
+              <div id="cc-by-deal"><div class="cc-skel" style="height:180px"></div></div>
+            </div>
+          </div>
+
+          <div class="cc-grid-2">
+            <div class="cc-card">
+              <div class="cc-card-head"><h3>Latest activity</h3><a class="cc-link" href="#activity">See all</a></div>
+              <div class="cc-feed" id="cc-feed-mini"><div class="cc-skel" style="height:220px"></div></div>
+            </div>
+            <div class="cc-card">
+              <div class="cc-card-head"><h3>Latest enquiries</h3><a class="cc-link" href="#enquiries">See all</a></div>
+              <div id="cc-leads-mini"><div class="cc-skel" style="height:220px"></div></div>
+            </div>
+          </div>
         </section>
 
-        <section class="dc-section" id="sec-users">
-          <h2>Users &amp; verification</h2>
-          <p class="dc-sub">Review accounts and confirm ID / KRA verification.</p>
-          <div class="dc-table-wrap" id="admin-users"></div>
+        <!-- ---------- LISTINGS ---------- -->
+        <section class="cc-view" data-view="listings" hidden>
+          <div class="cc-toolbar">
+            <div class="cc-tabs" id="lf" role="tablist">
+              <button data-f="all" class="on" type="button">All <b></b></button>
+              <button data-f="review" type="button">To review <b></b></button>
+              <button data-f="published" type="button">Live <b></b></button>
+            </div>
+            <select class="cc-select" id="ls-deal" aria-label="Type">
+              <option value="">All types</option><option value="rent">For rent</option><option value="sale">For sale</option><option value="land">Land</option>
+            </select>
+          </div>
+          <div class="cc-card flush" id="cc-listings"><div class="cc-skel" style="height:320px"></div></div>
         </section>
 
-        <section class="dc-section" id="sec-enquiries">
-          <h2>Enquiries</h2>
-          <p class="dc-sub">Messages buyers and tenants sent through property enquiry forms.</p>
-          <div class="dc-table-wrap" id="admin-leads"></div>
+        <!-- ---------- USERS ---------- -->
+        <section class="cc-view" data-view="users" hidden>
+          <div class="cc-toolbar">
+            <div class="cc-tabs" id="uf" role="tablist">
+              <button data-f="all" class="on" type="button">All <b></b></button>
+              <button data-f="kyc" type="button">KYC to check <b></b></button>
+              <button data-f="unverified" type="button">Unverified <b></b></button>
+              <button data-f="verified" type="button">Verified <b></b></button>
+            </div>
+          </div>
+          <div class="cc-card flush" id="cc-users"><div class="cc-skel" style="height:320px"></div></div>
         </section>
+
+        <!-- ---------- ENQUIRIES ---------- -->
+        <section class="cc-view" data-view="enquiries" hidden>
+          <div class="cc-card flush" id="cc-leads"><div class="cc-skel" style="height:320px"></div></div>
+        </section>
+
+        <!-- ---------- ACTIVITY ---------- -->
+        <section class="cc-view" data-view="activity" hidden>
+          <div class="cc-toolbar">
+            <div class="cc-tabs" id="af" role="tablist">
+              <button data-f="all" class="on" type="button">Everything</button>
+              <button data-f="listing" type="button">Listings</button>
+              <button data-f="user" type="button">Users</button>
+              <button data-f="money" type="button">Payments</button>
+              <button data-f="lead" type="button">Enquiries</button>
+              <button data-f="rating" type="button">Ratings</button>
+            </div>
+          </div>
+          <div class="cc-card"><div class="cc-feed" id="cc-feed"><div class="cc-skel" style="height:320px"></div></div></div>
+        </section>
+
       </main>
     </div>
   </div>
 
+  <!-- Confirm dialog -->
+  <dialog class="cc-dialog" id="cc-confirm">
+    <form method="dialog">
+      <h3 id="cc-confirm-title">Are you sure?</h3>
+      <p id="cc-confirm-body"></p>
+      <div class="cc-dialog-acts">
+        <button class="cc-btn ghost" value="cancel">Cancel</button>
+        <button class="cc-btn danger" value="ok" id="cc-confirm-ok">Confirm</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div class="cc-toast" id="cc-toast" role="status" aria-live="polite"></div>
+
   <script src="/assets/config.js"></script>
-  <script src="/assets/app.js"></script>
+  <script src="/assets/admin.js"></script>
 </body>
 </html>
