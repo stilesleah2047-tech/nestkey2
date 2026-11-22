@@ -219,13 +219,16 @@
     try { if (localStorage.getItem(KEY)) return; } catch (e) { return; }
     var bar = document.createElement('div');
     bar.className = 'cookie-bar';
-    bar.innerHTML = '<div class="cookie-text">We use cookies to keep you signed in and improve NestKey. See our <a href="/cookies">Cookie Policy</a> and <a href="/privacy">Privacy Policy</a>.</div>' +
-      '<div class="cookie-btns"><button class="btn ghost btn--sm" id="ck-decline">Essential only</button><button class="btn btn--sm" id="ck-accept">Accept</button></div>';
+    // NestKey only uses essential storage (sign-in, saved homes, this notice), so this is a
+    // notice rather than a consent choice. If analytics or ads are ever added, bring back a
+    // real choice and only load them after the visitor accepts.
+    bar.setAttribute('role', 'region'); bar.setAttribute('aria-label', 'Cookie notice');
+    bar.innerHTML = '<div class="cookie-text">NestKey only stores what it needs to keep you signed in and remember your saved homes. No ads, no tracking. <a href="/cookies">Cookie Policy</a></div>' +
+      '<div class="cookie-btns"><button class="btn btn--sm" id="ck-accept">OK</button></div>';
     document.body.appendChild(bar);
     setTimeout(function () { bar.classList.add('show'); }, 100);
     function done(v) { try { localStorage.setItem(KEY, v); } catch (e) {} bar.classList.remove('show'); setTimeout(function () { bar.remove(); }, 300); }
-    bar.querySelector('#ck-accept').addEventListener('click', function () { done('accepted'); });
-    bar.querySelector('#ck-decline').addEventListener('click', function () { done('essential'); });
+    bar.querySelector('#ck-accept').addEventListener('click', function () { done('seen'); });
   }
   initCookieConsent();
 
@@ -867,6 +870,8 @@
       if ($('field-rooms')) $('field-rooms').style.display = isLand ? 'none' : '';
       if ($('field-size')) $('field-size').style.display = isLand ? '' : 'none';
       if ($('field-type')) { var ti = $('field-type').querySelector('input'); if (ti) ti.placeholder = isLand ? 'Plot, Farm, Commercial…' : 'Bedsitter, 1 bedroom, Maisonette…'; }
+      // A private title-deed number lets buyers check sale and land listings.
+      if ($('field-deed')) $('field-deed').style.display = isSale ? '' : 'none';
       // Land is priced by size, so it's always a single listing.
       if ($('field-units-mode')) $('field-units-mode').style.display = isLand ? 'none' : '';
       if (isLand) setUnitsMode('single');
@@ -993,6 +998,11 @@
             var title = form.title.value.trim(), phone = form.phone.value.trim();
       if (title.length < 4) { show('err', 'Please add a clear listing title.'); return; }
       if (phone.replace(/\D/g, '').length < 9) { show('err', 'Please add a phone / WhatsApp number so house hunters can reach you.'); return; }
+      if ($('p-consent') && !$('p-consent').checked) {
+        $('p-consent').closest('.consent-box').classList.add('need');
+        show('err', 'Please tick the consent box so we can store your listing.');
+        return;
+      }
       if (unitsMode === 'multi' && unitCount() < 2) { show('err', 'Enter how many identical units are available (2 or more), or choose \u201cOne house or room\u201d.'); return; }
       if (!getToken()) {
         show('err', 'Please <a href="/account" target="_blank" rel="noopener">sign in or create a free account</a> (opens in a new tab) so you can upload photos. Your details here will stay as they are \u2014 come back and press the button again.');
@@ -1035,6 +1045,8 @@
             lat: $('p-lat') ? $('p-lat').value : '', lng: $('p-lng') ? $('p-lng').value : '',
             name: form.name.value, email: form.email.value, phone: phone,
             tier: tier, photos: coverUrls, rooms: rooms, unitsTotal: unitCount(),
+            deedNumber: ($('p-deed') && form.deal.value !== 'rent') ? $('p-deed').value : '',
+            consent: !!($('p-consent') && $('p-consent').checked),
           };
           return api('/api/listings', { method: 'POST', headers: authHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify(body) });
         });
@@ -1069,6 +1081,52 @@
     });
 
   }
+
+  /* ---------------- Verify a title deed ---------------- */
+  if ($('verify-form')) {
+    var vf = $('verify-form'), vout = $('verify-result');
+    function vCard(kind, html) { vout.className = 'verify-card show ' + kind; vout.innerHTML = html; }
+    function vListing(m) {
+      var when = m.listedAt ? new Date(m.listedAt).toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+      var deal = m.deal === 'land' ? 'Land for sale' : (m.deal === 'sale' ? 'For sale' : 'For rent');
+      return '<div class="vc-listing"><div class="vc-ltitle"><a href="/property/' + encodeURIComponent(m.id) + '" target="_blank" rel="noopener">' + escapeHtml(m.title) + '</a></div>' +
+        '<div class="vc-lmeta">' + escapeHtml([deal, m.place, m.price ? money(m.price) : ''].filter(Boolean).join(' · ')) + '</div>' +
+        '<div>Listed by <b>' + escapeHtml(m.listerName || 'a NestKey user') + '</b>' + (m.verified ? ' <span class="vc-badge">Verified lister</span>' : '') + (when ? ' · since ' + escapeHtml(when) : '') + '</div></div>';
+    }
+    var vNote = '<div class="vc-note">A match only means the person who listed it typed this number. It does not prove they own the land. Check that the seller’s ID matches the name on the title, and do an official search on Ardhisasa or eCitizen before paying anything.</div>';
+    vf.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var deed = ($('verify-deed').value || '').trim();
+      if (deed.replace(/[^A-Za-z0-9]/g, '').length < 4) { vCard('err', '<strong>Type the full number</strong><p>Enter the title deed or parcel number exactly as it appears on the document the seller shared.</p>'); return; }
+      var btn = $('verify-btn'); btn.disabled = true; vCard('info', '<p>Checking…</p>');
+      fetch(API + '/api/listings/verify-deed', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ deed: deed }) })
+        .then(function (r) { return r.json(); }).then(function (res) {
+          btn.disabled = false;
+          if (!res || res.error) throw new Error((res && res.error) || 'Could not check right now.');
+          var m = res.matches || [];
+          if (res.status === 'conflict') {
+            vCard('err', '<strong>Warning: this number is on listings by different people</strong>' +
+              '<p>The same title deed number appears on ' + m.length + ' listings posted by different people. Only one of them can be the real owner, so this can be a sign of fraud.</p>' +
+              m.map(vListing).join('') +
+              '<div class="vc-note"><b>Don’t pay anyone yet.</b> Do an official title search first, and <a href="/contact">tell us</a> so we can look into it.</div>');
+          } else if (res.status === 'match') {
+            vCard('ok', '<strong>This number matches a live NestKey listing</strong>' + m.map(vListing).join('') +
+              '<p>Make sure this is the property you’re being offered, and that you’re dealing with the person shown.</p>' + vNote);
+          } else {
+            vCard('warn', '<strong>No live NestKey listing has this number</strong>' +
+              '<p>That doesn’t mean it’s fake: the seller may not have listed it on NestKey, may not have added the number, or it may have been typed differently. But if a seller told you it’s listed here, be careful.</p>' + vNote);
+          }
+        }).catch(function (err) { btn.disabled = false; vCard('err', '<strong>Couldn’t check</strong><p>' + escapeHtml(err.message) + '</p>'); });
+    });
+    // Support links like /verify?deed=...
+    try { var qd = new URLSearchParams(location.search).get('deed'); if (qd) { $('verify-deed').value = qd; vf.requestSubmit ? vf.requestSubmit() : vf.dispatchEvent(new Event('submit')); } } catch (e) {}
+  }
+
+  // Consent boxes: clear the warning as soon as it's ticked.
+  document.addEventListener('change', function (e) {
+    var box = e.target && e.target.closest && e.target.closest('.consent-box');
+    if (box && e.target.checked) box.classList.remove('need');
+  });
 
   /* ---------------- Services / subscriptions ---------------- */
   if ($('services')) {
@@ -1300,6 +1358,7 @@
       if ($('ag-field-beds')) $('ag-field-beds').style.display = isLand ? 'none' : '';
       if ($('ag-field-baths')) $('ag-field-baths').style.display = isLand ? 'none' : '';
       if ($('ag-field-units')) $('ag-field-units').style.display = isLand ? 'none' : '';
+      if ($('ag-field-deed')) $('ag-field-deed').style.display = isSale ? '' : 'none';
       if ($('ag-field-size')) $('ag-field-size').style.display = isLand ? '' : 'none';
       if ($('ag-field-videos')) $('ag-field-videos').style.display = isLand ? 'none' : '';
       if ($('ag-field-type')) { var ti = $('ag-field-type').querySelector('input'); if (ti) ti.placeholder = isLand ? 'Plot, Farm, Commercial…' : 'Apartment, Maisonette…'; }
@@ -1558,6 +1617,7 @@
       if ($('agent-form-title')) $('agent-form-title').textContent = 'Add a property';
       if ($('agent-submit')) $('agent-submit').textContent = 'Save as draft';
       if ($('agent-cancel')) $('agent-cancel').style.display = 'none';
+      if ($('ag-consent-wrap')) $('ag-consent-wrap').style.display = '';
     }
 
     // Prefill the form with an existing listing so the user can edit it (drafts or published).
@@ -1577,6 +1637,9 @@
       if (f.baths) f.baths.value = l.baths != null ? l.baths : '';
       if ($('ag-roomCount')) $('ag-roomCount').value = l.roomCount != null ? l.roomCount : '';
       if ($('ag-unitsTotal')) $('ag-unitsTotal').value = l.unitsTotal || 1;
+      if ($('ag-deed')) $('ag-deed').value = l.deedNumber || '';
+      // Consent was given when the listing was created.
+      if ($('ag-consent-wrap')) $('ag-consent-wrap').style.display = 'none';
       if (f.description) f.description.value = l.description || '';
       if ($('ag-lat')) $('ag-lat').value = (l.lat != null ? l.lat : '');
       if ($('ag-lng')) $('ag-lng').value = (l.lng != null ? l.lng : '');
@@ -1613,6 +1676,11 @@
       var f = e.target, s = $('agent-status');
       if (f.title.value.trim().length < 4) { s.className = 'status show err'; s.textContent = 'Add a clear title.'; return; }
       var isEdit = !!editId;
+      if (!isEdit && $('ag-consent') && !$('ag-consent').checked) {
+        $('ag-consent').closest('.consent-box').classList.add('need');
+        s.className = 'status show err'; s.textContent = 'Please tick the consent box so we can store your listing.';
+        return;
+      }
       s.className = 'status show info'; s.textContent = isEdit ? 'Saving changes…' : 'Uploading & saving…';
       upFiles($('ag-photos').files).then(function (pf) {
         var isLandDeal = f.deal.value === 'land';
@@ -1631,6 +1699,8 @@
             region: f.region.value, county: f.county ? f.county.value : '', beds: f.beds.value, baths: f.baths.value,
             roomCount: $('ag-roomCount') ? $('ag-roomCount').value : '',
             unitsTotal: (isLandDeal || !$('ag-unitsTotal')) ? 1 : $('ag-unitsTotal').value,
+            deedNumber: ($('ag-deed') && f.deal.value !== 'rent') ? $('ag-deed').value : '',
+            consent: isEdit ? undefined : !!($('ag-consent') && $('ag-consent').checked),
             size: sizeStr, areaAcres: areaAcres,
             lat: $('ag-lat') ? $('ag-lat').value : '', lng: $('ag-lng') ? $('ag-lng').value : '',
             description: f.description.value,
