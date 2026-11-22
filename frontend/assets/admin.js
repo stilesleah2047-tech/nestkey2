@@ -269,7 +269,7 @@
     }
     el.innerHTML = '<table class="cc-table"><thead><tr><th>Property</th><th>Type</th><th>Area</th><th>Status</th><th class="num">Views</th><th class="num">Added</th><th></th></tr></thead><tbody>' +
       rows.map(function (l) {
-        var photo = l.photos && l.photos[0];
+        var photo = l.photos && l.photos[0] && String(l.photos[0]).replace(/\.nk\.jpg$/, '.nk-sm.webp');
         var pill = l.status === 'published' ? '<span class="cc-pill ok">Live</span>' : l.status === 'pending' ? '<span class="cc-pill pending">Pending</span>' :
           l.status === 'draft' ? '<span class="cc-pill draft">Draft</span>' : '<span class="cc-pill bad">' + esc(l.status) + '</span>';
         var acts = (l.status === 'published'
