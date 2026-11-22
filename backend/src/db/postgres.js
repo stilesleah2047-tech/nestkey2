@@ -18,6 +18,8 @@ function row(r) {
     roomCount: r.room_count || 0,
     unitsTotal: r.units_total != null ? r.units_total : 1,
     unitsAvailable: r.units_available != null ? r.units_available : 1,
+    deedNumber: r.deed_number || '',
+    consentAt: r.consent_at || null,
     size: r.size,
     areaAcres: r.area_acres != null ? Number(r.area_acres) : null,
     lat: r.lat != null ? Number(r.lat) : null,
@@ -54,8 +56,9 @@ module.exports = {
   async create(d) {
     const q = `INSERT INTO listings
       (title, deal, type, price, beds, baths, size, area_acres, lat, lng, region, county, location, description, photos, videos, rooms, tier,
-       submitter_name, submitter_phone, submitter_email, owner_id, status, paid, room_count, units_total, units_available)
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27)
+       submitter_name, submitter_phone, submitter_email, owner_id, status, paid, room_count, units_total, units_available,
+       deed_number, deed_key, consent_at)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30)
       RETURNING *`;
     const vals = [
       d.title, d.deal || 'rent', d.type || null, d.price || 0, d.beds || 0, d.baths || 0,
@@ -68,6 +71,7 @@ module.exports = {
       d.roomCount || 0,
       d.unitsTotal || 1,
       d.unitsAvailable != null ? d.unitsAvailable : (d.unitsTotal || 1),
+      d.deedNumber || null, d.deedKey || null, d.consentAt || null,
     ];
     const { rows } = await pool.query(q, vals);
     return row(rows[0]);
@@ -274,6 +278,7 @@ Object.assign(module.exports, {
       description: 'description', size: 'size', areaAcres: 'area_acres', lat: 'lat', lng: 'lng',
       photos: 'photos', videos: 'videos', tier: 'tier',
       unitsTotal: 'units_total', unitsAvailable: 'units_available',
+      deedNumber: 'deed_number', deedKey: 'deed_key',
     };
     const sets = [];
     const vals = [];
@@ -553,5 +558,23 @@ Object.assign(module.exports, {
       [n, listingId, ownerId]
     );
     return rows.length ? { unitsAvailable: rows[0].units_available, unitsTotal: rows[0].units_total } : null;
+  },
+});
+
+// ---------------- Title-deed check ----------------
+Object.assign(module.exports, {
+  // Live listings whose deed matches. Only public facts come back: never the deed itself.
+  async findByDeedKey(key) {
+    if (!key) return [];
+    const { rows } = await pool.query(
+      `SELECT id, title, deal, region, county, location, price, verified, owner_id, submitter_name, created_at
+       FROM listings WHERE deed_key = $1 AND paid = true AND status = 'published'
+       ORDER BY created_at ASC LIMIT 10`, [key]
+    );
+    return rows.map((r) => ({
+      id: String(r.id), title: r.title, deal: r.deal, region: r.region, county: r.county, location: r.location,
+      price: Number(r.price) || 0, verified: !!r.verified, ownerId: r.owner_id ? String(r.owner_id) : null,
+      listerName: r.submitter_name || '', listedAt: r.created_at,
+    }));
   },
 });
