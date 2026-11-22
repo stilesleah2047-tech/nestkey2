@@ -1,5 +1,6 @@
 const path = require('path');
 const express = require('express');
+const { errorHandler } = require('./src/asyncErrors'); // must load before routes run
 const cors = require('cors');
 const config = require('./src/config');
 const db = require('./src/db');
@@ -95,6 +96,9 @@ app.get('/api/config', (_req, res) => res.json({
   roomTypes: require('./src/rooms').ROOM_TYPES,
 }));
 app.get('/api/locations', (_req, res) => res.json(require('./src/locations').COUNTIES));
+
+// Must be the last middleware: turns failed requests into a JSON error instead of a crash.
+app.use(errorHandler);
 
 async function start() {
   await db.init();
