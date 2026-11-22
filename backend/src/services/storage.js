@@ -68,10 +68,13 @@ function publicUrlForKey(key) {
 }
 
 // Save one uploaded file (multer memoryStorage buffer) -> { url, type, key }.
-async function save(file) {
+// `key` may be given by the caller (used to store a photo's full and small copies
+// under matching names); it must be one we generated: never user input.
+async function save(file, key) {
   const mime = String(file.mimetype || '').toLowerCase();
   if (!EXT_BY_MIME[mime]) throw new Error('Unsupported file type');
-  const key = keyFor(mime);
+  if (key && !/^[0-9]+-[0-9a-f]{16}\.nk(-sm)?\.(jpg|webp)$/.test(key)) throw new Error('Bad storage key');
+  key = key || keyFor(mime);
   const type = /^video\//.test(mime) ? 'video' : 'image';
   if (useS3) {
     await s3.send(new PutObjectCommand({
@@ -90,4 +93,7 @@ async function save(file) {
   return { url: publicUrlForKey(key), type, key };
 }
 
-module.exports = { save, useS3, EXT_BY_MIME };
+// A fresh random base name for a processed photo: <base>.nk.jpg and <base>.nk-sm.webp
+function newPhotoBase() { return Date.now() + '-' + crypto.randomBytes(8).toString('hex'); }
+
+module.exports = { save, useS3, EXT_BY_MIME, newPhotoBase };
