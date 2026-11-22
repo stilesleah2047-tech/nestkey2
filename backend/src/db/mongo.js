@@ -11,6 +11,9 @@ const listingSchema = new mongoose.Schema({
   roomCount: { type: Number, default: 0 },
   unitsTotal: { type: Number, default: 1 },
   unitsAvailable: { type: Number, default: 1 },
+  deedNumber: String,
+  deedKey: { type: String, index: true },
+  consentAt: Date,
   size: String,
   region: String,
   county: String,
@@ -50,6 +53,7 @@ function out(d) {
     title: o.title, deal: o.deal, type: o.type, price: o.price || 0,
     beds: o.beds || 0, baths: o.baths || 0, roomCount: o.roomCount || 0, size: o.size,
     unitsTotal: o.unitsTotal != null ? o.unitsTotal : 1, unitsAvailable: o.unitsAvailable != null ? o.unitsAvailable : 1,
+    deedNumber: o.deedNumber || '', consentAt: o.consentAt || null,
     region: o.region, county: o.county, areaAcres: o.areaAcres, lat: o.lat != null ? o.lat : null, lng: o.lng != null ? o.lng : null, location: o.location, description: o.description,
     photos: o.photos || [], status: o.status, paid: o.paid, amount: o.amount || 0,
     videos: o.videos || [], rooms: o.rooms || [], tier: o.tier || 'standard', featured: !!o.featured, verified: !!o.verified,
@@ -73,6 +77,7 @@ module.exports = {
       videos: d.videos || [], rooms: d.rooms || [], tier: d.tier === 'showcase' ? 'showcase' : 'standard',
       ownerId: d.ownerId || null,
       unitsTotal: d.unitsTotal || 1, unitsAvailable: d.unitsAvailable != null ? d.unitsAvailable : (d.unitsTotal || 1),
+      deedNumber: d.deedNumber || undefined, deedKey: d.deedKey || undefined, consentAt: d.consentAt || undefined,
       submitter: d.submitter || {}, status: d.status || 'pending', paid: d.paid != null ? d.paid : false,
     });
     return out(doc);
@@ -248,7 +253,7 @@ Object.assign(module.exports, {
   async setListingFlags(id, { featured, verified }) { await Listing.findByIdAndUpdate(id, { featured: !!featured, verified: !!verified }); },
   async updateOwned(id, ownerId, f) {
     if (!mongoose.isValidObjectId(id)) return;
-    const allow = ['title', 'deal', 'type', 'price', 'beds', 'baths', 'roomCount', 'region', 'county', 'location', 'description', 'size', 'areaAcres', 'lat', 'lng', 'photos', 'videos', 'tier', 'unitsTotal', 'unitsAvailable'];
+    const allow = ['title', 'deal', 'type', 'price', 'beds', 'baths', 'roomCount', 'region', 'county', 'location', 'description', 'size', 'areaAcres', 'lat', 'lng', 'photos', 'videos', 'tier', 'unitsTotal', 'unitsAvailable', 'deedNumber', 'deedKey'];
     const upd = {};
     allow.forEach((k) => { if (f[k] !== undefined) upd[k] = f[k]; });
     if (!Object.keys(upd).length) return;
@@ -487,5 +492,18 @@ Object.assign(module.exports, {
     const v = Math.max(0, Math.min(total, n));
     await Listing.updateOne({ _id: listingId }, { $set: { unitsAvailable: v } });
     return { unitsAvailable: v, unitsTotal: total };
+  },
+});
+
+// ---------------- Title-deed check ----------------
+Object.assign(module.exports, {
+  async findByDeedKey(key) {
+    if (!key) return [];
+    const docs = await Listing.find({ deedKey: key, paid: true, status: 'published' }).sort({ createdAt: 1 }).limit(10);
+    return docs.map((o) => ({
+      id: String(o._id), title: o.title, deal: o.deal, region: o.region, county: o.county, location: o.location,
+      price: o.price || 0, verified: !!o.verified, ownerId: o.ownerId ? String(o.ownerId) : null,
+      listerName: (o.submitter && o.submitter.name) || '', listedAt: o.createdAt,
+    }));
   },
 });
