@@ -95,6 +95,7 @@
         <div class="field" id="field-beds"><label id="beds-label">Bedrooms</label><input name="beds" id="beds" type="number" min="0" placeholder="1"></div>
         <div class="field" id="field-baths"><label>Bathrooms</label><input name="baths" type="number" min="0" placeholder="1"></div>
         <div class="field" id="field-rooms"><label>General rooms (total)</label><input name="roomCount" id="roomCount" type="number" min="0" placeholder="e.g. 8"><small class="hint">Total number of rooms in the whole property (all spaces, not just bedrooms).</small></div>
+        <div class="field full" id="field-deed" style="display:none"><label for="p-deed">Title deed / parcel number <span class="opt">(private)</span></label><input id="p-deed" autocomplete="off" placeholder="e.g. NAIROBI/BLOCK 123/456"><small class="hint">Never shown on your listing. Buyers who already have the number from you can type it on our <a href="/verify" target="_blank" rel="noopener">Verify a deed</a> page to check it matches this listing.</small></div>
         <div class="field" id="field-size" style="display:none"><label>Plot size</label>
           <div style="display:flex;gap:8px">
             <input id="p-size-value" type="number" min="0" step="0.01" placeholder="e.g. 2" style="flex:1">
@@ -136,6 +137,8 @@
         <div class="field"><label>Your email</label><input name="email" type="email" placeholder="you@email.com"></div>
         <div class="field full"><label id="phone-label">Phone / WhatsApp number *</label><input name="phone" id="phone" placeholder="07xx xxx xxx" required inputmode="tel" autocomplete="tel"></div>
       </div>
+
+      <label class="consent-box"><input type="checkbox" id="p-consent"> <span>I consent to NestKey storing this listing, including the property&rsquo;s details and location, on secure servers outside Kenya so it can be shown to house hunters. See <a href="/privacy#transfers" target="_blank" rel="noopener">how we protect it</a>. You can delete the listing at any time.</span></label>
 
       <div class="fee-box">
         <div class="sub" id="fee-caption">Listing fee — one-off, pay securely with M-Pesa, card or bank via Pesapal</div>
