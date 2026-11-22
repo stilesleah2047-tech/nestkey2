@@ -9,6 +9,10 @@ const { optionalAuth } = require('../auth');
 
 const enquireLimit = rateLimit({ windowMs: 10 * 60 * 1000, max: 8, message: 'You have sent several enquiries. Please wait a few minutes.' });
 const createLimit = rateLimit({ windowMs: 60 * 60 * 1000, max: 20 });
+const bookLimit = rateLimit({ windowMs: 60 * 60 * 1000, max: 6, message: 'You have sent several booking requests. Please wait a while before booking again.' });
+
+// How many identical units a listing covers (1 = a single house). Capped to keep fees sane.
+function unitsFrom(v) { return Math.min(500, Math.max(1, parseInt(v, 10) || 1)); }
 
 const router = express.Router();
 
@@ -89,6 +93,35 @@ router.post('/:id/enquire', enquireLimit, async (req, res) => {
   }
 });
 
+// POST /api/listings/:id/book  { name, phone, moveIn, note }
+// A house hunter asks to take a unit. The publisher is told straight away and
+// confirms or declines from their dashboard; the available count only drops when
+// they confirm.
+router.post('/:id/book', bookLimit, optionalAuth, async (req, res) => {
+  try {
+    const l = await db.getById(req.params.id);
+    if (!l || !l.paid || l.status !== 'published') return res.status(404).json({ error: 'This property is no longer available.' });
+    if ((l.unitsAvailable != null ? l.unitsAvailable : 1) <= 0) return res.status(409).json({ error: 'Sorry, every unit here has been taken.' });
+    const b = req.body || {};
+    const name = String(b.name || '').trim().slice(0, 120);
+    const phone = String(b.phone || '').trim().slice(0, 20);
+    if (name.length < 2) return res.status(400).json({ error: 'Please add your name.' });
+    if (phone.replace(/\D/g, '').length < 9) return res.status(400).json({ error: 'Add your phone number so the publisher can reach you.' });
+    const moveIn = /^\d{4}-\d{2}-\d{2}$/.test(String(b.moveIn || '')) ? String(b.moveIn) : '';
+    const booking = await db.createBooking({
+      listingId: l.id, ownerId: l.ownerId, userId: req.user ? req.user.id : null,
+      name, phone, moveIn, note: b.note ? String(b.note).slice(0, 1000) : '',
+    });
+    const events = require('../events');
+    if (l.ownerId) events.emit('booking.created', { id: booking.id, listingId: l.id, title: l.title, name, phone }, l.ownerId);
+    events.emitAdmin('activity', { kind: 'lead', at: new Date(), text: 'Booking request: ' + l.title + ' — ' + name });
+    res.status(201).json({ ok: true, id: booking.id });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Could not send your booking. Please try again.' });
+  }
+});
+
 // POST /api/listings — create a pending (unpaid) listing
 router.post('/', createLimit, optionalAuth, async (req, res) => {
   try {
@@ -141,6 +174,8 @@ router.post('/', createLimit, optionalAuth, async (req, res) => {
       videos: cleanMedia(b.videos, 6),
       rooms: rooms,
       tier: tier,
+      // Land is charged by size, so it's always one listing = one plot.
+      unitsTotal: b.deal === 'land' ? 1 : unitsFrom(b.unitsTotal),
       // Link the listing to the signed-in account so it shows in their dashboard.
       ownerId: req.user ? req.user.id : null,
       submitter: {
