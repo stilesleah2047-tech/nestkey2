@@ -150,3 +150,27 @@ CREATE TABLE IF NOT EXISTS favourites (
   created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
   PRIMARY KEY (user_id, listing_id)
 );
+
+-- ---- Multi-unit listings (e.g. a block of identical bedsitters) ----
+-- units_total: how many identical units this listing covers (1 = a single house).
+-- units_available: how many are still free. It only goes down when the publisher
+-- confirms a booking (or adjusts it by hand in their dashboard).
+ALTER TABLE listings ADD COLUMN IF NOT EXISTS units_total INTEGER NOT NULL DEFAULT 1;
+ALTER TABLE listings ADD COLUMN IF NOT EXISTS units_available INTEGER NOT NULL DEFAULT 1;
+
+-- ---- Bookings: a house hunter asks to take a unit; the publisher confirms or declines ----
+CREATE TABLE IF NOT EXISTS bookings (
+  id          BIGSERIAL PRIMARY KEY,
+  listing_id  BIGINT NOT NULL,
+  owner_id    BIGINT,
+  user_id     BIGINT,
+  name        TEXT,
+  phone       TEXT,
+  move_in     TEXT,
+  note        TEXT,
+  status      TEXT NOT NULL DEFAULT 'pending',
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+  decided_at  TIMESTAMPTZ
+);
+CREATE INDEX IF NOT EXISTS idx_bookings_owner ON bookings (owner_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_bookings_listing ON bookings (listing_id, status);
