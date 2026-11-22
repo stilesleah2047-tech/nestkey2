@@ -117,7 +117,7 @@
       op.innerHTML = !top.length ? '<p class="empty">No properties yet. <button type="button" class="link-btn" data-tab="add">Add your first one</button></p>' :
         top.map(function (l) {
           return '<button type="button" class="ov-item" data-tab="properties">' +
-            '<span class="ov-thumb">' + (l.photos && l.photos[0] ? '<img src="' + esc(l.photos[0]) + '" alt="" loading="lazy">' : '') + '</span>' +
+            '<span class="ov-thumb">' + (l.photos && l.photos[0] ? '<img src="' + esc(String(l.photos[0]).replace(/\.nk\.jpg$/, '.nk-sm.webp')) + '" alt="" loading="lazy">' : '') + '</span>' +
             '<span class="ov-main"><strong>' + esc(l.title) + '</strong><span>' + (l.status === 'published' ? 'Published' : 'Draft') + ' · ' + esc(l.region || '') + '</span></span>' +
             '<span class="ov-side"><strong>' + (l.views || 0) + '</strong> views</span></button>';
         }).join('');
