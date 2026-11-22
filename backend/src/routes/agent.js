@@ -8,6 +8,7 @@ const { parsePrice } = require('../price');
 const pesapal = require('../services/pesapal');
 const events = require('../events');
 const { cleanMedia } = require('../media');
+const { deedKey, cleanDeed } = require('../deed');
 
 const router = express.Router();
 router.use(requireAuth);
@@ -43,6 +44,8 @@ router.post('/listings', async (req, res) => {
   try {
     const b = req.body || {};
     if (!b.title || String(b.title).trim().length < 4) return res.status(400).json({ error: 'Please give the listing a clear title.' });
+    if (b.consent !== true) return res.status(400).json({ error: 'Please tick the consent box so we can store your listing.' });
+    const isSaleDeal = b.deal === 'sale' || b.deal === 'land';
 
     let rooms = [];
     if (Array.isArray(b.rooms)) {
@@ -75,6 +78,9 @@ router.post('/listings', async (req, res) => {
       photos, videos: cleanMedia(b.videos, 6), rooms,
       tier: b.tier === 'showcase' ? 'showcase' : 'standard',
       unitsTotal: Math.min(500, Math.max(1, parseInt(b.unitsTotal, 10) || 1)),
+      deedNumber: isSaleDeal ? cleanDeed(b.deedNumber) : '',
+      deedKey: isSaleDeal ? deedKey(b.deedNumber) : '',
+      consentAt: new Date(),
       submitter: { name: req.user.name, phone: b.phone, email: req.user.email },
       ownerId: req.user.id, status: 'draft', paid: true,
     });
@@ -110,6 +116,12 @@ router.put('/listings/:id', async (req, res) => {
   if (Array.isArray(b.photos) && cleanMedia(b.photos, 12).length) f.photos = cleanMedia(b.photos, 12);
   if (Array.isArray(b.videos) && cleanMedia(b.videos, 6).length) f.videos = cleanMedia(b.videos, 6);
   if (b.tier === 'standard' || b.tier === 'showcase') f.tier = b.tier;
+  if (b.deedNumber != null) {
+    const deal = f.deal || l.deal;
+    const sale = deal === 'sale' || deal === 'land';
+    f.deedNumber = sale ? cleanDeed(b.deedNumber) : '';
+    f.deedKey = (sale && deedKey(b.deedNumber)) || null;
+  }
   if (b.unitsTotal != null && b.unitsTotal !== '') {
     const total = Math.min(500, Math.max(1, parseInt(b.unitsTotal, 10) || 1));
     const oldTotal = l.unitsTotal || 1;
