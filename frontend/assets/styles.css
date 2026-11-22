@@ -482,3 +482,18 @@ h1.detail-title { font-size: 1.5rem; line-height: 1.25; margin: 6px 0 8px; }
 .plan.plan-free .price small { font-size: .9rem; }
 .plan a.btn { display: block; text-align: center; text-decoration: none; }
 .soon-badge { display: inline-block; margin-left: 6px; padding: 2px 8px; border-radius: 999px; background: #FFF4D6; color: #8A5A00; font-size: .72rem; font-weight: 700; vertical-align: middle; letter-spacing: .02em; }
+
+/* Consent checkbox on posting forms */
+.consent-box { display: flex; gap: 10px; align-items: flex-start; margin: 18px 0 4px; padding: 12px 14px; border: 1px solid var(--line, #e3e8ec); border-radius: 12px; background: #f7fafb; font-size: .88rem; line-height: 1.5; color: #33444f; cursor: pointer; }
+.consent-box input { width: 18px; height: 18px; margin: 2px 0 0; flex: none; accent-color: #0E9384; cursor: pointer; }
+.consent-box a { color: #0B7A6E; font-weight: 700; }
+.consent-box.need { border-color: #e0a3a0; background: #fdf4f4; }
+label .opt { font-weight: 500; color: #6b7b85; }
+
+/* Legal pages: summary box */
+.legal-summary { background: #f2f9f8; border: 1px solid #cfe9e5; border-radius: 14px; padding: 4px 20px 8px; margin: 18px 0 8px; }
+.legal-summary h2 { margin-top: 14px; }
+.legal ul ul { margin-top: 6px; }
+.legal code { font-size: .86rem; background: #f1f4f6; padding: 1px 6px; border-radius: 6px; }
+@media (max-width: 640px) { .legal-table { display: block; overflow-x: auto; } }
+.form .consent-box, .consent-box span { font-weight: 500; }
