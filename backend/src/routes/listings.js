@@ -6,9 +6,11 @@ const { parsePrice } = require('../price');
 const { cleanMedia } = require('../media');
 const { rateLimit } = require('../ratelimit');
 const { optionalAuth } = require('../auth');
+const { deedKey, cleanDeed } = require('../deed');
 
 const enquireLimit = rateLimit({ windowMs: 10 * 60 * 1000, max: 8, message: 'You have sent several enquiries. Please wait a few minutes.' });
 const createLimit = rateLimit({ windowMs: 60 * 60 * 1000, max: 20 });
+const deedLimit = rateLimit({ windowMs: 60 * 60 * 1000, max: 20, message: 'Too many deed checks. Please try again in an hour.' });
 const bookLimit = rateLimit({ windowMs: 60 * 60 * 1000, max: 6, message: 'You have sent several booking requests. Please wait a while before booking again.' });
 
 // How many identical units a listing covers (1 = a single house). Capped to keep fees sane.
@@ -20,7 +22,8 @@ const router = express.Router();
 // (The public API used to expose the lister's email, M-Pesa checkout id and receipt.)
 function publicListing(l) {
   if (!l) return l;
-  const { checkoutId, receipt, amount, payError, ...rest } = l;
+  // deedNumber is private (property details are sensitive personal data); consentAt is internal.
+  const { checkoutId, receipt, amount, payError, deedNumber, deedKey: _dk, consentAt, ...rest } = l;
   rest.submitter = { name: (l.submitter && l.submitter.name) || '', phone: (l.submitter && l.submitter.phone) || '' };
   return rest;
 }
@@ -55,6 +58,29 @@ router.get('/regions', async (_req, res) => {
     res.json(await db.regions());
   } catch (e) {
     res.status(500).json({ error: 'Could not load regions' });
+  }
+});
+
+// POST /api/listings/verify-deed  { deed } — does this title-deed number belong to a live listing?
+// Answers with public facts only (title, area, who listed it); never reveals any deed number.
+router.post('/verify-deed', deedLimit, async (req, res) => {
+  try {
+    const key = deedKey((req.body || {}).deed);
+    if (!key) return res.status(400).json({ error: 'Type the full title deed or parcel number.' });
+    const rows = await db.findByDeedKey(key);
+    const listers = new Set(rows.map((r) => r.ownerId || ('name:' + String(r.listerName).trim().toLowerCase())));
+    const status = !rows.length ? 'none' : (listers.size > 1 ? 'conflict' : 'match');
+    res.json({
+      status,
+      matches: rows.map((r) => ({
+        id: r.id, title: r.title, deal: r.deal, price: r.price,
+        place: [r.location || r.region, r.county].filter((x, i, a) => x && a.indexOf(x) === i).join(', '),
+        listerName: r.listerName, verified: r.verified, listedAt: r.listedAt,
+      })),
+    });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Could not check right now. Please try again.' });
   }
 });
 
@@ -133,6 +159,12 @@ router.post('/', createLimit, optionalAuth, async (req, res) => {
     if (String(b.phone || '').replace(/\D/g, '').length < 9) {
       return res.status(400).json({ error: 'Please add a phone / WhatsApp number so hunters can reach you.' });
     }
+    // Property details are sensitive personal data, and our servers are outside Kenya,
+    // so the lister's express consent is required (Data Protection Act s.49).
+    if (b.consent !== true) {
+      return res.status(400).json({ error: 'Please tick the consent box so we can store your listing.' });
+    }
+    const isSaleDeal = b.deal === 'sale' || b.deal === 'land';
     // Sanitize + auto-order rooms into a canonical walk-through.
     var rooms = [];
     if (Array.isArray(b.rooms)) {
@@ -176,6 +208,9 @@ router.post('/', createLimit, optionalAuth, async (req, res) => {
       tier: tier,
       // Land is charged by size, so it's always one listing = one plot.
       unitsTotal: b.deal === 'land' ? 1 : unitsFrom(b.unitsTotal),
+      deedNumber: isSaleDeal ? cleanDeed(b.deedNumber) : '',
+      deedKey: isSaleDeal ? deedKey(b.deedNumber) : '',
+      consentAt: new Date(),
       // Link the listing to the signed-in account so it shows in their dashboard.
       ownerId: req.user ? req.user.id : null,
       submitter: {
