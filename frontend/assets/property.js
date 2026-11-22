@@ -25,7 +25,22 @@
     bed: SVG('<path d="M3 18v-6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6M3 18h18M3 14h18M7 10V7h4v3"/>'),
     bath: SVG('<path d="M4 12h16v3a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4zM6 12V5a2 2 0 0 1 4 0"/>'),
     home: SVG('<path d="M3 11.5 12 4l9 7.5M5 10v10h14V10"/>'),
+    book: SVG('<rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4M9 15l2 2 4-4"/>'),
   };
+
+  // Units: a single house is 1 of 1. A block of identical flats is e.g. 6 of 20.
+  function unitsOf(l) {
+    var total = Math.max(1, Number(l.unitsTotal) || 1);
+    var left = l.unitsAvailable == null ? total : Math.max(0, Number(l.unitsAvailable) || 0);
+    return { total: total, left: left, multi: total > 1 };
+  }
+  function bookLabel(l) {
+    var u = unitsOf(l);
+    if (l.deal === 'land') return 'Book this plot';
+    if (l.deal === 'sale') return u.multi ? 'Book a unit' : 'Book this property';
+    return u.multi ? 'Book a unit' : 'Book this house';
+  }
+  function takenLabel(l) { return l.deal === 'rent' ? (unitsOf(l).multi ? 'Fully let' : 'Taken') : 'Sold out'; }
 
   // ---- Saved homes (same storage as the browse page) ----
   var favs = [];
@@ -94,7 +109,9 @@
       }).join('') + (gallery.length > 1 ? '<button type="button" class="pp-all" data-lbx="0">' + IC.grid + 'Show all ' + gallery.length + ' photos</button>' : '') + '</div>';
     } else g = '<div class="pp-nophoto">No photos yet</div>';
 
-    var tags = '<span class="pp-tag">' + deal + '</span>' + (l.verified ? '<span class="pp-tag">✓ Verified</span>' : '') +
+    var u = unitsOf(l);
+    var tags = '<span class="pp-tag">' + deal + '</span>' +
+      (u.left === 0 ? '<span class="pp-tag gone">' + takenLabel(l) + '</span>' : (u.multi ? '<span class="pp-tag gold">' + u.left + ' of ' + u.total + ' units left</span>' : '')) + (l.verified ? '<span class="pp-tag">✓ Verified</span>' : '') +
       (l.featured ? '<span class="pp-tag gold">Featured</span>' : '') + (l.tier === 'showcase' ? '<span class="pp-tag navy">Video tour</span>' : '');
     var saved = favs.indexOf(String(l.id)) > -1;
     var top = '<div class="pp-top"><div><h1>' + esc(l.title) + '</h1>' +
@@ -109,6 +126,7 @@
       if (l.beds != null && l.beds !== '') facts.push(['Bedrooms', Number(l.beds) === 0 ? 'Studio / bedsitter' : l.beds]);
       if (l.baths) facts.push(['Bathrooms', l.baths]);
       if (l.roomCount) facts.push(['Rooms in total', l.roomCount]);
+      if (u.multi) facts.push(['Units', u.left + ' of ' + u.total + ' available']);
     }
     if (l.size) facts.push(['Plot size', esc(l.size)]);
     if (place) facts.push(['Location', esc(place)]);
@@ -144,6 +162,12 @@
     var wa = waNumber(phone);
     var waText = 'Hi' + (l.submitter && l.submitter.name ? ' ' + String(l.submitter.name).split(' ')[0] : '') + ', I saw your listing "' + l.title + '" on NestKey. Is it still available?';
     var waHref = wa ? 'https://wa.me/' + wa + '?text=' + encodeURIComponent(waText) : '';
+    var bookBtn = u.left > 0
+      ? '<button type="button" class="btn pp-book" id="pp-book">' + IC.book + bookLabel(l) + '</button>'
+      : '<button type="button" class="btn pp-book" disabled>' + takenLabel(l) + '</button>';
+    var availLine = u.left === 0
+      ? '<div class="pp-avail none">No units free right now. Save it and check back.</div>'
+      : (u.multi ? '<div class="pp-avail"><span class="pp-avail-bar"><i style="width:' + Math.round(u.left / u.total * 100) + '%"></i></span>' + u.left + ' of ' + u.total + ' identical units available</div>' : '');
     var acts = '';
     if (wa) acts += '<a class="btn wa" target="_blank" rel="noopener" href="' + waHref + '">' + IC.wa + 'WhatsApp</a>';
     if (phone) acts += '<a class="btn ghost" href="tel:' + esc(telNumber(phone)) + '">' + IC.phone + 'Call</a>';
@@ -152,7 +176,8 @@
       ? 'Before paying for land or a house, <a href="/verify">verify the title deed</a> and visit with your own lawyer.'
       : 'Never send a deposit before you’ve viewed the house in person. <a href="/blog-avoid-rental-scams-kenya">How to avoid rental scams</a>';
     var card = '<aside class="pp-side"><div class="pp-card" id="contact">' +
-      '<div class="pp-price">' + money(l.price) + per + '</div><div class="pp-deal">' + deal + (l.type ? ' · ' + esc(l.type) : '') + '</div>' +
+      '<div class="pp-price">' + money(l.price) + per + (u.multi ? '<small> per unit</small>' : '') + '</div><div class="pp-deal">' + deal + (l.type ? ' · ' + esc(l.type) : '') + '</div>' +
+      availLine + bookBtn +
       '<div class="pp-owner"><div class="pp-avatar" aria-hidden="true">' + esc(String(owner).charAt(0).toUpperCase()) + '</div><div><strong>Listed by ' + esc(owner) + '</strong><span>Contact them directly. NestKey doesn’t charge you a viewing fee.</span></div></div>' +
       (acts ? '<div class="pp-actions">' + acts + '</div>' : '') +
       '<div class="pp-form"><h3>Send an enquiry</h3>' +
@@ -167,7 +192,10 @@
     // Phone bar
     var bar = $('pp-bar');
     bar.innerHTML = '<div class="pp-bar-price">' + money(l.price) + per + '</div>' +
-      (wa ? '<a class="btn wa" target="_blank" rel="noopener" href="' + waHref + '">' + IC.wa + 'WhatsApp</a>' : '') +
+      (u.left > 0 ? '<button type="button" class="btn pp-book" id="pp-book-bar">' + IC.book + 'Book</button>' : '') +
+      (wa ? (u.left > 0
+        ? '<a class="btn wa icon-only" target="_blank" rel="noopener" href="' + waHref + '" aria-label="WhatsApp ' + esc(owner) + '">' + IC.wa + '</a>'
+        : '<a class="btn wa" target="_blank" rel="noopener" href="' + waHref + '">' + IC.wa + 'WhatsApp</a>') : '') +
       (phone ? '<a class="btn ghost" href="tel:' + esc(telNumber(phone)) + '" aria-label="Call ' + esc(owner) + '">' + IC.phone + '</a>' : '<a class="btn" href="#contact">Enquire</a>');
     bar.hidden = false;
 
@@ -202,6 +230,7 @@
         }).catch(function (err) { st.className = 'status show err'; st.textContent = err.message || 'Could not send. Please try again.'; });
     });
     if ($('pay-house')) $('pay-house').addEventListener('click', function () { payFlow(l); });
+    ['pp-book', 'pp-book-bar'].forEach(function (bid) { if ($(bid)) $(bid).addEventListener('click', function () { bookFlow(l); }); });
 
     if (hasGeo && window.L) {
       setTimeout(function () {
@@ -212,6 +241,55 @@
         } catch (e) {}
       }, 120);
     }
+  }
+
+  // Book: the hunter asks to take a unit. The publisher is alerted at once and
+  // confirms from their dashboard; only then does the available count go down.
+  function bookFlow(l) {
+    var me = null; try { me = JSON.parse(localStorage.getItem('hh_user') || 'null'); } catch (e) {}
+    var owner = (l.submitter && l.submitter.name) || 'The publisher';
+    var first = String(owner).split(' ')[0];
+    var isRent = l.deal === 'rent';
+    var today = new Date(); today.setMinutes(today.getMinutes() - today.getTimezoneOffset());
+    var minDate = today.toISOString().slice(0, 10);
+    var ov = document.createElement('div'); ov.className = 'sub-modal open'; ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'true'); ov.setAttribute('aria-label', bookLabel(l));
+    ov.innerHTML = '<div class="sub-card bk-card">' +
+      '<h3>' + bookLabel(l) + '</h3><p class="plan-line">' + esc(l.title) + '</p>' +
+      '<p class="bk-how">' + esc(first) + ' gets your request straight away and will call or WhatsApp you to confirm. Nothing is paid on NestKey.</p>' +
+      '<label for="bk-name">Your name</label><input id="bk-name" autocomplete="name" value="' + esc(me && me.name ? me.name : '') + '">' +
+      '<label for="bk-phone">Your phone / WhatsApp</label><input id="bk-phone" inputmode="tel" autocomplete="tel" placeholder="07xx xxx xxx" value="' + esc(me && me.phone ? me.phone : '') + '">' +
+      '<label for="bk-date">' + (isRent ? 'When would you like to move in?' : 'When can you view it?') + ' <span class="bk-opt">(optional)</span></label><input id="bk-date" type="date" min="' + minDate + '">' +
+      '<label for="bk-note">Anything to add? <span class="bk-opt">(optional)</span></label><textarea id="bk-note" rows="3" placeholder="' + (isRent ? 'e.g. I’d like a ground-floor unit' : 'e.g. I’d like to view on Saturday morning') + '"></textarea>' +
+      '<div class="status" id="bk-status"></div>' +
+      '<div class="sub-actions"><button type="button" class="btn ghost" id="bk-cancel">Cancel</button><button type="button" class="btn block" id="bk-send">Send booking</button></div></div>';
+    document.body.appendChild(ov);
+    var close = function () { ov.remove(); document.removeEventListener('keydown', onKey); };
+    var onKey = function (e) { if (e.key === 'Escape') close(); };
+    document.addEventListener('keydown', onKey);
+    ov.addEventListener('click', function (e) { if (e.target === ov) close(); });
+    ov.querySelector('#bk-cancel').onclick = close;
+    setTimeout(function () { var f = ov.querySelector(me && me.name ? '#bk-phone' : '#bk-name'); if (f) f.focus(); }, 30);
+    ov.querySelector('#bk-send').onclick = function () {
+      var st = ov.querySelector('#bk-status'), btn = ov.querySelector('#bk-send');
+      var name = ov.querySelector('#bk-name').value.trim(), phone = ov.querySelector('#bk-phone').value.trim();
+      if (name.length < 2) { st.className = 'status show err'; st.textContent = 'Please add your name.'; return; }
+      if (phone.replace(/\D/g, '').length < 9) { st.className = 'status show err'; st.textContent = 'Add your phone number so ' + first + ' can reach you.'; return; }
+      btn.disabled = true; st.className = 'status show info'; st.textContent = 'Sending…';
+      var headers = { 'Content-Type': 'application/json' }; var t = token(); if (t) headers.Authorization = 'Bearer ' + t;
+      var moveIn = ov.querySelector('#bk-date').value, note = ov.querySelector('#bk-note').value;
+      fetch(API + '/api/listings/' + l.id + '/book', { method: 'POST', headers: headers, body: JSON.stringify({ name: name, phone: phone, moveIn: moveIn, note: note }) })
+        .then(function (r) { return r.json(); }).then(function (res) {
+          if (!res || res.error) throw new Error(res && res.error ? res.error : 'Could not send');
+          var wa = waNumber(l.submitter && l.submitter.phone);
+          var msg = 'Hi ' + first + ', I just booked "' + l.title + '" on NestKey. My name is ' + name + (moveIn ? ' and I’d like to ' + (isRent ? 'move in on ' : 'view it on ') + moveIn : '') + '. Please confirm.';
+          ov.querySelector('.bk-card').innerHTML = '<div class="bk-done"><div class="bk-tick" aria-hidden="true">' + SVG('<path d="M5 12l5 5L20 7"/>') + '</div>' +
+            '<h3>Booking sent</h3><p>' + esc(first) + ' has been notified and will contact you on <strong>' + esc(phone) + '</strong> to confirm.</p>' +
+            '<p class="bk-how">Don’t pay any deposit until you’ve viewed the house in person.</p>' +
+            (wa ? '<a class="btn wa block" target="_blank" rel="noopener" href="https://wa.me/' + wa + '?text=' + encodeURIComponent(msg) + '">' + IC.wa + 'Also message ' + esc(first) + ' on WhatsApp</a>' : '') +
+            '<button type="button" class="btn ghost block" id="bk-close">Done</button></div>';
+          ov.querySelector('#bk-close').onclick = close;
+        }).catch(function (err) { btn.disabled = false; st.className = 'status show err'; st.textContent = err.message || 'Could not send. Please try again.'; });
+    };
   }
 
   // Buyer pays the seller directly; we record it (same flow as before).
