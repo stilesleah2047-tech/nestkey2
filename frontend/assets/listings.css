@@ -249,3 +249,36 @@
   .page-browse .toolbar #sort { width: 162px; }
   .page-browse .toolbar .price { width: 96px; flex: none; }
 }
+
+/* ---------- Units + booking ---------- */
+.pp-tag.gone { background: #FDECEC; color: #B3261E; }
+.lc-badge.units { background: var(--l-gold); color: var(--l-navy); }
+.pp-avail { display: flex; align-items: center; gap: 10px; margin: 12px 0 0; font-size: .86rem; font-weight: 700; color: var(--l-teal-dkr); }
+.pp-avail.none { color: #B3261E; font-weight: 600; }
+.pp-avail-bar { flex: 0 0 72px; height: 8px; border-radius: 999px; background: var(--l-tint); overflow: hidden; }
+.pp-avail-bar i { display: block; height: 100%; border-radius: 999px; background: var(--l-teal); }
+.page-property .btn.pp-book { width: 100%; justify-content: center; margin-top: 14px; padding: 14px 18px; font-size: 1rem; background: var(--l-navy); }
+.page-property .btn.pp-book:hover { background: #16314a; }
+.page-property .btn.pp-book svg { width: 20px; height: 20px; }
+.page-property .btn.pp-book[disabled] { background: #E9EEF0; color: var(--l-muted); cursor: not-allowed; }
+.pp-bar .btn.pp-book { width: auto; margin: 0; padding: 10px 16px; font-size: .9rem; }
+
+.bk-card { max-height: calc(100vh - 40px); overflow-y: auto; font-family: "Plus Jakarta Sans", -apple-system, "Segoe UI", Roboto, sans-serif; }
+.bk-card .plan-line { margin-bottom: 10px; font-weight: 600; }
+.bk-card textarea { width: 100%; box-sizing: border-box; padding: 12px 14px; border: 1px solid var(--line, #E6ECEC); border-radius: 10px; font: inherit; margin-bottom: 14px; resize: vertical; }
+.bk-card input:focus, .bk-card textarea:focus { outline: none; border-color: var(--l-teal); box-shadow: 0 0 0 3px rgba(15,181,166,.15); }
+.bk-how { margin: 0 0 16px; padding: 10px 12px; border-radius: 10px; background: var(--l-tint, #E7F6F4); color: var(--l-teal-dkr, #0B7A6E); font-size: .85rem; line-height: 1.45; }
+.bk-opt { font-weight: 500; color: var(--l-muted, #5B6B73); }
+.bk-card .status { margin: 0 0 12px; }
+.bk-card .sub-actions .btn { justify-content: center; }
+.bk-done { text-align: center; }
+.bk-done h3 { margin: 6px 0 6px; font-size: 1.25rem; }
+.bk-done p { color: var(--l-ink, #0F2430); line-height: 1.5; margin: 0 0 14px; }
+.bk-done .bk-how { text-align: left; }
+.bk-done .btn { margin-top: 8px; justify-content: center; }
+.bk-done .btn.wa { background: #1FA855; }
+.bk-done .btn.wa:hover { background: #178A45; }
+.bk-done .btn svg { width: 18px; height: 18px; }
+.bk-tick { width: 56px; height: 56px; margin: 0 auto 4px; border-radius: 50%; background: var(--l-teal-dk, #0E9384); color: #fff; display: grid; place-items: center; }
+.bk-tick svg { width: 28px; height: 28px; stroke-width: 3; }
+.pp-bar .btn.icon-only { padding: 10px 12px; }
