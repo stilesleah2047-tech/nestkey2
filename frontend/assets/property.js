@@ -10,6 +10,7 @@
   function money(n) { return 'KSh ' + Number(n || 0).toLocaleString('en-KE'); }
   function $(i) { return document.getElementById(i); }
   function waNumber(p) { var d = String(p || '').replace(/\D/g, ''); if (/^0\d{9}$/.test(d)) d = '254' + d.slice(1); else if (/^[71]\d{8}$/.test(d)) d = '254' + d; return d; }
+  function thumbOf(u) { return String(u || '').replace(/\.nk\.jpg$/, '.nk-sm.webp'); }
   function telNumber(p) { return String(p || '').replace(/[^\d+]/g, ''); }
   function token() { try { return localStorage.getItem('hh_token'); } catch (e) { return null; } }
 
@@ -105,7 +106,7 @@
     if (gallery.length) {
       var shown = gallery.slice(0, 5);
       g = '<div class="pp-gallery n' + shown.length + '">' + shown.map(function (u, i) {
-        return '<button type="button" class="g' + i + '" data-lbx="' + i + '" aria-label="Open photo ' + (i + 1) + ' of ' + gallery.length + '"><img src="' + esc(u) + '" alt="' + (i === 0 ? esc(l.title) : '') + '"' + (i ? ' loading="lazy"' : '') + '></button>';
+        return '<button type="button" class="g' + i + '" data-lbx="' + i + '" aria-label="Open photo ' + (i + 1) + ' of ' + gallery.length + '"><img src="' + esc(i ? thumbOf(u) : u) + '" alt="' + (i === 0 ? esc(l.title) : '') + '"' + (i ? ' loading="lazy"' : ' fetchpriority="high"') + '></button>';
       }).join('') + (gallery.length > 1 ? '<button type="button" class="pp-all" data-lbx="0">' + IC.grid + 'Show all ' + gallery.length + ' photos</button>' : '') + '</div>';
     } else g = '<div class="pp-nophoto">No photos yet</div>';
 
@@ -145,7 +146,7 @@
         if (!(r.photos && r.photos.length) && !(r.videos && r.videos.length) && !r.description) return '';
         return '<div class="pp-room"><h3>' + esc(r.label || 'Room') + '</h3>' + (r.description ? '<p>' + esc(r.description) + '</p>' : '') +
           '<div class="pp-media">' + (r.videos || []).map(function (u) { return '<video controls preload="metadata" src="' + esc(u) + '"></video>'; }).join('') +
-          (r.photos || []).map(function (u) { return '<button type="button" data-lbx="' + gallery.indexOf(u) + '"><img src="' + esc(u) + '" alt="' + esc(r.label || 'Room') + '" loading="lazy"></button>'; }).join('') + '</div></div>';
+          (r.photos || []).map(function (u) { return '<button type="button" data-lbx="' + gallery.indexOf(u) + '"><img src="' + esc(thumbOf(u)) + '" alt="' + esc(r.label || 'Room') + '" loading="lazy"></button>'; }).join('') + '</div></div>';
       }).join('');
       if (parts) roomsHtml = '<section><h2>Room by room</h2>' + parts + '</section>';
     }
@@ -330,7 +331,7 @@
 
   // Similar homes: same county and deal, then same deal anywhere.
   function cardHtml(x) {
-    var img = (x.photos && x.photos[0]) || '';
+    var img = (x.photos && x.photos[0]) ? thumbOf(x.photos[0]) : '';
     var dl = x.deal === 'sale' ? 'For sale' : (x.deal === 'land' ? 'Land' : 'For rent');
     var place = [x.location || x.region, x.county].filter(function (v, i, a) { return v && a.indexOf(v) === i; }).join(', ');
     var facts = x.deal === 'land' ? (x.size ? '<span>' + esc(x.size) + '</span>' : '')
