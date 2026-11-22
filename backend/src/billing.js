@@ -6,9 +6,12 @@ const events = require('./events');
 const pesapal = require('./services/pesapal');
 const { normalizePhone } = require('./phone');
 
-function feeFor(beds) {
+// Fee = rate per room × rooms in each unit × number of units.
+// A single house is 1 unit; a block of 10 identical 2-bedroom flats is 2 × 10.
+function feeFor(beds, units) {
   const rooms = Math.max(1, parseInt(beds, 10) || 0);
-  return config.roomRate * rooms;
+  const n = Math.min(500, Math.max(1, parseInt(units, 10) || 1));
+  return config.roomRate * rooms * n;
 }
 
 // Amount for a listing (per-room fee + showcase upgrade, waived for Pro/Agency).
@@ -19,7 +22,7 @@ async function listingAmount(listing) {
     const raw = Math.round(acres * config.land.ratePerAcre);
     return Math.min(config.land.max, Math.max(config.land.min, raw));
   }
-  let amount = feeFor(listing.beds);
+  let amount = feeFor(listing.beds, listing.unitsTotal);
   if (listing.tier === 'showcase') {
     const phone = normalizePhone((listing.submitter && listing.submitter.phone) || '');
     const sub = phone ? await db.getActiveSubByPhone(phone) : null;
