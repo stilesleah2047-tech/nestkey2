@@ -23,7 +23,8 @@ router.post('/', async (req, res) => {
 
   // Live ping for anyone with the Command Center open.
   try { events.emitAdmin('activity', { kind: 'lead', at: new Date(), text: 'Contact form: ' + name + ' (' + contact + ')' }); } catch (e) {}
-  console.log('[contact]', name, contact, '-', message);
+  // Don't copy people's messages and phone numbers into server logs; the database copy is enough.
+  console.log('[contact] new message saved');
   res.status(201).json({ ok: true });
 });
 
