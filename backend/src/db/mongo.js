@@ -9,6 +9,8 @@ const listingSchema = new mongoose.Schema({
   beds: { type: Number, default: 0 },
   baths: { type: Number, default: 0 },
   roomCount: { type: Number, default: 0 },
+  unitsTotal: { type: Number, default: 1 },
+  unitsAvailable: { type: Number, default: 1 },
   size: String,
   region: String,
   county: String,
@@ -47,6 +49,7 @@ function out(d) {
     id: String(o._id),
     title: o.title, deal: o.deal, type: o.type, price: o.price || 0,
     beds: o.beds || 0, baths: o.baths || 0, roomCount: o.roomCount || 0, size: o.size,
+    unitsTotal: o.unitsTotal != null ? o.unitsTotal : 1, unitsAvailable: o.unitsAvailable != null ? o.unitsAvailable : 1,
     region: o.region, county: o.county, areaAcres: o.areaAcres, lat: o.lat != null ? o.lat : null, lng: o.lng != null ? o.lng : null, location: o.location, description: o.description,
     photos: o.photos || [], status: o.status, paid: o.paid, amount: o.amount || 0,
     videos: o.videos || [], rooms: o.rooms || [], tier: o.tier || 'standard', featured: !!o.featured, verified: !!o.verified,
@@ -69,6 +72,7 @@ module.exports = {
       location: d.location, description: d.description, photos: d.photos || [],
       videos: d.videos || [], rooms: d.rooms || [], tier: d.tier === 'showcase' ? 'showcase' : 'standard',
       ownerId: d.ownerId || null,
+      unitsTotal: d.unitsTotal || 1, unitsAvailable: d.unitsAvailable != null ? d.unitsAvailable : (d.unitsTotal || 1),
       submitter: d.submitter || {}, status: d.status || 'pending', paid: d.paid != null ? d.paid : false,
     });
     return out(doc);
@@ -80,7 +84,9 @@ module.exports = {
   },
 
   async list(f) {
-    const query = { paid: true, status: 'published' };
+    // Fully-let listings (no units left) drop out of search. Older documents have
+    // no unitsAvailable field at all, and $ne: 0 still matches those.
+    const query = { paid: true, status: 'published', unitsAvailable: { $ne: 0 } };
     if (f.region) query.region = new RegExp('^' + escapeRe(f.region) + '$', 'i');
     if (f.county) query.county = new RegExp('^' + escapeRe(f.county) + '$', 'i');
     if (f.deal) query.deal = f.deal;
@@ -208,6 +214,23 @@ const leadSchema = new mongoose.Schema({
 }, { timestamps: true });
 const Lead = mongoose.model('Lead', leadSchema);
 
+const bookingSchema = new mongoose.Schema({
+  listingId: String, listingTitle: String, ownerId: String, userId: String,
+  name: String, phone: String, moveIn: String, note: String,
+  status: { type: String, default: 'pending' }, decidedAt: Date,
+}, { timestamps: true });
+bookingSchema.index({ ownerId: 1, createdAt: -1 });
+const Booking = mongoose.model('Booking', bookingSchema);
+function bookingOut(b) {
+  if (!b) return null;
+  const o = b.toObject ? b.toObject() : b;
+  return {
+    id: String(o._id), listingId: o.listingId || null, listingTitle: o.listingTitle || null,
+    ownerId: o.ownerId || null, userId: o.userId || null, name: o.name, phone: o.phone,
+    moveIn: o.moveIn, note: o.note, status: o.status, createdAt: o.createdAt, decidedAt: o.decidedAt,
+  };
+}
+
 Object.assign(module.exports, {
   async createUser(d) {
     return userOut(await User.create({ name: d.name, email: d.email, phone: d.phone, role: d.role || 'landlord', company: d.company, passwordHash: d.passwordHash }));
@@ -225,7 +248,7 @@ Object.assign(module.exports, {
   async setListingFlags(id, { featured, verified }) { await Listing.findByIdAndUpdate(id, { featured: !!featured, verified: !!verified }); },
   async updateOwned(id, ownerId, f) {
     if (!mongoose.isValidObjectId(id)) return;
-    const allow = ['title', 'deal', 'type', 'price', 'beds', 'baths', 'roomCount', 'region', 'county', 'location', 'description', 'size', 'areaAcres', 'lat', 'lng', 'photos', 'videos', 'tier'];
+    const allow = ['title', 'deal', 'type', 'price', 'beds', 'baths', 'roomCount', 'region', 'county', 'location', 'description', 'size', 'areaAcres', 'lat', 'lng', 'photos', 'videos', 'tier', 'unitsTotal', 'unitsAvailable'];
     const upd = {};
     allow.forEach((k) => { if (f[k] !== undefined) upd[k] = f[k]; });
     if (!Object.keys(upd).length) return;
@@ -363,13 +386,14 @@ Object.assign(module.exports, {
     };
   },
   async recentActivity(limit) {
-    const [ls, us, ss, ts, lds, rs] = await Promise.all([
+    const [ls, us, ss, ts, lds, rs, bks] = await Promise.all([
       Listing.find({}).sort({ createdAt: -1 }).limit(15),
       User.find({}).sort({ createdAt: -1 }).limit(15),
       Subscription.find({}).sort({ createdAt: -1 }).limit(15),
       Escrow.find({ type: 'sale' }).sort({ createdAt: -1 }).limit(15),
       Lead.find({}).sort({ createdAt: -1 }).limit(15),
       Rating.find({}).sort({ createdAt: -1 }).limit(15),
+      Booking.find({}).sort({ createdAt: -1 }).limit(15),
     ]);
     const items = [];
     ls.forEach((x) => items.push({ kind: 'listing', at: x.createdAt, text: (x.status === 'published' ? 'Listing live: ' : 'Listing added: ') + x.title }));
@@ -377,6 +401,7 @@ Object.assign(module.exports, {
     ss.forEach((x) => items.push({ kind: 'subscription', at: x.createdAt, text: (x.status === 'active' ? 'Subscribed: ' : 'Subscription ' + x.status + ': ') + (x.planName || '') }));
     ts.forEach((x) => items.push({ kind: 'payment', at: x.createdAt, text: 'Sale recorded: ' + (x.listingTitle || '') + ' — KSh ' + Math.round(x.gross) }));
     lds.forEach((x) => items.push({ kind: 'lead', at: x.createdAt, text: 'Enquiry from ' + (x.name || 'someone') }));
+    bks.forEach((x) => items.push({ kind: 'lead', at: x.createdAt, text: (x.status === 'confirmed' ? 'Booking confirmed: ' : 'Booking request: ') + (x.listingTitle || 'a listing') + ' — ' + (x.name || 'someone') }));
     rs.forEach((x) => items.push({ kind: 'rating', at: x.createdAt, text: x.stars + '\u2605 rating' + (x.comment ? ': ' + x.comment : '') }));
     items.sort((a, b) => new Date(b.at) - new Date(a.at));
     return items.slice(0, limit || 40);
@@ -410,5 +435,57 @@ Object.assign(module.exports, {
       out.push({ id: String(u._id), name: u.name, email: u.email, phone: u.phone, role: u.role, company: u.company, businessName: u.businessName, idNumber: u.idNumber, kraPin: u.kraPin, verified: u.verified, listings, createdAt: u.createdAt });
     }
     return out;
+  },
+});
+
+// ---------------- Bookings + unit counter ----------------
+// Older listings were saved before units existed; give them 1 of 1 the first time we touch them.
+async function ensureUnits(listingId) {
+  await Listing.updateOne({ _id: listingId, unitsAvailable: { $exists: false } }, { $set: { unitsTotal: 1, unitsAvailable: 1 } });
+}
+
+Object.assign(module.exports, {
+  async createBooking(d) {
+    const l = mongoose.isValidObjectId(d.listingId) ? await Listing.findById(d.listingId, { title: 1 }) : null;
+    return bookingOut(await Booking.create({
+      listingId: String(d.listingId), listingTitle: l ? l.title : '', ownerId: d.ownerId || null, userId: d.userId || null,
+      name: d.name, phone: d.phone, moveIn: d.moveIn, note: d.note,
+    }));
+  },
+  async listBookingsByOwner(ownerId) {
+    const items = (await Booking.find({ ownerId }).sort({ createdAt: -1 }).limit(200)).map(bookingOut);
+    return items.sort((a, b) => (a.status === 'pending' ? 0 : 1) - (b.status === 'pending' ? 0 : 1));
+  },
+  async getBookingOwned(id, ownerId) {
+    return mongoose.isValidObjectId(id) ? bookingOut(await Booking.findOne({ _id: id, ownerId })) : null;
+  },
+  async setBookingStatus(id, ownerId, from, to) {
+    if (!mongoose.isValidObjectId(id)) return false;
+    const r = await Booking.updateOne({ _id: id, ownerId, status: from }, { $set: { status: to, decidedAt: new Date() } });
+    return r.modifiedCount > 0;
+  },
+  async takeUnit(listingId) {
+    if (!mongoose.isValidObjectId(listingId)) return null;
+    await ensureUnits(listingId);
+    const doc = await Listing.findOneAndUpdate(
+      { _id: listingId, unitsAvailable: { $gt: 0 } }, { $inc: { unitsAvailable: -1 } }, { new: true }
+    );
+    return doc ? doc.unitsAvailable : null;
+  },
+  async releaseUnit(listingId) {
+    if (!mongoose.isValidObjectId(listingId)) return;
+    await ensureUnits(listingId);
+    const l = await Listing.findById(listingId, { unitsTotal: 1, unitsAvailable: 1 });
+    if (l && l.unitsAvailable < (l.unitsTotal || 1)) await Listing.updateOne({ _id: listingId }, { $inc: { unitsAvailable: 1 } });
+  },
+  async setUnitsAvailable(listingId, ownerId, n) {
+    if (!mongoose.isValidObjectId(listingId)) return null;
+    await ensureUnits(listingId);
+    const l = await Listing.findOne({ _id: listingId, ownerId }, { unitsTotal: 1 });
+    if (!l) return null;
+    const total = l.unitsTotal || 1;
+    const v = Math.max(0, Math.min(total, n));
+    await Listing.updateOne({ _id: listingId }, { $set: { unitsAvailable: v } });
+    return { unitsAvailable: v, unitsTotal: total };
   },
 });
