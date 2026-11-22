@@ -69,7 +69,15 @@
         <div class="field full"><label>Listing title *</label><input name="title" required placeholder="e.g. Cosy bedsitter for rent in Roysambu"></div>
         <div class="field"><label>Type</label>
           <select name="deal" id="h-deal"><option value="rent">For rent</option><option value="sale">For sale</option><option value="land">Land</option></select></div>
-        <div class="field" id="field-type"><label>Property type</label><input name="type" placeholder="Bedsitter, 1-bed, Maisonette…"></div>
+        <div class="field" id="field-type"><label>Property type</label><input name="type" id="p-type" list="p-typelist" autocomplete="off" placeholder="Bedsitter, 1 bedroom, Maisonette…"><datalist id="p-typelist"><option value="Bedsitter"></option><option value="Single room"></option><option value="Studio"></option><option value="1 bedroom"></option><option value="2 bedroom"></option><option value="3 bedroom"></option><option value="4 bedroom"></option><option value="Apartment"></option><option value="Maisonette"></option><option value="Bungalow"></option><option value="Townhouse"></option><option value="Hostel room"></option><option value="Shop / commercial"></option></datalist></div>
+        <div class="field full" id="field-units-mode">
+          <label>What are you listing?</label>
+          <div class="tier-toggle" id="units-mode">
+            <button type="button" data-units="single" class="active"><strong>One house or room</strong><span>A single home or room</span></button>
+            <button type="button" data-units="multi"><strong>Several identical units</strong><span>e.g. 10 bedsitters in one block</span></button>
+          </div>
+        </div>
+        <div class="field" id="field-units" style="display:none"><label>How many units are available? *</label><input id="unitsTotal" type="number" min="2" max="500" value="2" inputmode="numeric"><small class="hint">Units must be identical: same rooms, size and rent. When a tenant books and you confirm, the count goes down by one.</small></div>
         <div class="field"><label id="price-label">Monthly rent (KSh)</label><input name="price" id="h-price" type="text" inputmode="text" autocomplete="off" placeholder="e.g. KSh 50,000, 50k, or fifty thousand"><small class="dc-sub" id="h-price-echo"></small></div>
         <div class="field"><label>County</label><input name="county" id="p-county" list="p-county-list" placeholder="Type or pick a county"><datalist id="p-county-list"></datalist></div>
         <div class="field"><label>Town / area</label><input name="region" id="region" list="p-townlist" placeholder="e.g. Roysambu"><datalist id="p-townlist"></datalist></div>
@@ -84,7 +92,7 @@
           <small class="hint" id="p-loc-status">Click the map or drag the pin to the exact spot — this helps people find the property.</small>
           <input type="hidden" id="p-lat"><input type="hidden" id="p-lng">
         </div>
-        <div class="field" id="field-beds"><label>Bedrooms</label><input name="beds" id="beds" type="number" min="0" placeholder="1"></div>
+        <div class="field" id="field-beds"><label id="beds-label">Bedrooms</label><input name="beds" id="beds" type="number" min="0" placeholder="1"></div>
         <div class="field" id="field-baths"><label>Bathrooms</label><input name="baths" type="number" min="0" placeholder="1"></div>
         <div class="field" id="field-rooms"><label>General rooms (total)</label><input name="roomCount" id="roomCount" type="number" min="0" placeholder="e.g. 8"><small class="hint">Total number of rooms in the whole property (all spaces, not just bedrooms).</small></div>
         <div class="field" id="field-size" style="display:none"><label>Plot size</label>
