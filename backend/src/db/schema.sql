@@ -174,3 +174,12 @@ CREATE TABLE IF NOT EXISTS bookings (
 );
 CREATE INDEX IF NOT EXISTS idx_bookings_owner ON bookings (owner_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_bookings_listing ON bookings (listing_id, status);
+
+-- ---- Title-deed check + posting consent ----
+-- deed_number: what the lister typed (private: never shown on public pages).
+-- deed_key: the same number reduced to letters/digits, used to match what a buyer types.
+-- consent_at: when the lister agreed to their property details being stored outside Kenya.
+ALTER TABLE listings ADD COLUMN IF NOT EXISTS deed_number TEXT;
+ALTER TABLE listings ADD COLUMN IF NOT EXISTS deed_key TEXT;
+ALTER TABLE listings ADD COLUMN IF NOT EXISTS consent_at TIMESTAMPTZ;
+CREATE INDEX IF NOT EXISTS idx_listings_deed ON listings (deed_key) WHERE deed_key IS NOT NULL;
