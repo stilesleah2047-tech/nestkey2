@@ -32,6 +32,7 @@
         <button type="button" role="tab" data-tab="overview"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg><span>Overview</span></button>
         <button type="button" role="tab" data-tab="properties"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v10h14V10"/><path d="M10 20v-5h4v5"/></svg><span>Properties</span><em class="ds-count" id="cnt-props"></em></button>
         <button type="button" role="tab" data-tab="enquiries"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg><span>Enquiries</span><em class="ds-count" id="cnt-leads"></em></button>
+        <button type="button" role="tab" data-tab="bookings"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4M9 15l2 2 4-4"/></svg><span>Bookings</span><em class="ds-count warn" id="cnt-bookings" hidden></em></button>
         <button type="button" role="tab" data-tab="payments"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M2.5 10h19M7 15h3"/></svg><span>Payments &amp; sales</span><em class="ds-count warn" id="cnt-pay" hidden></em></button>
         <button type="button" role="tab" data-tab="add" class="ds-add"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg><span>Add a property</span></button>
       </nav>
@@ -79,6 +80,17 @@
         <div id="leads" class="leads dcard flush"></div>
       </section>
 
+      <!-- Bookings -->
+      <section class="dash-panel" data-panel="bookings" hidden>
+        <div class="dp-head"><div><h1>Bookings</h1><p class="dp-sub">House hunters who want to take one of your units. Call them, then confirm once the unit is taken. Confirming lowers that listing’s available count by one.</p></div></div>
+        <div class="chips" id="bk-filter" role="group" aria-label="Filter bookings">
+          <button type="button" class="chip on" data-bk="pending">Waiting for you</button>
+          <button type="button" class="chip" data-bk="confirmed">Confirmed</button>
+          <button type="button" class="chip" data-bk="declined">Declined</button>
+          <button type="button" class="chip" data-bk="all">All</button>
+        </div>
+        <div id="bookings" class="leads dcard flush"><p class="empty" style="padding:20px">Loading…</p></div>
+      </section>
       <!-- Add / edit -->
       <section class="dash-panel" data-panel="add" hidden>
         <div class="dp-head"><div><h1 id="agent-form-title">Add a property</h1><p class="dp-sub">It’s saved as a draft first. Publish it from Properties when you’re ready.</p></div></div>
@@ -117,6 +129,7 @@
               <div class="field" id="ag-field-beds"><label>Bedrooms</label><input name="beds" type="number" min="0"></div>
               <div class="field" id="ag-field-baths"><label>Bathrooms</label><input name="baths" type="number" min="0"></div>
               <div class="field" id="ag-field-rooms"><label>Rooms in total</label><input name="roomCount" id="ag-roomCount" type="number" min="0" placeholder="e.g. 8"></div>
+              <div class="field" id="ag-field-units"><label>Identical units</label><input name="unitsTotal" id="ag-unitsTotal" type="number" min="1" max="500" value="1" inputmode="numeric"><small class="hint">1 for a single house. For a block, how many units have the same rooms and rent. Bedrooms are per unit.</small></div>
               <div class="field" id="ag-field-size" style="display:none"><label>Plot size</label>
                 <div class="size-pair">
                   <input id="ag-size-value" type="number" min="0" step="0.01" placeholder="e.g. 2">
