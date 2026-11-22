@@ -3,6 +3,31 @@ const multer = require('multer');
 const db = require('../db');
 const storage = require('../services/storage');
 const { requireAuth, isAdmin } = require('../auth');
+const images = require('../images');
+
+// Store one checked upload. Photos are resized and cleaned (see src/images.js);
+// GIFs and videos are stored as they are. Returns { url, type }.
+async function storeUpload(f) {
+  const mime = String(f.mimetype || '').toLowerCase();
+  if (/^image\/(jpeg|png|webp)$/.test(mime) && images.available()) {
+    const out = await images.processPhoto(f.buffer);
+    const base = storage.newPhotoBase();
+    const full = await storage.save({ buffer: out.full, mimetype: 'image/jpeg' }, base + '.nk.jpg');
+    await storage.save({ buffer: out.small, mimetype: 'image/webp' }, base + '.nk-sm.webp');
+    f.buffer = null; // let the original be freed straight away
+    return { url: full.url, type: 'image' };
+  }
+  const saved = await storage.save(f);
+  return { url: saved.url, type: saved.type };
+}
+
+// One file at a time: a 4000px photo needs ~50 MB of memory to process, so doing
+// 12 at once could run a small server out of memory.
+async function storeAll(files) {
+  const out = [];
+  for (const f of files) out.push(await storeUpload(f));
+  return out;
+}
 
 const router = express.Router();
 
@@ -65,8 +90,8 @@ router.post('/', upload.array('files', 12), async (req, res) => {
     if (!files.length) {
       return res.status(400).json({ error: 'No valid image/video files uploaded' });
     }
-    const saved = await Promise.all(files.map((f) => storage.save(f)));
-    res.json({ ok: true, files: saved.map((s) => ({ url: s.url, type: s.type })) });
+    const saved = await storeAll(files);
+    res.json({ ok: true, files: saved });
   } catch (e) {
     console.error('upload failed', e);
     res.status(400).json({ error: 'Upload failed: unsupported or invalid file' });
@@ -86,7 +111,7 @@ router.post('/:listingId', upload.array('photos', 12), async (req, res) => {
     if (!files.length) {
       return res.status(400).json({ error: 'No valid image/video files uploaded' });
     }
-    const saved = await Promise.all(files.map((f) => storage.save(f)));
+    const saved = await storeAll(files);
     const urls = saved.map((s) => s.url);
     if (urls.length) await db.addPhotos(listing.id, urls);
     res.json({ ok: true, photos: urls });
