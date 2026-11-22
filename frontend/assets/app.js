@@ -21,6 +21,8 @@
     });
   }
 
+  // Photos uploaded since the resize update have a small card copy next to the full one.
+  function thumbOf(u) { return String(u || '').replace(/\.nk\.jpg$/, '.nk-sm.webp'); }
   function money(n) { return 'KSh ' + Number(n || 0).toLocaleString('en-KE'); }
   function $(id) { return document.getElementById(id); }
 
@@ -485,14 +487,15 @@
     }
 
     function card(l) {
-      var img = (l.photos && l.photos[0]) || NOPHOTO;
+      var img = (l.photos && l.photos[0]) ? thumbOf(l.photos[0]) : NOPHOTO;
       var deal = l.deal === 'sale' ? 'For sale' : (l.deal === 'land' ? 'Land' : 'For rent');
       var href = '/property/' + encodeURIComponent(l.id);
       var badges = '<span class="lc-badge deal">' + deal + '</span>' +
         (l.tier === 'showcase' ? '<span class="lc-badge video">Video</span>' : '') +
         (l.featured ? '<span class="lc-badge feat">Featured</span>' : '') +
         ((Number(l.unitsTotal) || 1) > 1 ? '<span class="lc-badge units">' + (l.unitsAvailable != null ? l.unitsAvailable : l.unitsTotal) + ' units left</span>' : '');
-      var count = (l.photos && l.photos.length > 1) ? '<span class="lc-count">' + l.photos.length + ' photos</span>' : '';
+      var nPhotos = l.photoCount != null ? l.photoCount : (l.photos ? l.photos.length : 0);
+      var count = nPhotos > 1 ? '<span class="lc-count">' + nPhotos + ' photos</span>' : '';
       var heart = '<button class="fav-btn' + (isFav(l.id) ? ' on' : '') + '" data-fav="' + l.id + '" aria-label="Save ' + escapeHtml(l.title) + '">' +
         '<svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none"><path d="M12 21s-7-4.5-9.5-9A5 5 0 0112 5a5 5 0 019.5 7c-2.5 4.5-9.5 9-9.5 9z"/></svg></button>';
       var place = [l.location || l.region, l.county].filter(function (x, i, a) { return x && a.indexOf(x) === i; }).join(', ');
@@ -588,7 +591,7 @@
       lastItems.forEach(function (l, i) {
         var c = coordsFor(l, i);
         pts.push(c);
-        var photo = (l.photos && l.photos[0]) || NOPHOTO;
+        var photo = (l.photos && l.photos[0]) ? thumbOf(l.photos[0]) : NOPHOTO;
         var html = '<div class="map-pop"><img src="' + escapeHtml(photo) + '" alt="">' +
           '<div class="mp-price">' + money(l.price) + '</div>' +
           '<div class="mp-title">' + escapeHtml(l.title) + '</div>' +
@@ -1438,7 +1441,7 @@
         var dealLbl = { rent: 'For rent', sale: 'For sale', land: 'Land' };
         $('my-listings').innerHTML = '<div class="prop-list">' +
           items.map(function (l) {
-            var ph = (l.photos && l.photos[0]) ? '<img src="' + escapeHtml(l.photos[0]) + '" alt="" loading="lazy">' : '<span class="pr-noimg" aria-hidden="true"></span>';
+            var ph = (l.photos && l.photos[0]) ? '<img src="' + escapeHtml(thumbOf(l.photos[0])) + '" alt="" loading="lazy">' : '<span class="pr-noimg" aria-hidden="true"></span>';
             var price = money(l.price) + (l.deal === 'rent' ? '<small>/mo</small>' : '');
             var where = [l.region, l.county].filter(Boolean).map(escapeHtml).join(', ');
             var act = '<button class="mini-btn" data-act="edit" data-id="' + l.id + '">Edit</button>';
