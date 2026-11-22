@@ -28,6 +28,21 @@ function publicListing(l) {
   return rest;
 }
 
+// What a listing card, the map and "similar homes" need: no description, room
+// media or contact details, which keeps a page of results small (and stops anyone
+// collecting every lister's phone number from one request).
+function cardListing(l) {
+  const photos = Array.isArray(l.photos) ? l.photos : [];
+  return {
+    id: l.id, title: l.title, deal: l.deal, type: l.type, price: l.price,
+    beds: l.beds, baths: l.baths, roomCount: l.roomCount, size: l.size,
+    region: l.region, county: l.county, location: l.location, lat: l.lat, lng: l.lng,
+    tier: l.tier, featured: l.featured, verified: l.verified,
+    unitsTotal: l.unitsTotal, unitsAvailable: l.unitsAvailable,
+    photos: photos.slice(0, 1), photoCount: photos.length, createdAt: l.createdAt,
+  };
+}
+
 // GET /api/listings  — public search with filters
 router.get('/', async (req, res) => {
   try {
@@ -44,7 +59,7 @@ router.get('/', async (req, res) => {
       limit: Math.min(Math.max(parseInt(q.limit, 10) || 24, 1), 60),
       page: Math.max(parseInt(q.page, 10) || 1, 1),
     });
-    if (result && Array.isArray(result.items)) result.items = result.items.map(publicListing);
+    if (result && Array.isArray(result.items)) result.items = result.items.map(cardListing);
     res.json(result);
   } catch (e) {
     console.error(e);
