@@ -15,10 +15,11 @@ router.use(requireAuth);
 // GET /api/agent/summary — quota, counts, leads
 router.get('/summary', async (req, res) => {
   const uid = req.user.id;
-  const [mine, sub, leads] = await Promise.all([
+  const [mine, sub, leads, bookings] = await Promise.all([
     db.listByOwner(uid),
     db.getActiveSubByUserId(uid),
     db.listLeadsByOwner(uid),
+    db.listBookingsByOwner(uid),
   ]);
   const published = mine.filter((l) => l.status === 'published').length;
   const plan = sub ? getPlan(sub.planId) : null;
@@ -28,6 +29,7 @@ router.get('/summary', async (req, res) => {
     subscription: sub ? { plan: sub.planName, planId: sub.planId, periodEnd: sub.currentPeriodEnd } : null,
     quota: { max: max, used: published, remaining: max == null ? null : Math.max(0, max - published) },
     leads: leads.length,
+    bookingsPending: bookings.filter((b) => b.status === 'pending').length,
   });
 });
 
@@ -72,6 +74,7 @@ router.post('/listings', async (req, res) => {
       description: b.description ? String(b.description).slice(0, 4000) : '',
       photos, videos: cleanMedia(b.videos, 6), rooms,
       tier: b.tier === 'showcase' ? 'showcase' : 'standard',
+      unitsTotal: Math.min(500, Math.max(1, parseInt(b.unitsTotal, 10) || 1)),
       submitter: { name: req.user.name, phone: b.phone, email: req.user.email },
       ownerId: req.user.id, status: 'draft', paid: true,
     });
@@ -107,6 +110,20 @@ router.put('/listings/:id', async (req, res) => {
   if (Array.isArray(b.photos) && cleanMedia(b.photos, 12).length) f.photos = cleanMedia(b.photos, 12);
   if (Array.isArray(b.videos) && cleanMedia(b.videos, 6).length) f.videos = cleanMedia(b.videos, 6);
   if (b.tier === 'standard' || b.tier === 'showcase') f.tier = b.tier;
+  if (b.unitsTotal != null && b.unitsTotal !== '') {
+    const total = Math.min(500, Math.max(1, parseInt(b.unitsTotal, 10) || 1));
+    const oldTotal = l.unitsTotal || 1;
+    // A listing paid per unit can't add units for free after payment.
+    if (l.amount > 0 && total > oldTotal) {
+      return res.status(400).json({ error: 'This listing was paid for ' + oldTotal + ' unit' + (oldTotal > 1 ? 's' : '') + '. Post a new listing for extra units.' });
+    }
+    if (total !== oldTotal) {
+      f.unitsTotal = total;
+      // Keep the same number of taken units; never go below 0 or above the new total.
+      const taken = Math.max(0, oldTotal - (l.unitsAvailable != null ? l.unitsAvailable : oldTotal));
+      f.unitsAvailable = Math.max(0, Math.min(total, total - taken));
+    }
+  }
   await db.updateOwned(req.params.id, req.user.id, f);
   res.json({ ok: true });
 });
@@ -154,6 +171,41 @@ router.post('/listings/:id/unpublish', async (req, res) => {
 // DELETE /api/agent/listings/:id
 router.delete('/listings/:id', async (req, res) => {
   await db.deleteOwned(req.params.id, req.user.id);
+  res.json({ ok: true });
+});
+
+// PUT /api/agent/listings/:id/units  { available } — publisher adjusts the counter by hand
+// (e.g. a tenant moved out, or a unit was let outside NestKey).
+router.put('/listings/:id/units', async (req, res) => {
+  const n = parseInt((req.body || {}).available, 10);
+  if (!Number.isFinite(n)) return res.status(400).json({ error: 'Enter a number of units.' });
+  const r = await db.setUnitsAvailable(req.params.id, req.user.id, n);
+  if (!r) return res.status(404).json({ error: 'Not found' });
+  res.json(r);
+});
+
+// GET /api/agent/bookings — booking requests on my listings (pending first)
+router.get('/bookings', async (req, res) => {
+  res.json({ items: await db.listBookingsByOwner(req.user.id) });
+});
+
+// POST /api/agent/bookings/:id/confirm — the unit is taken: count goes down by one
+router.post('/bookings/:id/confirm', async (req, res) => {
+  const bk = await db.getBookingOwned(req.params.id, req.user.id);
+  if (!bk) return res.status(404).json({ error: 'Not found' });
+  if (bk.status !== 'pending') return res.status(409).json({ error: 'This booking was already ' + bk.status + '.' });
+  const left = await db.takeUnit(bk.listingId);
+  if (left == null) return res.status(409).json({ error: 'No units are left on this listing. Decline the booking, or raise the available count first.' });
+  const ok = await db.setBookingStatus(bk.id, req.user.id, 'pending', 'confirmed');
+  if (!ok) { await db.releaseUnit(bk.listingId); return res.status(409).json({ error: 'This booking was already handled.' }); }
+  events.emitAdmin('activity', { kind: 'lead', at: new Date(), text: 'Booking confirmed: ' + (bk.name || 'a tenant') + ' (' + left + ' unit' + (left === 1 ? '' : 's') + ' left)' });
+  res.json({ ok: true, unitsAvailable: left });
+});
+
+// POST /api/agent/bookings/:id/decline
+router.post('/bookings/:id/decline', async (req, res) => {
+  const ok = await db.setBookingStatus(req.params.id, req.user.id, 'pending', 'declined');
+  if (!ok) return res.status(409).json({ error: 'This booking was already handled.' });
   res.json({ ok: true });
 });
 
