@@ -16,6 +16,8 @@ function row(r) {
     beds: r.beds || 0,
     baths: r.baths || 0,
     roomCount: r.room_count || 0,
+    unitsTotal: r.units_total != null ? r.units_total : 1,
+    unitsAvailable: r.units_available != null ? r.units_available : 1,
     size: r.size,
     areaAcres: r.area_acres != null ? Number(r.area_acres) : null,
     lat: r.lat != null ? Number(r.lat) : null,
@@ -52,8 +54,8 @@ module.exports = {
   async create(d) {
     const q = `INSERT INTO listings
       (title, deal, type, price, beds, baths, size, area_acres, lat, lng, region, county, location, description, photos, videos, rooms, tier,
-       submitter_name, submitter_phone, submitter_email, owner_id, status, paid, room_count)
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25)
+       submitter_name, submitter_phone, submitter_email, owner_id, status, paid, room_count, units_total, units_available)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27)
       RETURNING *`;
     const vals = [
       d.title, d.deal || 'rent', d.type || null, d.price || 0, d.beds || 0, d.baths || 0,
@@ -64,6 +66,8 @@ module.exports = {
       d.submitter?.name || null, d.submitter?.phone || null, d.submitter?.email || null,
       d.ownerId || null, d.status || 'pending', d.paid != null ? d.paid : false,
       d.roomCount || 0,
+      d.unitsTotal || 1,
+      d.unitsAvailable != null ? d.unitsAvailable : (d.unitsTotal || 1),
     ];
     const { rows } = await pool.query(q, vals);
     return row(rows[0]);
@@ -75,7 +79,8 @@ module.exports = {
   },
 
   async list(f) {
-    const where = ['paid = true', "status = 'published'"];
+    // Fully-let listings (no units left) drop out of search until a unit frees up.
+    const where = ['paid = true', "status = 'published'", 'units_available > 0'];
     const vals = [];
     let i = 1;
     if (f.region) { where.push(`lower(region) = $${i++}`); vals.push(String(f.region).toLowerCase()); }
@@ -268,6 +273,7 @@ Object.assign(module.exports, {
       roomCount: 'room_count', region: 'region', county: 'county', location: 'location',
       description: 'description', size: 'size', areaAcres: 'area_acres', lat: 'lat', lng: 'lng',
       photos: 'photos', videos: 'videos', tier: 'tier',
+      unitsTotal: 'units_total', unitsAvailable: 'units_available',
     };
     const sets = [];
     const vals = [];
@@ -432,6 +438,7 @@ Object.assign(module.exports, {
       pool.query("SELECT listing_title,gross,created_at FROM escrows WHERE type='sale' ORDER BY created_at DESC LIMIT 15"),
       pool.query('SELECT name,created_at FROM leads ORDER BY created_at DESC LIMIT 15'),
       pool.query('SELECT stars,comment,created_at FROM ratings ORDER BY created_at DESC LIMIT 15'),
+      pool.query('SELECT b.name,b.status,b.created_at,l.title FROM bookings b LEFT JOIN listings l ON l.id=b.listing_id ORDER BY b.created_at DESC LIMIT 15'),
     ]);
     const items = [];
     r[0].rows.forEach((x) => items.push({ kind: 'listing', at: x.created_at, text: (x.status === 'published' ? 'Listing live: ' : 'Listing added: ') + x.title }));
@@ -439,6 +446,7 @@ Object.assign(module.exports, {
     r[2].rows.forEach((x) => items.push({ kind: 'subscription', at: x.created_at, text: (x.status === 'active' ? 'Subscribed: ' : 'Subscription ' + x.status + ': ') + (x.plan_name || '') }));
     r[3].rows.forEach((x) => items.push({ kind: 'payment', at: x.created_at, text: 'Sale recorded: ' + (x.listing_title || '') + ' — KSh ' + Math.round(x.gross) }));
     r[4].rows.forEach((x) => items.push({ kind: 'lead', at: x.created_at, text: 'Enquiry from ' + (x.name || 'someone') }));
+    r[6].rows.forEach((x) => items.push({ kind: 'lead', at: x.created_at, text: (x.status === 'confirmed' ? 'Booking confirmed: ' : 'Booking request: ') + (x.title || 'a listing') + ' — ' + (x.name || 'someone') }));
     r[5].rows.forEach((x) => items.push({ kind: 'rating', at: x.created_at, text: x.stars + '\u2605 rating' + (x.comment ? ': ' + x.comment : '') }));
     items.sort((a, b) => new Date(b.at) - new Date(a.at));
     return items.slice(0, limit || 40);
@@ -479,5 +487,71 @@ Object.assign(module.exports, {
       company: r.company, businessName: r.business_name, idNumber: r.id_number, kraPin: r.kra_pin,
       verified: r.verified, listings: r.listings, createdAt: r.created_at,
     }));
+  },
+});
+
+// ---------------- Bookings + unit counter ----------------
+function bookingRow(r) {
+  if (!r) return null;
+  return {
+    id: String(r.id), listingId: r.listing_id ? String(r.listing_id) : null,
+    listingTitle: r.listing_title || null,
+    ownerId: r.owner_id ? String(r.owner_id) : null, userId: r.user_id ? String(r.user_id) : null,
+    name: r.name, phone: r.phone, moveIn: r.move_in, note: r.note,
+    status: r.status, createdAt: r.created_at, decidedAt: r.decided_at,
+  };
+}
+
+Object.assign(module.exports, {
+  async createBooking(d) {
+    const { rows } = await pool.query(
+      `INSERT INTO bookings (listing_id, owner_id, user_id, name, phone, move_in, note)
+       VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`,
+      [d.listingId, d.ownerId || null, d.userId || null, d.name || null, d.phone || null, d.moveIn || null, d.note || null]
+    );
+    return bookingRow(rows[0]);
+  },
+  async listBookingsByOwner(ownerId) {
+    const { rows } = await pool.query(
+      `SELECT b.*, l.title AS listing_title FROM bookings b LEFT JOIN listings l ON l.id = b.listing_id
+       WHERE b.owner_id = $1 ORDER BY (b.status = 'pending') DESC, b.created_at DESC LIMIT 200`, [ownerId]
+    );
+    return rows.map(bookingRow);
+  },
+  async getBookingOwned(id, ownerId) {
+    if (!/^\d+$/.test(String(id))) return null;
+    const { rows } = await pool.query('SELECT * FROM bookings WHERE id = $1 AND owner_id = $2', [id, ownerId]);
+    return bookingRow(rows[0]);
+  },
+  // Move a booking from one status to another. Returns true only if it changed,
+  // so two clicks (or two tabs) can't confirm the same booking twice.
+  async setBookingStatus(id, ownerId, from, to) {
+    if (!/^\d+$/.test(String(id))) return false;
+    const r = await pool.query(
+      'UPDATE bookings SET status = $1, decided_at = now() WHERE id = $2 AND owner_id = $3 AND status = $4',
+      [to, id, ownerId, from]
+    );
+    return r.rowCount > 0;
+  },
+  // Take one unit, atomically. Returns the units left, or null if none were free.
+  async takeUnit(listingId) {
+    const { rows } = await pool.query(
+      'UPDATE listings SET units_available = units_available - 1 WHERE id = $1 AND units_available > 0 RETURNING units_available',
+      [listingId]
+    );
+    return rows.length ? rows[0].units_available : null;
+  },
+  async releaseUnit(listingId) {
+    await pool.query('UPDATE listings SET units_available = LEAST(units_total, units_available + 1) WHERE id = $1', [listingId]);
+  },
+  // Publisher sets how many units are free (0 .. units_total). Returns the new value, or null if not theirs.
+  async setUnitsAvailable(listingId, ownerId, n) {
+    if (!/^\d+$/.test(String(listingId))) return null;
+    const { rows } = await pool.query(
+      `UPDATE listings SET units_available = GREATEST(0, LEAST(units_total, $1))
+       WHERE id = $2 AND owner_id = $3 RETURNING units_available, units_total`,
+      [n, listingId, ownerId]
+    );
+    return rows.length ? { unitsAvailable: rows[0].units_available, unitsTotal: rows[0].units_total } : null;
   },
 });
