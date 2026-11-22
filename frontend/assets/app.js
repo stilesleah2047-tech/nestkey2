@@ -487,7 +487,8 @@
       var href = '/property/' + encodeURIComponent(l.id);
       var badges = '<span class="lc-badge deal">' + deal + '</span>' +
         (l.tier === 'showcase' ? '<span class="lc-badge video">Video</span>' : '') +
-        (l.featured ? '<span class="lc-badge feat">Featured</span>' : '');
+        (l.featured ? '<span class="lc-badge feat">Featured</span>' : '') +
+        ((Number(l.unitsTotal) || 1) > 1 ? '<span class="lc-badge units">' + (l.unitsAvailable != null ? l.unitsAvailable : l.unitsTotal) + ' units left</span>' : '');
       var count = (l.photos && l.photos.length > 1) ? '<span class="lc-count">' + l.photos.length + ' photos</span>' : '';
       var heart = '<button class="fav-btn' + (isFav(l.id) ? ' on' : '') + '" data-fav="' + l.id + '" aria-label="Save ' + escapeHtml(l.title) + '">' +
         '<svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none"><path d="M12 21s-7-4.5-9.5-9A5 5 0 0112 5a5 5 0 019.5 7c-2.5 4.5-9.5 9-9.5 9z"/></svg></button>';
@@ -789,6 +790,21 @@
   var SHOWCASE_FEE = 500;
   var ROOM_TYPES = [];
   var tier = 'standard';
+  var unitsMode = 'single'; // 'single' = one house/room, 'multi' = several identical units
+
+  // How many identical units the post form is listing (1 unless "Several identical units").
+  function unitCount() {
+    if (unitsMode !== 'multi') return 1;
+    var n = parseInt((($('unitsTotal') || {}).value) || '0', 10);
+    return Math.min(500, Math.max(1, isNaN(n) ? 1 : n));
+  }
+  // Bedrooms implied by a property type, used to pre-fill the bedrooms box.
+  function bedsForType(t) {
+    t = String(t || '').toLowerCase();
+    if (/bedsitter|single room|studio|hostel/.test(t)) return 0;
+    var m = t.match(/(\d+)\s*(bed|br\b)/);
+    return m ? parseInt(m[1], 10) : null;
+  }
   var COMMISSION_RATE = 0.025; // replaced by the server's value from /api/config
   var LAND_RATE = 1500, LAND_MIN = 300, LAND_MAX = 3000;
 
@@ -817,11 +833,12 @@
 
     var beds = parseInt(($('beds') || {}).value || '0', 10);
     var rooms = (isNaN(beds) || beds < 1) ? 1 : beds;
-    var base = ROOM_RATE * rooms;
+    var units = unitCount();
+    var base = ROOM_RATE * rooms * units;
     var totalH = base + (tier === 'showcase' ? SHOWCASE_FEE : 0);
     if ($('feeTotal')) $('feeTotal').textContent = money(totalH);
     if ($('feeBreak')) {
-      var txt = money(ROOM_RATE) + ' per room × ' + rooms + ' room' + (rooms > 1 ? 's' : '');
+      var txt = money(ROOM_RATE) + ' per room × ' + rooms + ' room' + (rooms > 1 ? 's' : '') + (units > 1 ? ' per unit × ' + units + ' units' : '');
       if (tier === 'showcase') txt += '  +  ' + money(SHOWCASE_FEE) + ' showcase (free with Landlord Pro / Agency)';
       $('feeBreak').textContent = txt;
     }
@@ -849,7 +866,10 @@
       if ($('field-baths')) $('field-baths').style.display = isLand ? 'none' : '';
       if ($('field-rooms')) $('field-rooms').style.display = isLand ? 'none' : '';
       if ($('field-size')) $('field-size').style.display = isLand ? '' : 'none';
-      if ($('field-type')) { var ti = $('field-type').querySelector('input'); if (ti) ti.placeholder = isLand ? 'Plot, Farm, Commercial…' : 'Bedsitter, 1-bed, Maisonette…'; }
+      if ($('field-type')) { var ti = $('field-type').querySelector('input'); if (ti) ti.placeholder = isLand ? 'Plot, Farm, Commercial…' : 'Bedsitter, 1 bedroom, Maisonette…'; }
+      // Land is priced by size, so it's always a single listing.
+      if ($('field-units-mode')) $('field-units-mode').style.display = isLand ? 'none' : '';
+      if (isLand) setUnitsMode('single');
       // Land has no rooms — hide the Standard/Video-Showcase toggle and rooms builder.
       var tierWrap = $('tier') ? $('tier').closest('.field') : null;
       if (tierWrap) tierWrap.style.display = isLand ? 'none' : '';
@@ -913,6 +933,24 @@
       $('rooms-builder').appendChild(wrap);
     }
     if ($('addRoom')) $('addRoom').addEventListener('click', addRoom);
+
+    // One house vs several identical units.
+    function setUnitsMode(m) {
+      unitsMode = m === 'multi' ? 'multi' : 'single';
+      if ($('units-mode')) Array.prototype.forEach.call($('units-mode').querySelectorAll('button'), function (x) { x.classList.toggle('active', x.getAttribute('data-units') === unitsMode); });
+      if ($('field-units')) $('field-units').style.display = unitsMode === 'multi' ? '' : 'none';
+      if ($('beds-label')) $('beds-label').textContent = unitsMode === 'multi' ? 'Bedrooms in each unit' : 'Bedrooms';
+      updateFee();
+    }
+    if ($('units-mode')) $('units-mode').addEventListener('click', function (e) {
+      var b = e.target.closest('button[data-units]'); if (b) setUnitsMode(b.getAttribute('data-units'));
+    });
+    if ($('unitsTotal')) $('unitsTotal').addEventListener('input', updateFee);
+    // Picking a type like "2 bedroom" fills in the bedrooms box if it's empty.
+    if ($('p-type')) $('p-type').addEventListener('change', function () {
+      var n = bedsForType($('p-type').value);
+      if (n != null && $('beds') && $('beds').value === '') { $('beds').value = n; updateFee(); }
+    });
     if ($('p-county')) wireCountyDatalist($('p-county'), $('region'), $('p-townlist'), $('p-county-list'));
 
     // Exact-location pin picker + recenter to chosen county.
@@ -955,6 +993,7 @@
             var title = form.title.value.trim(), phone = form.phone.value.trim();
       if (title.length < 4) { show('err', 'Please add a clear listing title.'); return; }
       if (phone.replace(/\D/g, '').length < 9) { show('err', 'Please add a phone / WhatsApp number so house hunters can reach you.'); return; }
+      if (unitsMode === 'multi' && unitCount() < 2) { show('err', 'Enter how many identical units are available (2 or more), or choose \u201cOne house or room\u201d.'); return; }
       if (!getToken()) {
         show('err', 'Please <a href="/account" target="_blank" rel="noopener">sign in or create a free account</a> (opens in a new tab) so you can upload photos. Your details here will stay as they are \u2014 come back and press the button again.');
         return;
@@ -995,7 +1034,7 @@
             size: sizeStr, areaAcres: areaAcres,
             lat: $('p-lat') ? $('p-lat').value : '', lng: $('p-lng') ? $('p-lng').value : '',
             name: form.name.value, email: form.email.value, phone: phone,
-            tier: tier, photos: coverUrls, rooms: rooms,
+            tier: tier, photos: coverUrls, rooms: rooms, unitsTotal: unitCount(),
           };
           return api('/api/listings', { method: 'POST', headers: authHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify(body) });
         });
@@ -1004,7 +1043,7 @@
         var id = res.id;
         function onPaid() {
           show('ok', '<strong>Payment received</strong><br>Your listing is now live. <a href="/">Browse listings \u2192</a>');
-          form.reset(); if ($('rooms-builder')) $('rooms-builder').innerHTML = ''; tier = 'standard'; updateFee(); btn.textContent = 'Submitted \u2713';
+          form.reset(); if ($('rooms-builder')) $('rooms-builder').innerHTML = ''; tier = 'standard'; setUnitsMode('single'); updateFee(); btn.textContent = 'Submitted \u2713';
           showRating('listing');
         }
         show('info', 'Opening secure payment\u2026');
@@ -1260,6 +1299,7 @@
       if ($('ag-price-label')) $('ag-price-label').textContent = d === 'rent' ? 'Monthly rent (KSh)' : (isLand ? 'Price (KSh)' : 'Asking price (KSh)');
       if ($('ag-field-beds')) $('ag-field-beds').style.display = isLand ? 'none' : '';
       if ($('ag-field-baths')) $('ag-field-baths').style.display = isLand ? 'none' : '';
+      if ($('ag-field-units')) $('ag-field-units').style.display = isLand ? 'none' : '';
       if ($('ag-field-size')) $('ag-field-size').style.display = isLand ? '' : 'none';
       if ($('ag-field-videos')) $('ag-field-videos').style.display = isLand ? 'none' : '';
       if ($('ag-field-type')) { var ti = $('ag-field-type').querySelector('input'); if (ti) ti.placeholder = isLand ? 'Plot, Farm, Commercial…' : 'Apartment, Maisonette…'; }
@@ -1334,6 +1374,7 @@
         if ($('stat-views')) $('stat-views').textContent = views.toLocaleString();
         dashEmit('listings', items);
         if (myLeads) renderLeads(myLeads);
+        renderBookings();
         if (!items.length) { $('my-listings').innerHTML = '<div class="empty-state"><strong>No properties yet</strong><span>Add your first property — it takes about five minutes.</span><button type="button" class="btn btn--sm" data-tab="add">Add a property</button></div>'; return; }
         var dealLbl = { rent: 'For rent', sale: 'For sale', land: 'Land' };
         $('my-listings').innerHTML = '<div class="prop-list">' +
@@ -1348,7 +1389,7 @@
             act += '<button class="mini-btn danger" data-act="delete" data-id="' + l.id + '" aria-label="Delete ' + escapeHtml(l.title) + '" title="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button>';
             return '<div class="prop-row" data-status="' + escapeHtml(l.status) + '">' +
               '<div class="pr-thumb">' + ph + '</div>' +
-              '<div class="pr-main"><strong>' + escapeHtml(l.title) + '</strong><span>' + price + (where ? ' · ' + where : '') + '</span></div>' +
+              '<div class="pr-main"><strong>' + escapeHtml(l.title) + '</strong><span>' + price + (where ? ' · ' + where : '') + '</span>' + unitsCtl(l) + '</div>' +
               '<div class="pr-meta">' + statusPill(l.status) + '<span class="pr-deal">' + (dealLbl[l.deal] || '') + '</span></div>' +
               '<div class="pr-views"><strong>' + (l.views || 0) + '</strong><span>views</span></div>' +
               '<div class="pr-acts">' + act + '</div></div>';
@@ -1356,8 +1397,105 @@
         Array.prototype.forEach.call($('my-listings').querySelectorAll('button[data-act]'), function (btn) {
           btn.addEventListener('click', function () { doAct(btn.getAttribute('data-act'), btn.getAttribute('data-id')); });
         });
+        Array.prototype.forEach.call($('my-listings').querySelectorAll('button[data-units]'), function (btn) {
+          btn.addEventListener('click', function () { setUnits(btn.getAttribute('data-id'), Number(btn.getAttribute('data-units'))); });
+        });
       });
     }
+
+    // ----- Units counter -----
+    function unitsCtl(l) {
+      if (l.deal === 'land') return '';
+      var total = Math.max(1, Number(l.unitsTotal) || 1);
+      var left = l.unitsAvailable == null ? total : Math.max(0, Number(l.unitsAvailable) || 0);
+      if (total === 1) {
+        return '<span class="pr-units">' + (left ? '<span class="pill ok">Available</span>' : '<span class="pill gone">Taken</span>') +
+          '<button type="button" class="u-toggle" data-units="' + (left ? 0 : 1) + '" data-id="' + l.id + '">' + (left ? 'Mark as taken' : 'Mark available') + '</button></span>';
+      }
+      return '<span class="pr-units" aria-label="Units available">' +
+        '<button type="button" class="u-step" data-units="' + (left - 1) + '" data-id="' + l.id + '"' + (left <= 0 ? ' disabled' : '') + ' aria-label="One fewer unit available">\u2212</button>' +
+        '<span class="u-num' + (left ? '' : ' zero') + '">' + (left ? left + ' of ' + total + ' free' : 'Fully let (' + total + ')') + '</span>' +
+        '<button type="button" class="u-step" data-units="' + (left + 1) + '" data-id="' + l.id + '"' + (left >= total ? ' disabled' : '') + ' aria-label="One more unit available">+</button></span>';
+    }
+    function setUnits(id, n) {
+      fetch(API + '/api/agent/listings/' + id + '/units', { method: 'PUT', headers: authHeaders({ 'Content-Type': 'application/json' }), body: JSON.stringify({ available: n }) })
+        .then(guard).then(function (r) { return r.json(); }).then(function (res) {
+          if (!res || res.error) { toast((res && res.error) || 'Could not update units'); return; }
+          toast(res.unitsAvailable ? res.unitsAvailable + ' of ' + res.unitsTotal + ' available' : (res.unitsTotal > 1 ? 'Marked fully let \u2014 hidden from search' : 'Marked as taken \u2014 hidden from search'));
+          loadListings();
+        });
+    }
+
+    // ----- Bookings -----
+    var myBookings = null, bkFilter = 'pending', newBookingId = null;
+    function bkDate(d) {
+      if (!d) return '';
+      var t = new Date(d + 'T00:00:00'); if (isNaN(t)) return escapeHtml(d);
+      return t.toLocaleDateString('en-KE', { weekday: 'short', day: 'numeric', month: 'short' });
+    }
+    function renderBookings() {
+      var box = $('bookings'); if (!box || !myBookings) return;
+      var rows = myBookings.filter(function (b) { return bkFilter === 'all' || b.status === bkFilter; });
+      if (!rows.length) {
+        box.innerHTML = '<div class="empty-state"><strong>' + (bkFilter === 'pending' ? 'No bookings waiting' : 'Nothing here yet') + '</strong><span>When a house hunter taps \u201cBook\u201d on one of your listings, it shows up here straight away.</span></div>';
+        return;
+      }
+      box.innerHTML = rows.map(function (b) {
+        var prop = b.listingId ? listingById(b.listingId) : null;
+        var title = (prop && prop.title) || b.listingTitle || 'Your listing';
+        var who = b.name || 'Someone', first = who.split(' ')[0];
+        var wa = waNumber(b.phone);
+        var waMsg = b.status === 'confirmed'
+          ? 'Hi ' + first + ', your booking for "' + title + '" on NestKey is confirmed. When can you come to sign and get the keys?'
+          : 'Hi ' + first + ', thanks for booking "' + title + '" on NestKey. When would you like to come and view it?';
+        var pill = b.status === 'pending' ? '<span class="pill warn bk-status">Waiting</span>'
+          : (b.status === 'confirmed' ? '<span class="pill ok bk-status">Confirmed</span>' : '<span class="pill muted bk-status">Declined</span>');
+        var units = '';
+        if (prop && (Number(prop.unitsTotal) || 1) > 1) units = '<span><b>' + (prop.unitsAvailable || 0) + '</b> of ' + prop.unitsTotal + ' units free</span>';
+        var acts = '';
+        if (b.status === 'pending') {
+          acts += '<button type="button" class="mini-btn primary" data-bk-act="confirm" data-id="' + b.id + '">Confirm \u2014 unit taken</button>';
+          acts += '<button type="button" class="mini-btn" data-bk-act="decline" data-id="' + b.id + '">Decline</button>';
+        }
+        if (b.phone) acts += '<a class="mini-btn" href="tel:' + escapeHtml(String(b.phone).replace(/[^\d+]/g, '')) + '">Call</a>';
+        if (wa) acts += '<a class="mini-btn wa" href="https://wa.me/' + wa + '?text=' + encodeURIComponent(waMsg) + '" target="_blank" rel="noopener">' + (b.status === 'confirmed' ? 'Tell ' + escapeHtml(first) + ' on WhatsApp' : 'WhatsApp') + '</a>';
+        return '<div class="bk-row ' + escapeHtml(b.status) + (String(b.id) === String(newBookingId) ? ' new' : '') + '">' +
+          '<div class="lr-avatar" aria-hidden="true">' + escapeHtml(who.charAt(0).toUpperCase()) + '</div>' +
+          '<div class="lr-main"><div class="lr-top"><strong>' + escapeHtml(who) + '</strong>' + pill + '<span>' + escapeHtml(ago(b.createdAt)) + '</span></div>' +
+          '<div class="lr-prop">' + escapeHtml(title) + '</div>' +
+          '<div class="bk-facts">' + (b.phone ? '<span>' + escapeHtml(b.phone) + '</span>' : '') +
+          (b.moveIn ? '<span>' + (prop && prop.deal !== 'rent' ? 'Viewing' : 'Move in') + ': <b>' + bkDate(b.moveIn) + '</b></span>' : '') + units + '</div>' +
+          (b.note ? '<p>' + escapeHtml(b.note) + '</p>' : '') + '</div>' +
+          '<div class="bk-acts">' + acts + '</div></div>';
+      }).join('');
+    }
+    function loadBookings() {
+      fetch(API + '/api/agent/bookings', { headers: authHeaders() }).then(guard).then(function (r) { return r.json(); }).then(function (d) {
+        myBookings = (d && d.items) || [];
+        renderBookings();
+        dashEmit('bookings', myBookings);
+      }).catch(function () {});
+    }
+    if ($('bk-filter')) $('bk-filter').addEventListener('click', function (e) {
+      var c = e.target.closest('[data-bk]'); if (!c) return;
+      bkFilter = c.getAttribute('data-bk');
+      Array.prototype.forEach.call($('bk-filter').querySelectorAll('.chip'), function (x) { x.classList.toggle('on', x === c); });
+      renderBookings();
+    });
+    if ($('bookings')) $('bookings').addEventListener('click', function (e) {
+      var btn = e.target.closest('button[data-bk-act]'); if (!btn) return;
+      var act = btn.getAttribute('data-bk-act'), id = btn.getAttribute('data-id');
+      var b = (myBookings || []).filter(function (x) { return String(x.id) === String(id); })[0];
+      if (act === 'confirm' && !confirm('Confirm that ' + ((b && b.name) || 'this person') + ' has taken a unit? The available count goes down by one.')) return;
+      if (act === 'decline' && !confirm('Decline this booking?')) return;
+      btn.disabled = true;
+      fetch(API + '/api/agent/bookings/' + id + '/' + act, { method: 'POST', headers: authHeaders() }).then(guard).then(function (r) { return r.json(); }).then(function (res) {
+        if (!res || res.error) { toast((res && res.error) || 'Could not update'); btn.disabled = false; return; }
+        if (act === 'confirm') toast(res.unitsAvailable > 0 ? 'Confirmed \u2014 ' + res.unitsAvailable + ' unit' + (res.unitsAvailable === 1 ? '' : 's') + ' left' : 'Confirmed \u2014 now fully let and hidden from search');
+        else toast('Booking declined');
+        loadBookings(); loadListings();
+      }).catch(function () { btn.disabled = false; toast('Could not update. Check your connection.'); });
+    });
 
     function doAct(act, id) {
       if (act === 'edit') { startEdit(id); return; }
@@ -1438,6 +1576,7 @@
       if (f.beds) f.beds.value = l.beds != null ? l.beds : '';
       if (f.baths) f.baths.value = l.baths != null ? l.baths : '';
       if ($('ag-roomCount')) $('ag-roomCount').value = l.roomCount != null ? l.roomCount : '';
+      if ($('ag-unitsTotal')) $('ag-unitsTotal').value = l.unitsTotal || 1;
       if (f.description) f.description.value = l.description || '';
       if ($('ag-lat')) $('ag-lat').value = (l.lat != null ? l.lat : '');
       if ($('ag-lng')) $('ag-lng').value = (l.lng != null ? l.lng : '');
@@ -1491,6 +1630,7 @@
             title: f.title.value, deal: f.deal.value, type: f.type.value, price: f.price.value,
             region: f.region.value, county: f.county ? f.county.value : '', beds: f.beds.value, baths: f.baths.value,
             roomCount: $('ag-roomCount') ? $('ag-roomCount').value : '',
+            unitsTotal: (isLandDeal || !$('ag-unitsTotal')) ? 1 : $('ag-unitsTotal').value,
             size: sizeStr, areaAcres: areaAcres,
             lat: $('ag-lat') ? $('ag-lat').value : '', lng: $('ag-lng') ? $('ag-lng').value : '',
             description: f.description.value,
@@ -1529,6 +1669,13 @@
         var d = {}; try { d = JSON.parse(ev.data); } catch (e) {}
         toast('New enquiry' + (d.title ? ' on ' + d.title : '') + '!');
         loadLeads(); loadSummary();
+      });
+      es.addEventListener('booking.created', function (ev) {
+        var d = {}; try { d = JSON.parse(ev.data); } catch (e) {}
+        newBookingId = d.id || null;
+        toast('New booking' + (d.name ? ' from ' + d.name : '') + (d.title ? ' on ' + d.title : '') + '!');
+        try { if (window.Notification && Notification.permission === 'granted') new Notification('New booking on NestKey', { body: (d.name || 'Someone') + ' wants ' + (d.title || 'one of your properties'), icon: '/assets/icon-192.png' }); } catch (e) {}
+        loadBookings();
       });
       es.addEventListener('payment.recorded', function (ev) {
         var d = {}; try { d = JSON.parse(ev.data); } catch (e) {}
@@ -1617,7 +1764,9 @@
         }).catch(function () { toast('Something went wrong.'); if (btn) btn.disabled = false; });
     }
 
-    loadSummary(); loadListings(); loadLeads(); loadTransactions();
+    loadSummary(); loadListings(); loadLeads(); loadBookings(); loadTransactions();
+    // Ask once for desktop/phone notifications so new bookings pop up even in another tab.
+    try { if (window.Notification && Notification.permission === 'default') document.addEventListener('click', function askOnce() { document.removeEventListener('click', askOnce); Notification.requestPermission(); }); } catch (e) {}
   }
 
   /* ---------------- Admin Command Center ---------------- */
