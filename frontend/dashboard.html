@@ -136,6 +136,7 @@
                   <select id="ag-size-unit"><option value="acres">acres</option><option value="hectares">hectares</option><option value="plots">plots (50×100)</option><option value="sqm">sq metres</option></select>
                 </div>
               </div>
+              <div class="field full" id="ag-field-deed" style="display:none"><label for="ag-deed">Title deed / parcel number <span class="opt">(private)</span></label><input name="deedNumber" id="ag-deed" autocomplete="off" placeholder="e.g. NAIROBI/BLOCK 123/456"><small class="hint">Never shown publicly. Buyers can check it on the Verify a deed page.</small></div>
               <div class="field full"><label>Description</label><textarea name="description" placeholder="What makes it a good home? Water, parking, security, distance to the main road…"></textarea></div>
             </div>
           </fieldset>
@@ -146,6 +147,7 @@
               <div class="field" id="ag-field-videos"><label>Videos (optional)</label><input id="ag-videos" type="file" accept="video/*" multiple></div>
             </div>
           </fieldset>
+          <div id="ag-consent-wrap"><label class="consent-box"><input type="checkbox" id="ag-consent"> <span>I consent to NestKey storing this listing, including the property&rsquo;s details and location, on secure servers outside Kenya so it can be shown to house hunters. See <a href="/privacy#transfers" target="_blank" rel="noopener">how we protect it</a>. You can delete the listing at any time.</span></label></div>
           <div class="save-bar">
             <div class="status" id="agent-status"></div>
             <div class="save-actions">
