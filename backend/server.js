@@ -9,6 +9,13 @@ const { rateLimit } = require('./src/ratelimit');
 
 const app = express();
 app.disable('x-powered-by');
+
+// Gzip pages, scripts, styles and API answers (app.js shrinks ~4x). The live-updates
+// stream must stay uncompressed, or events would sit in a buffer instead of arriving.
+const compression = require('compression');
+app.use(compression({
+  filter: (req, res) => (req.path === '/api/stream' ? false : compression.filter(req, res)),
+}));
 app.set('trust proxy', 1); // correct client IPs behind Render/Railway/Nginx (needed for rate limits)
 
 // Basic security headers (no extra dependency).
