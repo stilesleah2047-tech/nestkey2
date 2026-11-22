@@ -223,3 +223,30 @@ body:has(.dash) footer.foot { margin-top: 0; }
   .save-actions { width: 100%; }
   .save-actions .btn { flex: 1; justify-content: center; }
 }
+
+/* ---------- Units counter + bookings ---------- */
+.pr-units { display: inline-flex !important; align-items: center; gap: 6px; margin-top: 6px; overflow: visible !important; }
+.pr-units .u-num { font-size: .82rem; font-weight: 700; color: var(--d-navy); min-width: 74px; }
+.pr-units .u-num.zero { color: #A33A38; }
+.u-step { width: 28px; height: 28px; border-radius: 8px; border: 1px solid var(--d-line); background: #fff; color: var(--d-navy); font: inherit; font-size: 1rem; font-weight: 800; line-height: 1; cursor: pointer; display: grid; place-items: center; padding: 0; }
+.u-step:hover:not([disabled]) { border-color: var(--d-teal); color: var(--d-teal-dk); }
+.u-step[disabled] { opacity: .4; cursor: default; }
+.u-toggle { border: 1px solid var(--d-line); background: #fff; border-radius: 999px; padding: 3px 10px; font: inherit; font-size: .76rem; font-weight: 700; color: var(--d-muted); cursor: pointer; }
+.u-toggle:hover { border-color: var(--d-teal); color: var(--d-teal-dk); }
+.pill.gone { background: #FDECEC; color: #A33A38; }
+
+.bk-row { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; gap: 14px; align-items: start; padding: 16px 18px; border-top: 1px solid var(--d-line); }
+.bk-row:first-child { border-top: 0; }
+.bk-row.pending { background: linear-gradient(90deg, var(--d-gold-tint), #fff 60%); }
+.bk-row.new { animation: bknew 2.4s ease; }
+@keyframes bknew { 0% { background: rgba(244,183,64,.35); } 100% { background: transparent; } }
+.bk-facts { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 6px; font-size: .84rem; color: var(--d-muted); }
+.bk-facts b { color: var(--d-ink); font-weight: 700; }
+.bk-row p { margin: 8px 0 0; font-size: .92rem; color: var(--d-ink); line-height: 1.5; }
+.bk-acts { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; max-width: 330px; }
+.bk-status { margin-left: 4px; }
+.bk-row .lr-top { flex-wrap: wrap; }
+@media (max-width: 760px) {
+  .bk-row { grid-template-columns: 40px minmax(0, 1fr); }
+  .bk-acts { grid-column: 1 / -1; justify-content: flex-start; max-width: none; }
+}
